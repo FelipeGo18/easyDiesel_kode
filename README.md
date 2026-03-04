@@ -2,7 +2,7 @@
 
 Sistema web para el control, trazabilidad y regulación de combustibles en estaciones de servicio colombianas, desarrollado en cumplimiento del **Decreto 1428 de 2025** y el **Decreto 763 de 2024** del Ministerio de Minas y Energía.
 
-> Proyecto de Ingeriería de software — Universidad Piloto de Colombia
+> Proyecto de grado — Universidad Piloto de Colombia
 
 ---
 
@@ -112,6 +112,20 @@ combustibles-app/
 │   ├── package.json
 │   └── tsconfig.json
 │
+├── docs/                    # Documentación técnica del proyecto
+│   ├── Arquitectura_Plataforma_Combustibles.docx
+│   ├── arquitectura_combustibles.puml
+│   ├── modelo_base_datos_combustibles.puml
+│   └── estructura_carpetas.puml
+├── .skills/                 # Skills reutilizables para agentes de IA (skills.sh)
+│   ├── backend/
+│   │   └── SKILL.md         # Convenciones del backend (Express, Prisma, estructura)
+│   ├── frontend/
+│   │   └── SKILL.md         # Convenciones del frontend (React, Tailwind, shadcn/ui)
+│   ├── normativa/
+│   │   └── SKILL.md         # Reglas del Decreto 1428 y motor de precios
+│   └── db/
+│       └── SKILL.md         # Modelo de datos, relaciones y convenciones SQL
 ├── .gitignore
 └── README.md
 ```
@@ -130,8 +144,8 @@ combustibles-app/
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/FelipeGo18/easyDiesel_kode.git
-cd easyDiesel_kode
+git clone https://github.com/tu-usuario/combustibles-app.git
+cd combustibles-app
 ```
 
 ### 2. Configurar el backend
@@ -240,6 +254,33 @@ Para visualizar el modelo entidad-relación, abrir `docs/modelo_base_datos_combu
 
 ---
 
+## 🤖 AI Agent Skills
+
+Este proyecto usa [skills.sh](https://skills.sh) — el ecosistema abierto de skills para agentes de IA. Las skills son instrucciones reutilizables empaquetadas en archivos `SKILL.md` que permiten a cualquier agente (Claude Code, Cursor, Copilot, Codex) cargar el conocimiento específico del proyecto sin necesidad de re-explicarlo en cada sesión.
+
+### Skills disponibles
+
+| Skill | Descripción |
+|-------|-------------|
+| `backend` | Convenciones de Express, estructura de rutas/controllers/services, patrones Prisma |
+| `frontend` | Convenciones React + Vite, uso de shadcn/ui, estructura de hooks y servicios |
+| `normativa` | Reglas del Decreto 1428/2025, lógica del motor de precios, tipos de servicio |
+| `db` | Modelo de datos, relaciones entre tablas, convenciones de nomenclatura SQL |
+
+### Instalar las skills en tu agente
+
+```bash
+# Instalar todas las skills del proyecto
+pnpm dlx skills add ./  --all
+
+# Instalar una skill específica
+pnpm dlx skills add ./ --skill backend
+```
+
+> Las skills se instalan automáticamente en el agente que tengas configurado (Claude Code, Cursor, etc.)
+
+---
+
 ## 📌 Estado del proyecto
 
 - [x] Arquitectura definida
@@ -250,7 +291,5 @@ Para visualizar el modelo entidad-relación, abrir `docs/modelo_base_datos_combu
 - [ ] Implementación frontend
 - [ ] Pruebas unitarias
 - [ ] Despliegue en producción
-
----
 
 *Universidad Piloto de Colombia · 2026*
