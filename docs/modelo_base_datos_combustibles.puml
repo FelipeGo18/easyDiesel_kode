@@ -1,0 +1,272 @@
+@startuml Modelo_Base_Datos_Combustibles
+
+hide methods
+hide circle
+
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #BDC3C7
+  BorderThickness 1.5
+  HeaderBackgroundColor #2C3E50
+  HeaderFontColor #FFFFFF
+  HeaderFontSize 13
+  HeaderFontStyle bold
+  AttributeFontColor #2C3E50
+  AttributeFontSize 11
+}
+
+skinparam arrow {
+  Color #5D6D7E
+  FontColor #5D6D7E
+  FontSize 10
+}
+
+' ══════════════════════════════════════════════
+'  MODULO: ACCESO Y USUARIOS
+' ══════════════════════════════════════════════
+
+package "Acceso y Usuarios" #D6EAF8 {
+
+  entity "roles" as roles {
+    <b><color:#C0392B>PK  id : INTEGER</color></b>
+    --
+    nombre : VARCHAR(50) UNIQUE
+    descripcion : TEXT
+    permisos : JSONB
+  }
+
+  entity "usuarios" as usuarios {
+    <b><color:#C0392B>PK  id : UUID</color></b>
+    --
+    <color:#2980B9>FK  rol_id : INTEGER</color>
+    nombre : VARCHAR(100)
+    email : VARCHAR(150) UNIQUE
+    password_hash : VARCHAR(255)
+    activo : BOOLEAN
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+  }
+
+}
+
+' ══════════════════════════════════════════════
+'  MODULO: ACTORES OPERATIVOS
+' ══════════════════════════════════════════════
+
+package "Actores Operativos" #D5F5E3 {
+
+  entity "estaciones_servicio" as estaciones_servicio {
+    <b><color:#C0392B>PK  id : UUID</color></b>
+    --
+    <color:#2980B9>FK  usuario_id : UUID</color>
+    <color:#2980B9>FK  zona_id : INTEGER</color>
+    nombre : VARCHAR(150)
+    nit : VARCHAR(20) UNIQUE
+    direccion : TEXT
+    ciudad : VARCHAR(100)
+    departamento : VARCHAR(100)
+    latitud : DECIMAL(9,6)
+    longitud : DECIMAL(9,6)
+    activa : BOOLEAN
+  }
+
+  entity "distribuidores" as distribuidores {
+    <b><color:#C0392B>PK  id : UUID</color></b>
+    --
+    <color:#2980B9>FK  usuario_id : UUID</color>
+    nombre : VARCHAR(150)
+    nit : VARCHAR(20) UNIQUE
+    tipo : ENUM(mayorista / regulado)
+    activo : BOOLEAN
+  }
+
+}
+
+' ══════════════════════════════════════════════
+'  MODULO: INVENTARIO
+' ══════════════════════════════════════════════
+
+package "Inventario" #FEF9E7 {
+
+  entity "tanques" as tanques {
+    <b><color:#C0392B>PK  id : UUID</color></b>
+    --
+    <color:#2980B9>FK  estacion_id : UUID</color>
+    tipo_combustible : ENUM
+    capacidad_galones : DECIMAL(10,2)
+    nivel_actual : DECIMAL(10,2)
+    nivel_minimo : DECIMAL(10,2)
+    activo : BOOLEAN
+  }
+
+  entity "transacciones_combustible" as transacciones_combustible {
+    <b><color:#C0392B>PK  id : UUID</color></b>
+    --
+    <color:#2980B9>FK  estacion_id : UUID</color>
+    <color:#2980B9>FK  tanque_id : UUID</color>
+    <color:#2980B9>FK  usuario_id : UUID</color>
+    <color:#2980B9>FK  distribuidor_id : UUID</color>
+    <color:#2980B9>FK  entrega_id : UUID</color>
+    tipo : ENUM(entrada / salida)
+    volumen_galones : DECIMAL(10,3)
+    placa_vehiculo : VARCHAR(10)
+    tipo_servicio : ENUM
+    precio_galon : DECIMAL(10,2)
+    subsidio_aplicado : BOOLEAN
+    decreto_aplicado : VARCHAR(50)
+    created_at : TIMESTAMP
+  }
+
+  entity "entregas_distribuidor" as entregas_distribuidor {
+    <b><color:#C0392B>PK  id : UUID</color></b>
+    --
+    <color:#2980B9>FK  distribuidor_id : UUID</color>
+    <color:#2980B9>FK  estacion_id : UUID</color>
+    tipo_combustible : ENUM
+    volumen_galones : DECIMAL(10,2)
+    precio_compra : DECIMAL(10,2)
+    numero_guia : VARCHAR(50) UNIQUE
+    fecha_entrega : TIMESTAMP
+    confirmada : BOOLEAN
+  }
+
+}
+
+' ══════════════════════════════════════════════
+'  MODULO: PRECIOS Y NORMATIVA
+' ══════════════════════════════════════════════
+
+package "Precios y Normativa" #F9EBEA {
+
+  entity "zonas_distribucion" as zonas_distribucion {
+    <b><color:#C0392B>PK  id : INTEGER</color></b>
+    --
+    nombre : VARCHAR(100)
+    descripcion : TEXT
+    tipo_zona : ENUM(interconectada / no_interconectada)
+  }
+
+  entity "precios_vigentes" as precios_vigentes {
+    <b><color:#C0392B>PK  id : UUID</color></b>
+    --
+    <color:#2980B9>FK  zona_id : INTEGER</color>
+    <color:#2980B9>FK  decreto_id : INTEGER</color>
+    tipo_combustible : ENUM
+    tipo_servicio : ENUM
+    precio_galon : DECIMAL(10,2)
+    subsidio : BOOLEAN
+    vigencia_desde : DATE
+    vigencia_hasta : DATE
+    activo : BOOLEAN
+  }
+
+  entity "decretos_normativos" as decretos_normativos {
+    <b><color:#C0392B>PK  id : INTEGER</color></b>
+    --
+    numero : VARCHAR(50) UNIQUE
+    anio : INTEGER
+    entidad : VARCHAR(150)
+    descripcion : TEXT
+    url_documento : TEXT
+    fecha_vigencia : DATE
+    activo : BOOLEAN
+  }
+
+}
+
+' ══════════════════════════════════════════════
+'  MODULO: AUDITORIA Y REPORTES
+' ══════════════════════════════════════════════
+
+package "Auditoria y Reportes" #F4ECF7 {
+
+  entity "auditoria_log" as auditoria_log {
+    <b><color:#C0392B>PK  id : UUID</color></b>
+    --
+    <color:#2980B9>FK  usuario_id : UUID</color>
+    modulo : VARCHAR(50)
+    accion : VARCHAR(100)
+    entidad : VARCHAR(50)
+    entidad_id : UUID
+    datos_antes : JSONB
+    datos_despues : JSONB
+    ip_address : INET
+    created_at : TIMESTAMP
+  }
+
+  entity "reportes" as reportes {
+    <b><color:#C0392B>PK  id : UUID</color></b>
+    --
+    <color:#2980B9>FK  generado_por : UUID</color>
+    tipo : ENUM
+    periodo_inicio : DATE
+    periodo_fin : DATE
+    formato : ENUM(PDF / Excel / CSV)
+    url_archivo : TEXT
+    created_at : TIMESTAMP
+  }
+
+}
+
+' ══════════════════════════════════════════════
+'  RELACIONES
+' ══════════════════════════════════════════════
+
+roles                   ||--o{ usuarios                  : "tiene"
+
+usuarios                ||--o| estaciones_servicio       : "gestiona"
+usuarios                ||--o| distribuidores            : "gestiona"
+
+zonas_distribucion      ||--o{ estaciones_servicio       : "pertenece a"
+zonas_distribucion      ||--o{ precios_vigentes          : "aplica en"
+
+decretos_normativos     ||--o{ precios_vigentes          : "regula"
+
+estaciones_servicio     ||--o{ tanques                   : "tiene"
+estaciones_servicio     ||--o{ transacciones_combustible : "registra"
+estaciones_servicio     ||--o{ entregas_distribuidor     : "recibe"
+
+tanques                 ||--o{ transacciones_combustible : "involucra"
+
+distribuidores          ||--o{ entregas_distribuidor     : "realiza"
+distribuidores          ||--o{ transacciones_combustible : "origina"
+
+entregas_distribuidor   ||--o{ transacciones_combustible : "referenciada en entrada"
+
+usuarios                ||--o{ auditoria_log             : "genera log"
+usuarios                ||--o{ reportes                  : "genera"
+
+' ══════════════════════════════════════════════
+'  ENUMS
+' ══════════════════════════════════════════════
+
+note as ENUMS
+  <b>Valores ENUM</b>
+  ─────────────────────────────────
+  <b>tipo_combustible:</b>
+    ACPM | gasolina_corriente | extra
+
+  <b>tipo_servicio:</b>
+    particular | publico
+    diplomatico | oficial
+
+  <b>tipo (transaccion):</b>
+    entrada | salida
+
+  <b>tipo (distribuidor):</b>
+    mayorista | regulado
+
+  <b>tipo_zona:</b>
+    interconectada | no_interconectada
+
+  <b>formato (reporte):</b>
+    PDF | Excel | CSV
+end note
+
+title Modelo de Base de Datos -- Plataforma Gestion Combustibles\nPostgreSQL 16  |  Prisma ORM  |  Decreto 1428/2025
+
+@enduml

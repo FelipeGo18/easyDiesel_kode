@@ -1,0 +1,272 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ──────────────────────────────────────────
+// ENUMS
+// ──────────────────────────────────────────
+
+enum TipoCombustible {
+  ACPM
+  GASOLINA_CORRIENTE
+  GASOLINA_EXTRA
+}
+
+enum TipoServicio {
+  PARTICULAR
+  PUBLICO
+  DIPLOMATICO
+  OFICIAL
+  CARGA
+}
+
+enum EstadoTransaccion {
+  COMPLETADA
+  ANULADA
+  PENDIENTE
+}
+
+enum TipoReporte {
+  INVENTARIO
+  TRANSACCIONES
+  PRECIOS
+  AUDITORIA
+  NORMATIVO
+}
+
+enum FormatoReporte {
+  PDF
+  EXCEL
+}
+
+// ──────────────────────────────────────────
+// MODELOS
+// ──────────────────────────────────────────
+
+model Rol {
+  id          String    @id @default(uuid())
+  nombre      String    @unique  // admin, estacion, distribuidor, regulador, auditor, particular, subsidiado, distribuidor_regulado
+  descripcion String?
+  permisos    String[]  // Lista de permisos asociados al rol
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  usuarios    Usuario[]
+
+  @@map("roles")
+}
+
+model Usuario {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  nombre        String
+  apellido      String
+  activo        Boolean   @default(true)
+  rolId         String    @map("rol_id")
+  estacionId    String?   @map("estacion_id")
+  distribuidorId String?  @map("distribuidor_id")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  rol           Rol              @relation(fields: [rolId], references: [id])
+  estacion      EstacionServicio? @relation(fields: [estacionId], references: [id])
+  distribuidor  Distribuidor?    @relation(fields: [distribuidorId], references: [id])
+  auditorias    AuditoriaLog[]
+
+  @@map("usuarios")
+}
+
+model EstacionServicio {
+  id            String    @id @default(uuid())
+  nombre        String
+  direccion     String
+  ciudad        String
+  departamento  String
+  codigoSicom   String    @unique @map("codigo_sicom") // Código SICOM del Ministerio
+  zonaId        String    @map("zona_id")
+  activa        Boolean   @default(true)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  zona          ZonaDistribucion @relation(fields: [zonaId], references: [id])
+  usuarios      Usuario[]
+  tanques       Tanque[]
+  transacciones TransaccionCombustible[]
+  entregas      EntregaDistribuidor[]
+
+  @@map("estaciones_servicio")
+}
+
+model Distribuidor {
+  id            String    @id @default(uuid())
+  nombre        String
+  nit           String    @unique
+  direccion     String
+  ciudad        String
+  departamento  String
+  activo        Boolean   @default(true)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  usuarios      Usuario[]
+  entregas      EntregaDistribuidor[]
+
+  @@map("distribuidores")
+}
+
+model Tanque {
+  id               String          @id @default(uuid())
+  nombre           String
+  capacidadGalones Float           @map("capacidad_galones")
+  nivelActual      Float           @map("nivel_actual")
+  tipoCombustible  TipoCombustible @map("tipo_combustible")
+  estacionId       String          @map("estacion_id")
+  activo           Boolean         @default(true)
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  estacion         EstacionServicio @relation(fields: [estacionId], references: [id])
+  transacciones    TransaccionCombustible[]
+  entregas         EntregaDistribuidor[]
+
+  @@map("tanques")
+}
+
+model TransaccionCombustible {
+  id               String             @id @default(uuid())
+  estacionId       String             @map("estacion_id")
+  tanqueId         String             @map("tanque_id")
+  tipoCombustible  TipoCombustible    @map("tipo_combustible")
+  tipoServicio     TipoServicio       @map("tipo_servicio")
+  galones          Float
+  precioUnitario   Float              @map("precio_unitario")
+  precioTotal      Float              @map("precio_total")
+  placaVehiculo    String?            @map("placa_vehiculo")
+  estado           EstadoTransaccion  @default(COMPLETADA)
+  decretoAplicado  String?            @map("decreto_aplicado") // Referencia al decreto vigente
+  subsidioAplicado Boolean            @default(false) @map("subsidio_aplicado")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+
+  estacion         EstacionServicio   @relation(fields: [estacionId], references: [id])
+  tanque           Tanque             @relation(fields: [tanqueId], references: [id])
+
+  @@index([estacionId, createdAt])
+  @@index([tipoCombustible, tipoServicio])
+  @@map("transacciones_combustible")
+}
+
+model EntregaDistribuidor {
+  id               String          @id @default(uuid())
+  distribuidorId   String          @map("distribuidor_id")
+  estacionId       String          @map("estacion_id")
+  tanqueId         String          @map("tanque_id")
+  tipoCombustible  TipoCombustible @map("tipo_combustible")
+  galones          Float
+  precioUnitario   Float           @map("precio_unitario")
+  precioTotal      Float           @map("precio_total")
+  numeroRemision   String          @unique @map("numero_remision")
+  fechaEntrega     DateTime        @map("fecha_entrega")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  distribuidor     Distribuidor     @relation(fields: [distribuidorId], references: [id])
+  estacion         EstacionServicio @relation(fields: [estacionId], references: [id])
+  tanque           Tanque           @relation(fields: [tanqueId], references: [id])
+
+  @@index([distribuidorId, fechaEntrega])
+  @@map("entregas_distribuidor")
+}
+
+model ZonaDistribucion {
+  id            String    @id @default(uuid())
+  nombre        String    @unique
+  departamentos String[]  // Lista de departamentos en la zona
+  descripcion   String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  estaciones    EstacionServicio[]
+  precios       PrecioVigente[]
+
+  @@map("zonas_distribucion")
+}
+
+model PrecioVigente {
+  id               String          @id @default(uuid())
+  tipoCombustible  TipoCombustible @map("tipo_combustible")
+  tipoServicio     TipoServicio    @map("tipo_servicio")
+  zonaId           String          @map("zona_id")
+  precioGalon      Float           @map("precio_galon")
+  subsidioGalon    Float           @default(0) @map("subsidio_galon")
+  decretoId        String          @map("decreto_id")
+  vigenciaDesde    DateTime        @map("vigencia_desde")
+  vigenciaHasta    DateTime?       @map("vigencia_hasta")
+  activo           Boolean         @default(true)
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  zona             ZonaDistribucion  @relation(fields: [zonaId], references: [id])
+  decreto          DecretoNormativo  @relation(fields: [decretoId], references: [id])
+
+  @@unique([tipoCombustible, tipoServicio, zonaId, activo])
+  @@index([activo, tipoCombustible])
+  @@map("precios_vigentes")
+}
+
+model DecretoNormativo {
+  id              String    @id @default(uuid())
+  numero          String    @unique  // Ej: "1428/2025"
+  titulo          String
+  descripcion     String?
+  fechaExpedicion DateTime  @map("fecha_expedicion")
+  fechaVigencia   DateTime  @map("fecha_vigencia")
+  activo          Boolean   @default(true)
+  documentoUrl    String?   @map("documento_url")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  precios         PrecioVigente[]
+
+  @@map("decretos_normativos")
+}
+
+model AuditoriaLog {
+  id          String   @id @default(uuid())
+  usuarioId   String   @map("usuario_id")
+  accion      String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, etc.
+  entidad     String   // Nombre de la tabla afectada
+  entidadId   String?  @map("entidad_id")
+  datosAntes  Json?    @map("datos_antes")
+  datosDespues Json?   @map("datos_despues")
+  ip          String?
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id])
+
+  @@index([usuarioId, createdAt])
+  @@index([entidad, entidadId])
+  @@map("auditoria_log")
+}
+
+model Reporte {
+  id          String         @id @default(uuid())
+  tipo        TipoReporte
+  formato     FormatoReporte
+  parametros  Json?          // Filtros aplicados al generar el reporte
+  archivoUrl  String?        @map("archivo_url")
+  generadoPor String         @map("generado_por")
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  @@index([tipo, createdAt])
+  @@map("reportes")
+}

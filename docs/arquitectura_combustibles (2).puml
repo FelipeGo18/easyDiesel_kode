@@ -1,0 +1,212 @@
+@startuml Arquitectura_Plataforma_Combustibles
+
+!theme plain
+skinparam backgroundColor #FAFAFA
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+
+skinparam rectangle {
+  BackgroundColor #FAFAFA
+  BorderColor #CCCCCC
+}
+skinparam node {
+  BackgroundColor #2C3E50
+  FontColor #FFFFFF
+  BorderColor #1A252F
+}
+skinparam component {
+  BackgroundColor #EBF5FB
+  BorderColor #1A5276
+  FontColor #1A5276
+}
+skinparam database {
+  BackgroundColor #FDEBD0
+  BorderColor #D35400
+  FontColor #D35400
+}
+skinparam actor {
+  BackgroundColor #F5B7B1
+  BorderColor #C0392B
+  FontColor #C0392B
+}
+skinparam cloud {
+  BackgroundColor #E8DAEF
+  BorderColor #6C3483
+  FontColor #6C3483
+}
+skinparam arrow {
+  Color #5D6D7E
+  FontColor #5D6D7E
+  FontSize 10
+}
+
+' ════════════════════════════════════════════════════════
+'  FILA 1 — ACTORES  (izquierda)  +  INTEGRACIONES (derecha)
+' ════════════════════════════════════════════════════════
+
+rectangle "**ACTORES**" as ACTORES #FEF9E7 {
+  actor "Administrador\nde Plataforma" as ADMIN
+  actor "Estacion\nde Servicio"        as ESTACION
+  actor "Distribuidor\nMayorista"      as DISTRIB
+  actor "Autoridad\nReguladora"        as REGULADOR
+  actor "Usuario\nParticular"          as PARTICULAR
+  actor "Usuario\nSubsidiado"          as SUBSIDIADO
+}
+
+rectangle "**INTEGRACIONES EXTERNAS**" as EXTERNAS #E8DAEF {
+  cloud "Sensores IoT\n(Nivel tanques)" as IOT
+  cloud "API GPS /\nTracking"           as GPS
+  cloud "Facturacion\nElectronica"      as FACT
+  cloud "Ministerio\nde Minas"          as MINAS
+}
+
+' ════════════════════════════════════════════════════════
+'  FILA 2 — FRONTEND
+' ════════════════════════════════════════════════════════
+
+rectangle "**CAPA DE PRESENTACION  —  React.js SPA**" as FRONTEND #D6EAF8 {
+  component "**M1** Auth\n(Login / JWT)"       as M1   #AED6F1
+  component "**M2** Gestion\nde Usuarios"      as M2   #AED6F1
+  component "**M3** Inventario\n(Tanques)"     as M3   #AED6F1
+  component "**M4** Precios\ny Zonas"          as M4   #AED6F1
+  component "**M5** Normativa\n(Motor Reglas)" as M5   #AED6F1
+  component "**M6** Reportes\n(PDF / Excel)"   as M6   #AED6F1
+  component "**M7** Auditoria\n(Log)"          as M7   #AED6F1
+  component "**M8** Dashboard\n(KPIs)"         as M8   #AED6F1
+}
+
+' ════════════════════════════════════════════════════════
+'  FILA 3 — BACKEND
+' ════════════════════════════════════════════════════════
+
+rectangle "**CAPA DE SERVICIOS  —  Node.js + Express  (puerto 3000)**" as BACKEND #D5F5E3 {
+  component "Auth\nMiddleware\n(JWT/bcrypt)" as SVC_AUTH #A9DFBF
+
+  component "/auth"         as API_AUTH #A9DFBF
+  component "/usuarios"     as API_USR  #A9DFBF
+  component "/estaciones\n/tanques" as API_EST  #A9DFBF
+  component "/transacciones" as API_TRX  #A9DFBF
+  component "/precios\n/zonas"      as API_PRC  #A9DFBF
+  component "/decretos"     as API_DEC  #A9DFBF
+  component "/reportes"     as API_RPT  #A9DFBF
+  component "/auditoria"    as API_AUD  #A9DFBF
+  component "/dashboard"    as API_DASH #A9DFBF
+
+  component "Sequelize ORM\n(modelos / migraciones)" as ORM #A9DFBF
+}
+
+' ════════════════════════════════════════════════════════
+'  FILA 4 — DATOS
+' ════════════════════════════════════════════════════════
+
+rectangle "**CAPA DE DATOS**" as DATOS #FDEBD0 {
+  database "**PostgreSQL 16**  (puerto 5432)\nusuarios / roles / estaciones_servicio\ndistribuidores / tanques\ntransacciones_combustible / entregas_distribuidor\nzonas_distribucion / precios_vigentes\ndecretos_normativos / auditoria_log / reportes" as PG    #F5CBA7
+  database "**Archivos**\nPDF / Excel" as FILES #F5CBA7
+}
+
+' ════════════════════════════════════════════════════════
+'  ORDEN VERTICAL entre bloques
+' ════════════════════════════════════════════════════════
+ACTORES  -[hidden]down-> FRONTEND
+FRONTEND -[hidden]down-> BACKEND
+BACKEND  -[hidden]down-> DATOS
+EXTERNAS -[hidden]down-> BACKEND
+
+' ════════════════════════════════════════════════════════
+'  ACTORES → FRONTEND
+' ════════════════════════════════════════════════════════
+ADMIN     -down-> M1 : HTTPS
+ADMIN     -down-> M2
+ADMIN     -down-> M4
+ADMIN     -down-> M5
+
+ESTACION  -down-> M1 : HTTPS
+ESTACION  -down-> M3
+ESTACION  -down-> M6
+ESTACION  -down-> M8
+
+DISTRIB   -down-> M1 : HTTPS
+DISTRIB   -down-> M3
+DISTRIB   -down-> M6
+
+REGULADOR -down-> M1 : HTTPS
+REGULADOR -down-> M6
+REGULADOR -down-> M7
+REGULADOR -down-> M8
+
+PARTICULAR -down-> M1 : HTTPS
+PARTICULAR -down-> M8
+
+SUBSIDIADO -down-> M1 : HTTPS
+SUBSIDIADO -down-> M8
+
+' ════════════════════════════════════════════════════════
+'  FRONTEND → BACKEND  (cada modulo a su API)
+' ════════════════════════════════════════════════════════
+M1  -down-> API_AUTH  : REST
+M2  -down-> API_USR   : REST
+M3  -down-> API_EST   : REST
+M3  -down-> API_TRX   : REST
+M4  -down-> API_PRC   : REST
+M5  -down-> API_DEC   : REST
+M6  -down-> API_RPT   : REST
+M7  -down-> API_AUD   : REST
+M8  -down-> API_DASH  : REST
+
+' ════════════════════════════════════════════════════════
+'  AUTH MIDDLEWARE protege todos los endpoints
+' ════════════════════════════════════════════════════════
+SVC_AUTH -right-> API_AUTH
+SVC_AUTH -right-> API_USR
+SVC_AUTH -right-> API_EST
+SVC_AUTH -right-> API_TRX
+SVC_AUTH -right-> API_PRC
+SVC_AUTH -right-> API_DEC
+SVC_AUTH -right-> API_RPT
+SVC_AUTH -right-> API_AUD
+SVC_AUTH -right-> API_DASH
+
+' ════════════════════════════════════════════════════════
+'  BACKEND → ORM → BASE DE DATOS
+' ════════════════════════════════════════════════════════
+API_AUTH -down-> ORM
+API_USR  -down-> ORM
+API_EST  -down-> ORM
+API_TRX  -down-> ORM
+API_PRC  -down-> ORM
+API_DEC  -down-> ORM
+API_RPT  -down-> ORM
+API_AUD  -down-> ORM
+API_DASH -down-> ORM
+
+ORM     -down-> PG    : "SQL"
+API_RPT -down-> FILES : "genera archivos"
+
+' ════════════════════════════════════════════════════════
+'  INTEGRACIONES EXTERNAS → BACKEND
+' ════════════════════════════════════════════════════════
+IOT  -down-> API_EST  : "MQTT/HTTP\nnivel tanques"
+GPS  -down-> API_TRX  : "HTTP ubicacion"
+FACT -down-> API_TRX  : "HTTP factura"
+API_RPT -right-> MINAS : "HTTP reporte oficial"
+
+' ════════════════════════════════════════════════════════
+'  LEYENDA
+' ════════════════════════════════════════════════════════
+legend right
+  |= Simbolo |= Significado |
+  | -->  | Conexion directa |
+  | ..>  | Llamada REST |
+  | Rojo | Usuario humano |
+  | Azul | Modulo Frontend (React) |
+  | Verde | Endpoint Backend (Node.js) |
+  | Naranja | Base de datos |
+  | Morado | Servicio externo |
+endlegend
+
+title Arquitectura -- Plataforma de Gestion de Combustibles\nDecreto 1428/2025  |  React + Node.js + PostgreSQL
+
+@enduml
