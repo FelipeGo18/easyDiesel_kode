@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import type { Router as RouterType } from 'express';
+import { authRouter } from './auth.routes';
 
 const router: RouterType = Router();
 
 // ── Módulo 1: Auth ─────────────────────────────────────
-// router.use('/auth', authRouter);
+router.use('/auth', authRouter);
 
 // ── Módulo 2: Usuarios ─────────────────────────────────
 // router.use('/usuarios', usuariosRouter);

@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ──────────────────────────────────────────
@@ -28,6 +29,21 @@ enum TipoServicio {
   CARGA
 }
 
+enum TipoTransaccion {
+  ENTRADA
+  SALIDA
+}
+
+enum TipoDistribuidor {
+  MAYORISTA
+  REGULADO
+}
+
+enum TipoZona {
+  INTERCONECTADA
+  NO_INTERCONECTADA
+}
+
 enum EstadoTransaccion {
   COMPLETADA
   ANULADA
@@ -45,17 +61,18 @@ enum TipoReporte {
 enum FormatoReporte {
   PDF
   EXCEL
+  CSV
 }
 
 // ──────────────────────────────────────────
-// MODELOS
+// MODULO: ACCESO Y USUARIOS
 // ──────────────────────────────────────────
 
 model Rol {
   id          String    @id @default(uuid())
-  nombre      String    @unique  // admin, estacion, distribuidor, regulador, auditor, particular, subsidiado, distribuidor_regulado
+  nombre      String    @unique // admin, estacion, distribuidor, regulador, auditor, particular, subsidiado, distribuidor_regulado
   descripcion String?
-  permisos    String[]  // Lista de permisos asociados al rol
+  permisos    Json?     @db.JsonB // Permisos JSONB como en el PlantUML
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
   usuarios    Usuario[]
@@ -64,194 +81,239 @@ model Rol {
 }
 
 model Usuario {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  password      String
-  nombre        String
-  apellido      String
-  activo        Boolean   @default(true)
-  rolId         String    @map("rol_id")
-  estacionId    String?   @map("estacion_id")
-  distribuidorId String?  @map("distribuidor_id")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  id             String    @id @default(uuid())
+  email          String    @unique
+  passwordHash   String    @map("password_hash")
+  nombre         String
+  apellido       String
+  activo         Boolean   @default(true)
+  rolId          String    @map("rol_id")
+  estacionId     String?   @map("estacion_id")
+  distribuidorId String?   @map("distribuidor_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  rol           Rol              @relation(fields: [rolId], references: [id])
-  estacion      EstacionServicio? @relation(fields: [estacionId], references: [id])
-  distribuidor  Distribuidor?    @relation(fields: [distribuidorId], references: [id])
-  auditorias    AuditoriaLog[]
+  rol          Rol               @relation(fields: [rolId], references: [id])
+  estacion     EstacionServicio?  @relation(fields: [estacionId], references: [id])
+  distribuidor Distribuidor?      @relation(fields: [distribuidorId], references: [id])
+  auditorias   AuditoriaLog[]
+  reportes     Reporte[]
 
+  @@index([rolId])
+  @@index([estacionId])
+  @@index([distribuidorId])
   @@map("usuarios")
 }
 
-model EstacionServicio {
-  id            String    @id @default(uuid())
-  nombre        String
-  direccion     String
-  ciudad        String
-  departamento  String
-  codigoSicom   String    @unique @map("codigo_sicom") // Código SICOM del Ministerio
-  zonaId        String    @map("zona_id")
-  activa        Boolean   @default(true)
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+// ──────────────────────────────────────────
+// MODULO: ACTORES OPERATIVOS
+// ──────────────────────────────────────────
 
-  zona          ZonaDistribucion @relation(fields: [zonaId], references: [id])
+model EstacionServicio {
+  id           String   @id @default(uuid())
+  nombre       String
+  nit          String   @unique
+  direccion    String
+  ciudad       String
+  departamento String
+  codigoSicom  String   @unique @map("codigo_sicom") // Código SICOM del Ministerio
+  latitud      Decimal? @db.Decimal(9, 6)
+  longitud     Decimal? @db.Decimal(9, 6)
+  zonaId       String   @map("zona_id")
+  activa       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  zona          ZonaDistribucion         @relation(fields: [zonaId], references: [id])
   usuarios      Usuario[]
   tanques       Tanque[]
   transacciones TransaccionCombustible[]
   entregas      EntregaDistribuidor[]
 
+  @@index([zonaId])
+  @@index([ciudad, departamento])
   @@map("estaciones_servicio")
 }
 
 model Distribuidor {
-  id            String    @id @default(uuid())
-  nombre        String
-  nit           String    @unique
-  direccion     String
-  ciudad        String
-  departamento  String
-  activo        Boolean   @default(true)
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  id           String           @id @default(uuid())
+  nombre       String
+  nit          String           @unique
+  tipo         TipoDistribuidor
+  direccion    String
+  ciudad       String
+  departamento String
+  activo       Boolean          @default(true)
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
 
   usuarios      Usuario[]
   entregas      EntregaDistribuidor[]
+  transacciones TransaccionCombustible[]
 
   @@map("distribuidores")
 }
 
+// ──────────────────────────────────────────
+// MODULO: INVENTARIO
+// ──────────────────────────────────────────
+
 model Tanque {
   id               String          @id @default(uuid())
   nombre           String
-  capacidadGalones Float           @map("capacidad_galones")
-  nivelActual      Float           @map("nivel_actual")
+  capacidadGalones Decimal         @map("capacidad_galones") @db.Decimal(10, 2)
+  nivelActual      Decimal         @map("nivel_actual") @db.Decimal(10, 2)
+  nivelMinimo      Decimal         @default(0) @map("nivel_minimo") @db.Decimal(10, 2)
   tipoCombustible  TipoCombustible @map("tipo_combustible")
   estacionId       String          @map("estacion_id")
   activo           Boolean         @default(true)
   createdAt        DateTime        @default(now()) @map("created_at")
   updatedAt        DateTime        @updatedAt @map("updated_at")
 
-  estacion         EstacionServicio @relation(fields: [estacionId], references: [id])
-  transacciones    TransaccionCombustible[]
-  entregas         EntregaDistribuidor[]
+  estacion      EstacionServicio         @relation(fields: [estacionId], references: [id])
+  transacciones TransaccionCombustible[]
+  entregas      EntregaDistribuidor[]
 
+  @@index([estacionId])
+  @@index([tipoCombustible])
   @@map("tanques")
 }
 
 model TransaccionCombustible {
-  id               String             @id @default(uuid())
-  estacionId       String             @map("estacion_id")
-  tanqueId         String             @map("tanque_id")
-  tipoCombustible  TipoCombustible    @map("tipo_combustible")
-  tipoServicio     TipoServicio       @map("tipo_servicio")
-  galones          Float
-  precioUnitario   Float              @map("precio_unitario")
-  precioTotal      Float              @map("precio_total")
-  placaVehiculo    String?            @map("placa_vehiculo")
-  estado           EstadoTransaccion  @default(COMPLETADA)
-  decretoAplicado  String?            @map("decreto_aplicado") // Referencia al decreto vigente
-  subsidioAplicado Boolean            @default(false) @map("subsidio_aplicado")
-  createdAt        DateTime           @default(now()) @map("created_at")
-  updatedAt        DateTime           @updatedAt @map("updated_at")
+  id               String            @id @default(uuid())
+  estacionId       String            @map("estacion_id")
+  tanqueId         String            @map("tanque_id")
+  distribuidorId   String?           @map("distribuidor_id")
+  entregaId        String?           @map("entrega_id")
+  tipo             TipoTransaccion   @default(SALIDA)
+  tipoCombustible  TipoCombustible   @map("tipo_combustible")
+  tipoServicio     TipoServicio      @map("tipo_servicio")
+  galones          Decimal           @db.Decimal(10, 3)
+  precioUnitario   Decimal           @map("precio_unitario") @db.Decimal(10, 2)
+  precioTotal      Decimal           @map("precio_total") @db.Decimal(10, 2)
+  placaVehiculo    String?           @map("placa_vehiculo")
+  estado           EstadoTransaccion @default(COMPLETADA)
+  decretoAplicado  String?           @map("decreto_aplicado")
+  subsidioAplicado Boolean           @default(false) @map("subsidio_aplicado")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
 
-  estacion         EstacionServicio   @relation(fields: [estacionId], references: [id])
-  tanque           Tanque             @relation(fields: [tanqueId], references: [id])
+  estacion     EstacionServicio     @relation(fields: [estacionId], references: [id])
+  tanque       Tanque               @relation(fields: [tanqueId], references: [id])
+  distribuidor Distribuidor?        @relation(fields: [distribuidorId], references: [id])
+  entrega      EntregaDistribuidor? @relation(fields: [entregaId], references: [id])
 
   @@index([estacionId, createdAt])
   @@index([tipoCombustible, tipoServicio])
+  @@index([distribuidorId])
+  @@index([entregaId])
   @@map("transacciones_combustible")
 }
 
 model EntregaDistribuidor {
-  id               String          @id @default(uuid())
-  distribuidorId   String          @map("distribuidor_id")
-  estacionId       String          @map("estacion_id")
-  tanqueId         String          @map("tanque_id")
-  tipoCombustible  TipoCombustible @map("tipo_combustible")
-  galones          Float
-  precioUnitario   Float           @map("precio_unitario")
-  precioTotal      Float           @map("precio_total")
-  numeroRemision   String          @unique @map("numero_remision")
-  fechaEntrega     DateTime        @map("fecha_entrega")
-  createdAt        DateTime        @default(now()) @map("created_at")
-  updatedAt        DateTime        @updatedAt @map("updated_at")
+  id              String          @id @default(uuid())
+  distribuidorId  String          @map("distribuidor_id")
+  estacionId      String          @map("estacion_id")
+  tanqueId        String          @map("tanque_id")
+  tipoCombustible TipoCombustible @map("tipo_combustible")
+  galones         Decimal         @db.Decimal(10, 2)
+  precioUnitario  Decimal         @map("precio_unitario") @db.Decimal(10, 2)
+  precioTotal     Decimal         @map("precio_total") @db.Decimal(10, 2)
+  numeroRemision  String          @unique @map("numero_remision")
+  fechaEntrega    DateTime        @map("fecha_entrega")
+  confirmada      Boolean         @default(false)
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
 
-  distribuidor     Distribuidor     @relation(fields: [distribuidorId], references: [id])
-  estacion         EstacionServicio @relation(fields: [estacionId], references: [id])
-  tanque           Tanque           @relation(fields: [tanqueId], references: [id])
+  distribuidor  Distribuidor             @relation(fields: [distribuidorId], references: [id])
+  estacion      EstacionServicio         @relation(fields: [estacionId], references: [id])
+  tanque        Tanque                   @relation(fields: [tanqueId], references: [id])
+  transacciones TransaccionCombustible[]
 
   @@index([distribuidorId, fechaEntrega])
+  @@index([estacionId])
   @@map("entregas_distribuidor")
 }
+
+// ──────────────────────────────────────────
+// MODULO: PRECIOS Y NORMATIVA
+// ──────────────────────────────────────────
 
 model ZonaDistribucion {
   id            String    @id @default(uuid())
   nombre        String    @unique
-  departamentos String[]  // Lista de departamentos en la zona
+  tipoZona      TipoZona  @default(INTERCONECTADA) @map("tipo_zona")
+  departamentos String[] // Lista de departamentos en la zona
   descripcion   String?
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
-  estaciones    EstacionServicio[]
-  precios       PrecioVigente[]
+  estaciones EstacionServicio[]
+  precios    PrecioVigente[]
 
   @@map("zonas_distribucion")
 }
 
 model PrecioVigente {
-  id               String          @id @default(uuid())
-  tipoCombustible  TipoCombustible @map("tipo_combustible")
-  tipoServicio     TipoServicio    @map("tipo_servicio")
-  zonaId           String          @map("zona_id")
-  precioGalon      Float           @map("precio_galon")
-  subsidioGalon    Float           @default(0) @map("subsidio_galon")
-  decretoId        String          @map("decreto_id")
-  vigenciaDesde    DateTime        @map("vigencia_desde")
-  vigenciaHasta    DateTime?       @map("vigencia_hasta")
-  activo           Boolean         @default(true)
-  createdAt        DateTime        @default(now()) @map("created_at")
-  updatedAt        DateTime        @updatedAt @map("updated_at")
+  id              String          @id @default(uuid())
+  tipoCombustible TipoCombustible @map("tipo_combustible")
+  tipoServicio    TipoServicio    @map("tipo_servicio")
+  zonaId          String          @map("zona_id")
+  precioGalon     Decimal         @map("precio_galon") @db.Decimal(10, 2)
+  subsidioGalon   Decimal         @default(0) @map("subsidio_galon") @db.Decimal(10, 2)
+  decretoId       String          @map("decreto_id")
+  vigenciaDesde   DateTime        @map("vigencia_desde")
+  vigenciaHasta   DateTime?       @map("vigencia_hasta")
+  activo          Boolean         @default(true)
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
 
-  zona             ZonaDistribucion  @relation(fields: [zonaId], references: [id])
-  decreto          DecretoNormativo  @relation(fields: [decretoId], references: [id])
+  zona    ZonaDistribucion @relation(fields: [zonaId], references: [id])
+  decreto DecretoNormativo @relation(fields: [decretoId], references: [id])
 
   @@unique([tipoCombustible, tipoServicio, zonaId, activo])
   @@index([activo, tipoCombustible])
+  @@index([zonaId])
+  @@index([decretoId])
   @@map("precios_vigentes")
 }
 
 model DecretoNormativo {
-  id              String    @id @default(uuid())
-  numero          String    @unique  // Ej: "1428/2025"
+  id              String   @id @default(uuid())
+  numero          String   @unique // Ej: "1428/2025"
   titulo          String
   descripcion     String?
-  fechaExpedicion DateTime  @map("fecha_expedicion")
-  fechaVigencia   DateTime  @map("fecha_vigencia")
-  activo          Boolean   @default(true)
-  documentoUrl    String?   @map("documento_url")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  entidad         String? // Entidad que expidió (Min. Hacienda, Min. Minas, etc.)
+  fechaExpedicion DateTime @map("fecha_expedicion")
+  fechaVigencia   DateTime @map("fecha_vigencia")
+  activo          Boolean  @default(true)
+  documentoUrl    String?  @map("documento_url")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
-  precios         PrecioVigente[]
+  precios PrecioVigente[]
 
   @@map("decretos_normativos")
 }
 
-model AuditoriaLog {
-  id          String   @id @default(uuid())
-  usuarioId   String   @map("usuario_id")
-  accion      String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, etc.
-  entidad     String   // Nombre de la tabla afectada
-  entidadId   String?  @map("entidad_id")
-  datosAntes  Json?    @map("datos_antes")
-  datosDespues Json?   @map("datos_despues")
-  ip          String?
-  userAgent   String?  @map("user_agent")
-  createdAt   DateTime @default(now()) @map("created_at")
+// ──────────────────────────────────────────
+// MODULO: AUDITORIA Y REPORTES
+// ──────────────────────────────────────────
 
-  usuario     Usuario  @relation(fields: [usuarioId], references: [id])
+model AuditoriaLog {
+  id           String   @id @default(uuid())
+  usuarioId    String   @map("usuario_id")
+  modulo       String? // Módulo que generó el log (auth, inventario, precios, etc.)
+  accion       String // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, etc.
+  entidad      String // Nombre de la tabla afectada
+  entidadId    String?  @map("entidad_id")
+  datosAntes   Json?    @map("datos_antes") @db.JsonB
+  datosDespues Json?    @map("datos_despues") @db.JsonB
+  ip           String?
+  userAgent    String?  @map("user_agent")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
 
   @@index([usuarioId, createdAt])
   @@index([entidad, entidadId])
@@ -262,11 +324,14 @@ model Reporte {
   id          String         @id @default(uuid())
   tipo        TipoReporte
   formato     FormatoReporte
-  parametros  Json?          // Filtros aplicados al generar el reporte
+  parametros  Json?          @db.JsonB // Filtros aplicados al generar el reporte
   archivoUrl  String?        @map("archivo_url")
   generadoPor String         @map("generado_por")
   createdAt   DateTime       @default(now()) @map("created_at")
 
+  usuario Usuario @relation(fields: [generadoPor], references: [id])
+
   @@index([tipo, createdAt])
+  @@index([generadoPor])
   @@map("reportes")
 }
