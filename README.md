@@ -41,31 +41,31 @@ Supabase ─────────  PostgreSQL 16
 
 ## 🧩 Módulos del sistema
 
-| Módulo | Descripción |
-|--------|-------------|
-| **M1 — Auth** | Login, JWT, roles y permisos |
-| **M2 — Usuarios** | CRUD de actores del sistema |
-| **M3 — Inventario** | Entradas y salidas por tanque |
-| **M4 — Precios y Zonas** | Precios vigentes según decreto y zona |
-| **M5 — Normativa** | Motor de reglas para aplicación de decretos |
-| **M6 — Reportes** | Generación de informes PDF/Excel para el Ministerio |
-| **M7 — Auditoría** | Log inmutable de todas las operaciones |
-| **M8 — Dashboard** | KPIs en tiempo real e inventario por estación |
+| Módulo                         | Descripción                                         |
+| ------------------------------- | ---------------------------------------------------- |
+| **M1 — Auth**            | Login, JWT, roles y permisos                         |
+| **M2 — Usuarios**        | CRUD de actores del sistema                          |
+| **M3 — Inventario**      | Entradas y salidas por tanque                        |
+| **M4 — Precios y Zonas** | Precios vigentes según decreto y zona               |
+| **M5 — Normativa**       | Motor de reglas para aplicación de decretos         |
+| **M6 — Reportes**        | Generación de informes PDF/Excel para el Ministerio |
+| **M7 — Auditoría**      | Log inmutable de todas las operaciones               |
+| **M8 — Dashboard**       | KPIs en tiempo real e inventario por estación       |
 
 ---
 
 ## 👥 Roles de usuario
 
-| Rol | Acceso |
-|-----|--------|
-| `admin` | Acceso completo |
-| `estacion` | Inventario, transacciones, reportes propios |
-| `distribuidor` | Registro de entregas, reportes |
-| `regulador` | Solo lectura — normativa, reportes, dashboard |
-| `auditor` | Solo lectura — logs de auditoría |
-| `particular` | Consulta de precios vigentes |
-| `subsidiado` | Consulta de precios con subsidio |
-| `distribuidor_regulado` | Inventario y normativa |
+| Rol                       | Acceso                                         |
+| ------------------------- | ---------------------------------------------- |
+| `admin`                 | Acceso completo                                |
+| `estacion`              | Inventario, transacciones, reportes propios    |
+| `distribuidor`          | Registro de entregas, reportes                 |
+| `regulador`             | Solo lectura — normativa, reportes, dashboard |
+| `auditor`               | Solo lectura — logs de auditoría             |
+| `particular`            | Consulta de precios vigentes                   |
+| `subsidiado`            | Consulta de precios con subsidio               |
+| `distribuidor_regulado` | Inventario y normativa                         |
 
 ---
 
@@ -220,15 +220,15 @@ Cobertura mínima esperada: **70%** en servicios del backend, con énfasis en el
 
 ## 🚀 Despliegue (producción)
 
-| Servicio | Proveedor | Notas |
-|----------|-----------|-------|
-| Frontend | [Vercel](https://vercel.com) | Deploy automático desde `main` |
-| Backend | [Railway](https://railway.app) | Deploy automático desde `main` |
-| Base de datos | [Supabase](https://supabase.com) | PostgreSQL gestionado |
-| Autenticación | [Google OAuth 2.0](https://console.cloud.google.com) | Login con Google via Passport.js |
-| Mapas | [Google Maps JavaScript API](https://console.cloud.google.com) | Mapa interactivo en M4 y M8 |
-| Autenticación | [Google OAuth 2.0](https://console.cloud.google.com) | Login con Google vía Passport.js |
-| Mapas | [Google Maps JS API](https://console.cloud.google.com) | Mapa de estaciones en M4 y M8 |
+| Servicio       | Proveedor                                                   | Notas                             |
+| -------------- | ----------------------------------------------------------- | --------------------------------- |
+| Frontend       | [Vercel](https://vercel.com)                                   | Deploy automático desde `main` |
+| Backend        | [Railway](https://railway.app)                                 | Deploy automático desde `main` |
+| Base de datos  | [Supabase](https://supabase.com)                               | PostgreSQL gestionado             |
+| Autenticación | [Google OAuth 2.0](https://console.cloud.google.com)           | Login con Google via Passport.js  |
+| Mapas          | [Google Maps JavaScript API](https://console.cloud.google.com) | Mapa interactivo en M4 y M8       |
+| Autenticación | [Google OAuth 2.0](https://console.cloud.google.com)           | Login con Google vía Passport.js |
+| Mapas          | [Google Maps JS API](https://console.cloud.google.com)         | Mapa de estaciones en M4 y M8     |
 
 Cada push a la rama `main` dispara el despliegue automático en Vercel y Railway.
 
@@ -246,31 +246,31 @@ Para visualizar el modelo entidad-relación, abrir `docs/modelo_base_datos_combu
 
 ## 📄 Documentación
 
-| Documento | Descripción |
-|-----------|-------------|
-| `docs/Arquitectura_Plataforma_Combustibles.docx` | Arquitectura, modelo de BD y diseño de API completo |
-| `docs/arquitectura_combustibles.puml` | Diagrama de arquitectura (PlantUML) |
-| `docs/modelo_base_datos_combustibles.puml` | Diagrama ERD (PlantUML) |
-| `docs/estructura_carpetas.puml` | Estructura de carpetas del proyecto (PlantUML) |
+| Documento                                        | Descripción                                         |
+| ------------------------------------------------ | ---------------------------------------------------- |
+| `docs/Arquitectura_Plataforma_Combustibles.md` | Arquitectura, modelo de BD y diseño de API completo |
+| `docs/arquitectura_combustibles.puml`          | Diagrama de arquitectura (PlantUML)                  |
+| `docs/modelo_base_datos_combustibles.puml`     | Diagrama ERD (PlantUML)                              |
+| `docs/estructura_carpetas.puml`                | Estructura de carpetas del proyecto (PlantUML)       |
 
 ---
 
 ## ⚖️ Marco normativo
 
-| Decreto | Descripción |
-|---------|-------------|
+| Decreto                       | Descripción                                                                         |
+| ----------------------------- | ------------------------------------------------------------------------------------ |
 | **Decreto 1428 / 2025** | Precios diferenciales ACPM: particulares sin subsidio, público y carga con subsidio |
-| **Decreto 763 / 2024** | Regulación de distribución de combustibles líquidos |
-| **Decreto 318 / 2023** | Zonificación para precios diferenciales por región |
+| **Decreto 763 / 2024**  | Regulación de distribución de combustibles líquidos                               |
+| **Decreto 318 / 2023**  | Zonificación para precios diferenciales por región                                 |
 
 ---
 
 ## 📌 Estado del proyecto
 
-- [x] Arquitectura definida
-- [x] Modelo de base de datos diseñado
-- [x] API REST diseñada (11 grupos de endpoints)
-- [x] Estructura de carpetas definida
+- [X] Arquitectura definida
+- [X] Modelo de base de datos diseñado
+- [X] API REST diseñada (11 grupos de endpoints)
+- [X] Estructura de carpetas definida
 - [ ] Implementación backend
 - [ ] Implementación frontend
 - [ ] Pruebas unitarias
@@ -284,12 +284,12 @@ Este proyecto usa [skills.sh](https://skills.sh) — el ecosistema abierto de sk
 
 ### Skills disponibles
 
-| Skill | Descripción |
-|-------|-------------|
-| `backend` | Convenciones de Express, estructura de rutas/controllers/services, patrones Prisma |
-| `frontend` | Convenciones React + Vite, uso de shadcn/ui, estructura de hooks y servicios |
-| `normativa` | Reglas del Decreto 1428/2025, lógica del motor de precios, tipos de servicio |
-| `db` | Modelo de datos, relaciones entre tablas, convenciones de nomenclatura SQL |
+| Skill         | Descripción                                                                       |
+| ------------- | ---------------------------------------------------------------------------------- |
+| `backend`   | Convenciones de Express, estructura de rutas/controllers/services, patrones Prisma |
+| `frontend`  | Convenciones React + Vite, uso de shadcn/ui, estructura de hooks y servicios       |
+| `normativa` | Reglas del Decreto 1428/2025, lógica del motor de precios, tipos de servicio      |
+| `db`        | Modelo de datos, relaciones entre tablas, convenciones de nomenclatura SQL         |
 
 ### Instalar las skills en tu agente
 

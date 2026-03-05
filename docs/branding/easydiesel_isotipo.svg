@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+<!--
+  easyDiesel · Isotipo v2.1
+  ══════════════════════════════════════════
+  IDs para animar:
+    #hex-bg       → fondo hexágono
+    #hex-stroke   → borde (stroke-dashoffset con dasharray="280")
+    #ticks        → grupo marcas laterales
+    #drop         → gota completa
+    #drop-fill    → cuerpo gota
+    #drop-shine   → reflejo
+  ══════════════════════════════════════════
+-->
+<defs>
+  <radialGradient id="dg" cx="38%" cy="28%" r="70%">
+    <stop offset="0%"   stop-color="#FFD580"/>
+    <stop offset="50%"  stop-color="#F5A623"/>
+    <stop offset="100%" stop-color="#AA6A00"/>
+  </radialGradient>
+  <radialGradient id="hbg" cx="50%" cy="38%" r="62%">
+    <stop offset="0%"   stop-color="#1e1100"/>
+    <stop offset="100%" stop-color="#060400"/>
+  </radialGradient>
+  <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" result="b"/>
+    <feFlood flood-color="#F5A623" flood-opacity="0.4" result="c"/>
+    <feComposite in="c" in2="b" operator="in" result="s"/>
+    <feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+</defs>
+
+<!-- ── Hexágono fondo ── -->
+<path id="hex-bg"
+  d="M50 5 L91 27.5 L91 72.5 L50 95 L9 72.5 L9 27.5 Z"
+  fill="url(#hbg)"/>
+
+<!-- ── Ticks industriales (dibujados ANTES del borde para que el hex los tape) ── -->
+<g id="ticks">
+  <line id="tick-L1" x1="9"  y1="44" x2="22" y2="44" stroke="#F5A623" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
+  <line id="tick-L2" x1="9"  y1="58" x2="22" y2="58" stroke="#F5A623" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
+  <line id="tick-R1" x1="91" y1="44" x2="78" y2="44" stroke="#F5A623" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
+  <line id="tick-R2" x1="91" y1="58" x2="78" y2="58" stroke="#F5A623" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
+</g>
+
+<!-- ── Hexágono borde (encima de ticks para cerrar limpio) ── -->
+<path id="hex-stroke"
+  d="M50 5 L91 27.5 L91 72.5 L50 95 L9 72.5 L9 27.5 Z"
+  stroke="#F5A623" stroke-width="2.2" fill="none"
+  stroke-linejoin="miter"/>
+
+<!-- ── Gota de combustible ── -->
+<g id="drop">
+  <path id="drop-fill"
+    d="M50 21
+       C50 21  34 43  34 57
+       C34 67.5 41.3 76 50 76
+       C58.7 76  66 67.5 66 57
+       C66 43  50 21  50 21 Z"
+    fill="url(#dg)"
+    filter="url(#glow)"/>
+
+  <path id="drop-shine"
+    d="M44 38 C42.5 44 42 50 43 56"
+    stroke="white" stroke-width="1.8"
+    stroke-linecap="round" fill="none" opacity="0.28"/>
+</g>
+
+</svg>
