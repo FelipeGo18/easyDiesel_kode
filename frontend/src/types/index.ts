@@ -41,9 +41,7 @@ export interface Usuario {
     id: string;
     email: string;
     nombre: string;
-    apellido: string;
+    fotoUrl?: string;
     activo: boolean;
     rol: RolUsuario;
-    estacionId?: string;
-    distribuidorId?: string;
 }
