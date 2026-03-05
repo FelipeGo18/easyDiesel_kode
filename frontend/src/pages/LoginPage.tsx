@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
-import { Fuel } from 'lucide-react';
+import { Fuel, ArrowLeft } from 'lucide-react';
 
 export function LoginPage() {
     const { isAuthenticated, isLoading, login } = useAuth();
@@ -119,6 +119,15 @@ export function LoginPage() {
             {/* ── Right: Login form ── */}
             <div className="flex-1 flex items-center justify-center px-6">
                 <div className="w-full max-w-sm animate-enter" style={{ animationDelay: '0.1s' }}>
+                    {/* Back link */}
+                    <Link
+                        to="/"
+                        className="inline-flex items-center gap-1.5 text-[11px] font-mono text-text-muted hover:text-amber-500 uppercase tracking-wider interactive mb-8"
+                    >
+                        <ArrowLeft size={14} strokeWidth={1.5} />
+                        Volver al inicio
+                    </Link>
+
                     {/* Mobile logo */}
                     <div className="lg:hidden flex items-center gap-3 mb-10">
                         <Fuel size={28} strokeWidth={1.5} className="text-amber-500" />
