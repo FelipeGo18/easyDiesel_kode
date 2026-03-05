@@ -49,6 +49,43 @@ export const registerHandler = async (
 };
 
 /**
+ * GET /api/auth/google/callback
+ */
+export const googleCallbackHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { code } = req.query;
+        if (!code || typeof code !== 'string') {
+            res.status(400).json({ success: false, error: 'Código inválido' });
+            return;
+        }
+
+        // Simulación de intercambio de código por información de usuario de Google
+        // En una implementación real se usaría google-auth-library o fetch a las APIs de Google
+        // Por ahora, asumimos que obtenemos la info (para efectos de este plan)
+        const googleUser = {
+            email: 'user@google.com', // Esto vendría de Google
+            nombre: 'Usuario Google',
+            googleId: 'google-123',
+            fotoUrl: 'https://lh3.googleusercontent.com/a/...'
+        };
+
+        const result = await authService.loginWithGoogle(googleUser);
+
+        res.status(200).json({
+            success: true,
+            message: 'Login con Google exitoso',
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
  * POST /api/auth/login
  */
 export const loginHandler = async (

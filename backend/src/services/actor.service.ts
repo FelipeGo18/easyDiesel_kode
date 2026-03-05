@@ -15,6 +15,7 @@ export class ActorService {
         return prisma.estacionServicio.findMany({
             include: {
                 zona: true,
+                usuario: { select: { id: true, nombre: true, email: true } }
             },
             orderBy: { createdAt: 'desc' },
         });
@@ -23,7 +24,11 @@ export class ActorService {
     async obtenerEstacionPorId(id: string) {
         const estacion = await prisma.estacionServicio.findUnique({
             where: { id },
-            include: { zona: true, tanques: true },
+            include: { 
+                zona: true, 
+                tanques: true,
+                usuario: { select: { id: true, nombre: true, email: true } }
+            },
         });
         if (!estacion) throw new Error('Estación no encontrada');
         return estacion;
@@ -36,6 +41,9 @@ export class ActorService {
         const existeSicom = await prisma.estacionServicio.findUnique({ where: { codigoSicom: data.codigoSicom } });
         if (existeSicom) throw new Error('Ya existe una estación con este Código SICOM');
 
+        const existeUsuario = await prisma.estacionServicio.findUnique({ where: { usuarioId: data.usuarioId } });
+        if (existeUsuario) throw new Error('Este usuario ya está asignado a otra estación');
+
         return prisma.estacionServicio.create({
             data: {
                 nombre: data.nombre,
@@ -47,8 +55,9 @@ export class ActorService {
                 latitud: data.latitud ?? null,
                 longitud: data.longitud ?? null,
                 zonaId: data.zonaId,
+                usuarioId: data.usuarioId,
             },
-            include: { zona: true }
+            include: { zona: true, usuario: true }
         });
     }
 
@@ -86,6 +95,9 @@ export class ActorService {
 
     async obtenerDistribuidores() {
         return prisma.distribuidor.findMany({
+            include: {
+                usuario: { select: { id: true, nombre: true, email: true } }
+            },
             orderBy: { createdAt: 'desc' },
         });
     }
@@ -93,14 +105,20 @@ export class ActorService {
     async obtenerDistribuidorPorId(id: string) {
         const distribuidor = await prisma.distribuidor.findUnique({
             where: { id },
+            include: {
+                usuario: { select: { id: true, nombre: true, email: true } }
+            }
         });
         if (!distribuidor) throw new Error('Distribuidor no encontrado');
         return distribuidor;
     }
 
     async crearDistribuidor(data: CrearDistribuidorInput) {
-        const existe = await prisma.distribuidor.findUnique({ where: { nit: data.nit } });
-        if (existe) throw new Error('Ya existe un distribuidor con este NIT');
+        const existeNit = await prisma.distribuidor.findUnique({ where: { nit: data.nit } });
+        if (existeNit) throw new Error('Ya existe un distribuidor con este NIT');
+
+        const existeUsuario = await prisma.distribuidor.findUnique({ where: { usuarioId: data.usuarioId } });
+        if (existeUsuario) throw new Error('Este usuario ya está asignado a otro distribuidor');
 
         return prisma.distribuidor.create({
             data: {
@@ -110,7 +128,9 @@ export class ActorService {
                 direccion: data.direccion,
                 ciudad: data.ciudad,
                 departamento: data.departamento,
-            }
+                usuarioId: data.usuarioId,
+            },
+            include: { usuario: true }
         });
     }
 

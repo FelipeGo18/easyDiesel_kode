@@ -23,5 +23,13 @@ export const registrarTransaccionSchema = z.object({
     subsidioAplicado: z.boolean().default(false)
 });
 
+export const cierreTurnoSchema = z.object({
+    estacionId: z.string().uuid('ID de estación inválido'),
+    tanqueId: z.string().uuid('ID de tanque inválido'),
+    nivelFisico: z.number().nonnegative('El nivel físico debe ser mayor o igual a 0'),
+    observaciones: z.string().optional()
+});
+
 export type RegistrarEntregaInput = z.infer<typeof registrarEntregaSchema>;
 export type RegistrarTransaccionInput = z.infer<typeof registrarTransaccionSchema>;
+export type CierreTurnoInput = z.infer<typeof cierreTurnoSchema>;

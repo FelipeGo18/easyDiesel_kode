@@ -90,8 +90,7 @@ async function seed() {
         create: {
             email: adminEmail,
             passwordHash: adminPassword,
-            nombre: 'Administrador',
-            apellido: 'EasyDiesel',
+            nombre: 'Administrador EasyDiesel',
             rolId: adminRol.id,
             activo: true,
         },

@@ -60,7 +60,6 @@ export class AuthService {
                 email: data.email,
                 passwordHash,
                 nombre: data.nombre,
-                apellido: data.apellido,
                 rolId,
             },
             include: { rol: true },
@@ -79,7 +78,6 @@ export class AuthService {
                 id: usuario.id,
                 email: usuario.email,
                 nombre: usuario.nombre,
-                apellido: usuario.apellido,
                 rol: usuario.rol.nombre,
             },
         };
@@ -103,6 +101,10 @@ export class AuthService {
             throw Object.assign(new Error('Cuenta desactivada. Contacta al administrador.'), { statusCode: 403 });
         }
 
+        if (!usuario.passwordHash) {
+            throw Object.assign(new Error('Este usuario debe iniciar sesión con Google'), { statusCode: 401 });
+        }
+
         // Verificar contraseña
         const isValid = await bcrypt.compare(data.password, usuario.passwordHash);
         if (!isValid) {
@@ -122,8 +124,74 @@ export class AuthService {
                 id: usuario.id,
                 email: usuario.email,
                 nombre: usuario.nombre,
-                apellido: usuario.apellido,
                 rol: usuario.rol.nombre,
+            },
+        };
+    }
+
+    /**
+     * Autentica o registra un usuario mediante Google.
+     */
+    async loginWithGoogle(data: { email: string; nombre: string; googleId: string; fotoUrl?: string }) {
+        let usuario = await prisma.usuario.findUnique({
+            where: { email: data.email },
+            include: { rol: true },
+        });
+
+        if (usuario) {
+            // Actualizar información de Google si es necesario
+            if (!usuario.googleId || usuario.authProvider !== 'GOOGLE') {
+                usuario = await prisma.usuario.update({
+                    where: { id: usuario.id },
+                    data: {
+                        googleId: data.googleId,
+                        authProvider: 'GOOGLE',
+                        fotoUrl: data.fotoUrl || usuario.fotoUrl,
+                    },
+                    include: { rol: true },
+                });
+            }
+        } else {
+            // Crear nuevo usuario
+            const defaultRol = await prisma.rol.findUnique({
+                where: { nombre: 'particular' },
+            });
+            if (!defaultRol) {
+                throw Object.assign(new Error('No se encontró el rol por defecto'), { statusCode: 500 });
+            }
+
+            usuario = await prisma.usuario.create({
+                data: {
+                    email: data.email,
+                    nombre: data.nombre,
+                    googleId: data.googleId,
+                    authProvider: 'GOOGLE',
+                    fotoUrl: data.fotoUrl,
+                    rolId: defaultRol.id,
+                },
+                include: { rol: true },
+            });
+        }
+
+        if (!usuario.activo) {
+            throw Object.assign(new Error('Cuenta desactivada. Contacta al administrador.'), { statusCode: 403 });
+        }
+
+        // Generar token
+        const token = signToken({
+            userId: usuario.id,
+            email: usuario.email,
+            rol: usuario.rol.nombre,
+        });
+
+        return {
+            token,
+            usuario: {
+                id: usuario.id,
+                email: usuario.email,
+                nombre: usuario.nombre,
+                rol: usuario.rol.nombre,
+                fotoUrl: usuario.fotoUrl,
             },
         };
     }
@@ -136,8 +204,8 @@ export class AuthService {
             where: { id: userId },
             include: {
                 rol: { select: { id: true, nombre: true, descripcion: true, permisos: true } },
-                estacion: { select: { id: true, nombre: true, codigoSicom: true } },
-                distribuidor: { select: { id: true, nombre: true, nit: true } },
+                estacionGestionada: { select: { id: true, nombre: true, codigoSicom: true } },
+                distribuidorGestionado: { select: { id: true, nombre: true, nit: true } },
             },
         });
 
@@ -149,11 +217,10 @@ export class AuthService {
             id: usuario.id,
             email: usuario.email,
             nombre: usuario.nombre,
-            apellido: usuario.apellido,
             activo: usuario.activo,
             rol: usuario.rol,
-            estacion: usuario.estacion,
-            distribuidor: usuario.distribuidor,
+            estacion: usuario.estacionGestionada,
+            distribuidor: usuario.distribuidorGestionado,
             createdAt: usuario.createdAt,
         };
     }

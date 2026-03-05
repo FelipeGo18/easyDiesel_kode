@@ -13,14 +13,9 @@ export const registerSchema = z.object({
         .min(8, 'La contraseña debe tener al menos 8 caracteres')
         .max(72, 'La contraseña no puede superar 72 caracteres'),
 
-    nombre: z.string().min(1, 'El nombre es obligatorio')
+    nombre: z.string().min(1, 'El nombre completo es obligatorio')
         .min(2, 'El nombre debe tener al menos 2 caracteres')
-        .max(100, 'El nombre no puede superar 100 caracteres')
-        .trim(),
-
-    apellido: z.string().min(1, 'El apellido es obligatorio')
-        .min(2, 'El apellido debe tener al menos 2 caracteres')
-        .max(100, 'El apellido no puede superar 100 caracteres')
+        .max(150, 'El nombre no puede superar 150 caracteres')
         .trim(),
 
     rolId: z.string().uuid('ID de rol inválido').optional(),

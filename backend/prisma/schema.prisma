@@ -64,6 +64,11 @@ enum FormatoReporte {
   CSV
 }
 
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+}
+
 // ──────────────────────────────────────────
 // MODULO: ACCESO Y USUARIOS
 // ──────────────────────────────────────────
@@ -83,25 +88,23 @@ model Rol {
 model Usuario {
   id             String    @id @default(uuid())
   email          String    @unique
-  passwordHash   String    @map("password_hash")
+  passwordHash   String?   @map("password_hash")
+  googleId       String?   @unique @map("google_id")
+  authProvider   AuthProvider @default(LOCAL) @map("auth_provider")
+  fotoUrl        String?   @map("foto_url")
   nombre         String
-  apellido       String
   activo         Boolean   @default(true)
   rolId          String    @map("rol_id")
-  estacionId     String?   @map("estacion_id")
-  distribuidorId String?   @map("distribuidor_id")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   rol          Rol               @relation(fields: [rolId], references: [id])
-  estacion     EstacionServicio?  @relation(fields: [estacionId], references: [id])
-  distribuidor Distribuidor?      @relation(fields: [distribuidorId], references: [id])
   auditorias   AuditoriaLog[]
   reportes     Reporte[]
+  estacionGestionada EstacionServicio?
+  distribuidorGestionado Distribuidor?
 
   @@index([rolId])
-  @@index([estacionId])
-  @@index([distribuidorId])
   @@map("usuarios")
 }
 
@@ -111,6 +114,7 @@ model Usuario {
 
 model EstacionServicio {
   id           String   @id @default(uuid())
+  usuarioId    String   @unique @map("usuario_id")
   nombre       String
   nit          String   @unique
   direccion    String
@@ -125,7 +129,7 @@ model EstacionServicio {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   zona          ZonaDistribucion         @relation(fields: [zonaId], references: [id])
-  usuarios      Usuario[]
+  usuario       Usuario                  @relation(fields: [usuarioId], references: [id])
   tanques       Tanque[]
   transacciones TransaccionCombustible[]
   entregas      EntregaDistribuidor[]
@@ -137,6 +141,7 @@ model EstacionServicio {
 
 model Distribuidor {
   id           String           @id @default(uuid())
+  usuarioId    String           @unique @map("usuario_id")
   nombre       String
   nit          String           @unique
   tipo         TipoDistribuidor
@@ -147,7 +152,7 @@ model Distribuidor {
   createdAt    DateTime         @default(now()) @map("created_at")
   updatedAt    DateTime         @updatedAt @map("updated_at")
 
-  usuarios      Usuario[]
+  usuario       Usuario                  @relation(fields: [usuarioId], references: [id])
   entregas      EntregaDistribuidor[]
   transacciones TransaccionCombustible[]
 
@@ -321,13 +326,15 @@ model AuditoriaLog {
 }
 
 model Reporte {
-  id          String         @id @default(uuid())
-  tipo        TipoReporte
-  formato     FormatoReporte
-  parametros  Json?          @db.JsonB // Filtros aplicados al generar el reporte
-  archivoUrl  String?        @map("archivo_url")
-  generadoPor String         @map("generado_por")
-  createdAt   DateTime       @default(now()) @map("created_at")
+  id            String         @id @default(uuid())
+  tipo          TipoReporte
+  formato       FormatoReporte
+  periodoInicio DateTime       @map("periodo_inicio") @db.Date
+  periodoFin    DateTime       @map("periodo_fin") @db.Date
+  parametros    Json?          @db.JsonB // Filtros aplicados al generar el reporte
+  archivoUrl    String?        @map("archivo_url")
+  generadoPor   String         @map("generado_por")
+  createdAt     DateTime       @default(now()) @map("created_at")
 
   usuario Usuario @relation(fields: [generadoPor], references: [id])
 

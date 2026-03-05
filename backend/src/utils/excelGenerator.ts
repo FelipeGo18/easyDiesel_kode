@@ -1,93 +1,219 @@
 import ExcelJS from 'exceljs';
 
+// ─── Paleta Corporativa ───
+const BRAND = {
+    primary: 'FF1B2A4A',  // Azul marino profundo
+    secondary: 'FF2980B9',  // Azul acento
+    textDark: 'FF1C2833',
+    textMid: 'FF566573',
+    textLight: 'FFABB2B9',
+    lineStrong: 'FFD5D8DC',
+    lineSoft: 'FFEAECEE',
+    bgZebra: 'FFF8F9F9',
+    white: 'FFFFFFFF',
+};
+
+function humanize(key: string): string {
+    return key
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, s => s.toUpperCase())
+        .replace(/Id$/, '')
+        .trim();
+}
+
+// ═══════════════════════════════════════════════
+//  GENERADOR EXCEL — Diseño Corporativo Premium
+// ═══════════════════════════════════════════════
+
 export const generarExcel = async (titulo: string, datos: any[]): Promise<Buffer> => {
     const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'EasyDiesel';
+    workbook.creator = 'EasyDiesel Platform';
     workbook.created = new Date();
+    workbook.properties.date1904 = false;
 
     const sheet = workbook.addWorksheet('Reporte', {
-        views: [{ showGridLines: false }] // Minimalista: Ocultar líneas de cuadrícula por defecto
+        views: [{ showGridLines: false }],
+        properties: { defaultColWidth: 18 }
     });
 
-    // 1. Cabecera principal (Título Empresarial)
-    sheet.mergeCells('A1:F1');
-    const titleCell = sheet.getCell('A1');
-    titleCell.value = `Reporte: ${titulo}`;
-    titleCell.font = { name: 'Arial', family: 2, size: 16, bold: true, color: { argb: 'FF2C3E50' } };
-    titleCell.alignment = { vertical: 'middle', horizontal: 'left' };
+    // ── Determinar columnas ──
+    const columnKeys = datos && datos.length > 0
+        ? Object.keys(datos[0]).filter(key => typeof datos[0][key] !== 'object' && key !== 'id')
+        : [];
 
-    // 2. Subtítulo (Fecha de generación)
-    sheet.mergeCells('A2:F2');
-    const subtitleCell = sheet.getCell('A2');
-    subtitleCell.value = `Generado el: ${new Date().toLocaleString()}`;
-    subtitleCell.font = { name: 'Arial', family: 2, size: 10, italic: true, color: { argb: 'FF7F8C8D' } };
-    subtitleCell.alignment = { vertical: 'middle', horizontal: 'left' };
+    const numCols = Math.max(columnKeys.length, 6);
+    const lastColLetter = String.fromCharCode(64 + numCols); // A=65, B=66...
 
-    // Espacio en blanco
-    sheet.addRow([]);
+    // ───────────────────────────────────────
+    // FILA 1: Barra de acento (accent stripe)
+    // ───────────────────────────────────────
+    const accentRow = sheet.getRow(1);
+    accentRow.height = 6;
+    sheet.mergeCells(`A1:${lastColLetter}1`);
+    sheet.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BRAND.secondary } };
 
-    if (datos && datos.length > 0) {
-        const sampleItem = datos[0];
+    // ───────────────────────────────────────
+    // FILA 2: Logo / Nombre de empresa
+    // ───────────────────────────────────────
+    const brandRow = sheet.getRow(2);
+    brandRow.height = 36;
+    sheet.mergeCells(`A2:${lastColLetter}2`);
+    const brandCell = sheet.getCell('A2');
+    brandCell.value = 'EasyDiesel';
+    brandCell.font = { name: 'Arial', size: 22, bold: true, color: { argb: BRAND.primary } };
+    brandCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
 
-        // Evitar objetos anidados y fechas complejas, simplificar columnas
-        const columnKeys = Object.keys(sampleItem).filter(key => typeof sampleItem[key] !== 'object' && key !== 'id');
+    // ───────────────────────────────────────
+    // FILA 3: Subtítulo "Sistema de Gestión de Combustibles"
+    // ───────────────────────────────────────
+    sheet.mergeCells(`A3:${lastColLetter}3`);
+    const subBrandCell = sheet.getCell('A3');
+    subBrandCell.value = 'Sistema de Gestión de Combustibles';
+    subBrandCell.font = { name: 'Arial', size: 9, italic: true, color: { argb: BRAND.textLight } };
+    subBrandCell.alignment = { vertical: 'top', horizontal: 'left', indent: 1 };
 
-        const columns = columnKeys.map(key => ({
-            header: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(), // Formato capitalizado
-            key: key,
-            width: 25
+    // ───────────────────────────────────────
+    // FILA 4: Línea vacía como separador
+    // ───────────────────────────────────────
+    sheet.getRow(4).height = 8;
+
+    // ───────────────────────────────────────
+    // FILA 5: Título del reporte
+    // ───────────────────────────────────────
+    sheet.getRow(5).height = 28;
+    sheet.mergeCells(`A5:${lastColLetter}5`);
+    const titleCell = sheet.getCell('A5');
+    titleCell.value = titulo.toUpperCase();
+    titleCell.font = { name: 'Arial', size: 14, bold: true, color: { argb: BRAND.primary } };
+    titleCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+    titleCell.border = { bottom: { style: 'medium', color: { argb: BRAND.primary } } };
+
+    // ───────────────────────────────────────
+    // FILA 6: Metadata (fecha, total registros)
+    // ───────────────────────────────────────
+    sheet.mergeCells(`A6:C6`);
+    const dateCell = sheet.getCell('A6');
+    dateCell.value = `Generado: ${new Date().toLocaleString()}`;
+    dateCell.font = { name: 'Arial', size: 9, italic: true, color: { argb: BRAND.textMid } };
+    dateCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+
+    if (numCols > 3) {
+        const mergeEnd = lastColLetter;
+        sheet.mergeCells(`D6:${mergeEnd}6`);
+        const countCell = sheet.getCell('D6');
+        countCell.value = `Total registros: ${datos.length}`;
+        countCell.font = { name: 'Arial', size: 9, bold: true, color: { argb: BRAND.secondary } };
+        countCell.alignment = { vertical: 'middle', horizontal: 'right', indent: 1 };
+    }
+
+    // ───────────────────────────────────────
+    // FILA 7: Separador
+    // ───────────────────────────────────────
+    sheet.getRow(7).height = 8;
+
+    // ───────────────────────────────────────
+    // FILA 8: Cabecera de la tabla
+    // ───────────────────────────────────────
+    const DATA_START_ROW = 8;
+
+    if (!datos || datos.length === 0) {
+        sheet.mergeCells(`A${DATA_START_ROW}:${lastColLetter}${DATA_START_ROW}`);
+        const emptyCell = sheet.getCell(`A${DATA_START_ROW}`);
+        emptyCell.value = 'No hay datos disponibles para este reporte.';
+        emptyCell.font = { name: 'Arial', size: 11, italic: true, color: { argb: BRAND.textLight } };
+        emptyCell.alignment = { vertical: 'middle', horizontal: 'center' };
+    } else {
+        // Configurar columnas
+        sheet.columns = columnKeys.map(key => ({
+            key,
+            width: Math.max(18, humanize(key).length + 6)
         }));
 
-        sheet.columns = columns;
-
-        // Fila de encabezados de la tabla
-        const headerRow = sheet.getRow(4);
-        headerRow.values = columns.map(c => c.header);
-        headerRow.font = { name: 'Arial', bold: true, color: { argb: 'FFFFFFFF' } };
-        headerRow.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FF2C3E50' } // Azul oscuro corporativo
-        };
-        headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
-        headerRow.height = 25;
-
-        // Bordes sutiles para la cabecera
-        headerRow.eachCell(cell => {
+        // Header row
+        const headerRow = sheet.getRow(DATA_START_ROW);
+        headerRow.height = 28;
+        columnKeys.forEach((key, i) => {
+            const cell = headerRow.getCell(i + 1);
+            cell.value = humanize(key).toUpperCase();
+            cell.font = { name: 'Arial', size: 9, bold: true, color: { argb: BRAND.white } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BRAND.primary } };
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
             cell.border = {
-                top: { style: 'thin', color: { argb: 'FFBDC3C7' } },
-                bottom: { style: 'thin', color: { argb: 'FFBDC3C7' } },
-                left: { style: 'thin', color: { argb: 'FFBDC3C7' } },
-                right: { style: 'thin', color: { argb: 'FFBDC3C7' } }
+                top: { style: 'thin', color: { argb: BRAND.primary } },
+                bottom: { style: 'thin', color: { argb: BRAND.primary } },
+                left: { style: 'hair', color: { argb: 'FF34495E' } },
+                right: { style: 'hair', color: { argb: 'FF34495E' } },
             };
         });
 
-        // Filas de datos
-        datos.forEach((item, index) => {
+        // Filas de datos con zebra stripes
+        datos.forEach((item, idx) => {
             const rowData: any = {};
-            columns.forEach(col => {
-                if (col.key) rowData[col.key] = item[col.key];
+            columnKeys.forEach(key => {
+                const val = item[key];
+                if (val === null || val === undefined) { rowData[key] = '—'; return; }
+                if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(val)) {
+                    rowData[key] = new Date(val).toLocaleDateString();
+                    return;
+                }
+                rowData[key] = val;
             });
-            const row = sheet.addRow(rowData);
-            row.font = { name: 'Arial', size: 10, color: { argb: 'FF34495E' } };
-            row.alignment = { vertical: 'middle', horizontal: 'left' };
 
-            // Bordes horizontales sutiles para filas de datos
-            row.eachCell(cell => {
+            const row = sheet.addRow(rowData);
+            const isZebra = idx % 2 === 0;
+
+            row.eachCell({ includeEmpty: true }, (cell) => {
+                cell.font = { name: 'Arial', size: 9, color: { argb: BRAND.textDark } };
+                cell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
                 cell.border = {
-                    bottom: { style: 'hair', color: { argb: 'FFECF0F1' } }
+                    bottom: { style: 'hair', color: { argb: BRAND.lineSoft } },
                 };
+                if (isZebra) {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BRAND.bgZebra } };
+                }
             });
         });
-    } else {
-        const emptyCell = sheet.getCell('A4');
-        emptyCell.value = 'No hay datos disponibles para este reporte.';
-        emptyCell.font = { name: 'Arial', italic: true, color: { argb: 'FF95A5A6' } };
+
+        // Línea inferior fuerte al final de la tabla
+        const lastDataRow = sheet.lastRow;
+        if (lastDataRow) {
+            lastDataRow.eachCell({ includeEmpty: true }, (cell) => {
+                cell.border = {
+                    ...cell.border,
+                    bottom: { style: 'thin', color: { argb: BRAND.primary } },
+                };
+            });
+        }
+
+        // Auto-filtro
+        sheet.autoFilter = {
+            from: { row: DATA_START_ROW, column: 1 },
+            to: { row: DATA_START_ROW + datos.length, column: columnKeys.length }
+        };
+
+        // Congelar filas superiores
+        sheet.views = [{ state: 'frozen', ySplit: DATA_START_ROW, showGridLines: false }];
     }
+
+    // ───────────────────────────────────────
+    // FOOTER: Fila final con nota
+    // ───────────────────────────────────────
+    sheet.addRow([]);
+    const footerRow = sheet.addRow([]);
+    const footerCellRef = `A${footerRow.number}`;
+    sheet.mergeCells(`${footerCellRef}:${lastColLetter}${footerRow.number}`);
+    const footerCell = sheet.getCell(footerCellRef);
+    footerCell.value = `EasyDiesel © ${new Date().getFullYear()} — Documento confidencial, generado automáticamente.`;
+    footerCell.font = { name: 'Arial', size: 7, italic: true, color: { argb: BRAND.textLight } };
+    footerCell.alignment = { vertical: 'middle', horizontal: 'center' };
 
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);
 };
+
+// ═══════════════════════════════════════════════
+//  GENERADOR CSV — Datos planos sin estilos
+// ═══════════════════════════════════════════════
 
 export const generarCSV = async (titulo: string, datos: any[]): Promise<Buffer> => {
     const workbook = new ExcelJS.Workbook();
@@ -97,7 +223,7 @@ export const generarCSV = async (titulo: string, datos: any[]): Promise<Buffer> 
         const sampleItem = datos[0];
         const columns = Object.keys(sampleItem)
             .filter(key => typeof sampleItem[key] !== 'object')
-            .map(key => ({ header: key.toUpperCase(), key: key }));
+            .map(key => ({ header: humanize(key), key: key }));
 
         sheet.columns = columns;
 

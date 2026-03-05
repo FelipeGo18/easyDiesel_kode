@@ -137,6 +137,7 @@ combustibles-app/
 ### Requisitos previos
 
 - Node.js 20 LTS
+- Cuenta en [Google Cloud Console](https://console.cloud.google.com) con las APIs habilitadas: **Google OAuth 2.0** y **Maps JavaScript API**
 - pnpm 9+ — `npm install -g pnpm`
 - PostgreSQL 16 (local o cuenta en [Supabase](https://supabase.com))
 - Git
@@ -182,12 +183,18 @@ JWT_EXPIRES_IN="8h"
 PORT=3000
 NODE_ENV="development"
 FRONTEND_URL="http://localhost:5173"
+
+# Google OAuth 2.0
+GOOGLE_CLIENT_ID="tu_google_client_id"
+GOOGLE_CLIENT_SECRET="tu_google_client_secret"
+GOOGLE_CALLBACK_URL="http://localhost:3000/api/auth/google/callback"
 ```
 
 ### Variables de entorno — Frontend
 
 ```env
 VITE_API_URL="http://localhost:3000/api"
+VITE_GOOGLE_MAPS_API_KEY="tu_google_maps_api_key"
 ```
 
 ---
@@ -218,6 +225,10 @@ Cobertura mínima esperada: **70%** en servicios del backend, con énfasis en el
 | Frontend | [Vercel](https://vercel.com) | Deploy automático desde `main` |
 | Backend | [Railway](https://railway.app) | Deploy automático desde `main` |
 | Base de datos | [Supabase](https://supabase.com) | PostgreSQL gestionado |
+| Autenticación | [Google OAuth 2.0](https://console.cloud.google.com) | Login con Google via Passport.js |
+| Mapas | [Google Maps JavaScript API](https://console.cloud.google.com) | Mapa interactivo en M4 y M8 |
+| Autenticación | [Google OAuth 2.0](https://console.cloud.google.com) | Login con Google vía Passport.js |
+| Mapas | [Google Maps JS API](https://console.cloud.google.com) | Mapa de estaciones en M4 y M8 |
 
 Cada push a la rama `main` dispara el despliegue automático en Vercel y Railway.
 
@@ -254,6 +265,19 @@ Para visualizar el modelo entidad-relación, abrir `docs/modelo_base_datos_combu
 
 ---
 
+## 📌 Estado del proyecto
+
+- [x] Arquitectura definida
+- [x] Modelo de base de datos diseñado
+- [x] API REST diseñada (11 grupos de endpoints)
+- [x] Estructura de carpetas definida
+- [ ] Implementación backend
+- [ ] Implementación frontend
+- [ ] Pruebas unitarias
+- [ ] Despliegue en producción
+
+---
+
 ## 🤖 AI Agent Skills
 
 Este proyecto usa [skills.sh](https://skills.sh) — el ecosistema abierto de skills para agentes de IA. Las skills son instrucciones reutilizables empaquetadas en archivos `SKILL.md` que permiten a cualquier agente (Claude Code, Cursor, Copilot, Codex) cargar el conocimiento específico del proyecto sin necesidad de re-explicarlo en cada sesión.
@@ -280,16 +304,5 @@ pnpm dlx skills add ./ --skill backend
 > Las skills se instalan automáticamente en el agente que tengas configurado (Claude Code, Cursor, etc.)
 
 ---
-
-## 📌 Estado del proyecto
-
-- [x] Arquitectura definida
-- [x] Modelo de base de datos diseñado
-- [x] API REST diseñada (11 grupos de endpoints)
-- [x] Estructura de carpetas definida
-- [ ] Implementación backend
-- [ ] Implementación frontend
-- [ ] Pruebas unitarias
-- [ ] Despliegue en producción
 
 *Universidad Piloto de Colombia · 2026*

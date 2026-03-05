@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authRouter } from './auth.routes';
+import { publicoRouter } from './publico.routes';
 import usuarioRouter from './usuario.routes';
 import actorRouter from './actor.routes';
 import tanqueRouter from './tanque.routes';
@@ -16,6 +17,7 @@ const router = Router();
 
 // Rutas Publicas
 router.use('/auth', authRouter);
+router.use('/publico', publicoRouter);
 
 // Rutas Protegidas (todas las siguientes requieren estar autenticado)
 router.use(auth);
