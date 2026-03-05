@@ -44,12 +44,14 @@ export const crearTanqueHandler = async (req: Request, res: Response) => {
 export const actualizarTanqueHandler = async (req: Request, res: Response) => {
     try {
         const id = req.params.id as string;
-        const validData = actualizarTanqueSchema.parse(req.body);
-
-        if (Object.keys(validData).length === 0) {
+        const body = req.body;
+        
+        if (!body || Object.keys(body).length === 0) {
             res.status(400).json({ success: false, message: 'No hay datos para actualizar' });
             return;
         }
+
+        const validData = actualizarTanqueSchema.parse(body);
 
         const tanqueActualizado = await tanqueService.actualizarTanque(id, validData);
         res.json({ success: true, message: 'Tanque actualizado', data: tanqueActualizado });
