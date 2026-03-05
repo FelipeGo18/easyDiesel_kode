@@ -1,9 +1,35 @@
 import { Router } from 'express';
-import { registrarEntregaHandler, registrarTransaccionHandler } from '../controllers/inventario.controller';
+import { registrarEntregaHandler, registrarTransaccionHandler, cierreTurnoHandler } from '../controllers/inventario.controller';
 
 const router = Router();
 
 // Endpoints bajo /api/inventario
+
+/**
+ * @swagger
+ * /api/inventario/cierre-turno:
+ *   post:
+ *     summary: Registra un cierre de turno comparando niveles físicos vs teóricos
+ *     tags: [Inventario]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [estacionId, tanqueId, nivelFisico]
+ *             properties:
+ *               estacionId: { type: string }
+ *               tanqueId: { type: string }
+ *               nivelFisico: { type: number }
+ *               observaciones: { type: string }
+ *     responses:
+ *       200:
+ *         description: Cierre de turno procesado, retorna diferencia
+ */
+router.post('/cierre-turno', cierreTurnoHandler);
 
 /**
  * @swagger

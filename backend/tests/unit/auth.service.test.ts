@@ -28,8 +28,7 @@ describe('AuthService', () => {
         const registerData = {
             email: 'test@easydiesel.co',
             password: 'Test123!',
-            nombre: 'Juan',
-            apellido: 'Pérez',
+            nombre: 'Juan Pérez',
         };
 
         it('debe registrar un usuario exitosamente con rol por defecto', async () => {
@@ -39,7 +38,6 @@ describe('AuthService', () => {
                 id: 'user-1',
                 email: registerData.email,
                 nombre: registerData.nombre,
-                apellido: registerData.apellido,
                 rol: { nombre: 'particular' },
             });
 
@@ -85,8 +83,7 @@ describe('AuthService', () => {
                 email: loginData.email,
                 passwordHash: 'hashed',
                 activo: true,
-                nombre: 'Admin',
-                apellido: 'Test',
+                nombre: 'Admin Test',
                 rol: { nombre: 'admin' },
             });
 
@@ -130,10 +127,10 @@ describe('AuthService', () => {
     describe('getProfile', () => {
         it('debe retornar el perfil del usuario', async () => {
             prismaMock.usuario.findUnique.mockResolvedValue({
-                id: 'user-1', email: 'test@test.co', nombre: 'T', apellido: 'U',
+                id: 'user-1', email: 'test@test.co', nombre: 'T U',
                 activo: true, createdAt: new Date(),
                 rol: { id: 'r1', nombre: 'admin', descripcion: '', permisos: [] },
-                estacion: null, distribuidor: null,
+                estacionGestionada: null, distribuidorGestionado: null,
             });
 
             const result = await service.getProfile('user-1');

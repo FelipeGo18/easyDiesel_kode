@@ -62,15 +62,12 @@ usuarioRouter.get('/:id', obtenerUsuarioPorIdHandler);
  *         application/json:
  *           schema:
  *             type: object
- *             required: [email, nombre, apellido]
+ *             required: [email, nombre]
  *             properties:
  *               email: { type: string }
  *               password: { type: string }
  *               nombre: { type: string }
- *               apellido: { type: string }
  *               rolId: { type: string }
- *               estacionId: { type: string }
- *               distribuidorId: { type: string }
  *     responses:
  *       201:
  *         description: Usuario creado

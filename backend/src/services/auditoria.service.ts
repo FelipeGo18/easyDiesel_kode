@@ -65,7 +65,7 @@ export class AuditoriaService {
             prisma.auditoriaLog.findMany({
                 where,
                 include: {
-                    usuario: { select: { id: true, email: true, nombre: true, apellido: true } }
+                    usuario: { select: { id: true, email: true, nombre: true } }
                 },
                 orderBy: { createdAt: 'desc' },
                 skip,
@@ -91,7 +91,7 @@ export class AuditoriaService {
     async obtenerLogPorId(id: string) {
         const log = await prisma.auditoriaLog.findUnique({
             where: { id },
-            include: { usuario: { select: { id: true, email: true, nombre: true, apellido: true } } }
+            include: { usuario: { select: { id: true, email: true, nombre: true } } }
         });
         if (!log) throw new Error('Log de auditoria no encontrado');
         return log;

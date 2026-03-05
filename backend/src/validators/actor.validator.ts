@@ -11,6 +11,7 @@ export const crearEstacionSchema = z.object({
     latitud: z.number().optional().nullable(),
     longitud: z.number().optional().nullable(),
     zonaId: z.string().uuid('ID de zona inválido'),
+    usuarioId: z.string().uuid('ID de usuario administrador requerido'),
 });
 
 export const actualizarEstacionSchema = crearEstacionSchema.partial();
@@ -23,6 +24,7 @@ export const crearDistribuidorSchema = z.object({
     direccion: z.string().min(5, 'La dirección es requerida'),
     ciudad: z.string().min(3, 'La ciudad es requerida'),
     departamento: z.string().min(3, 'El departamento es requerido'),
+    usuarioId: z.string().uuid('ID de usuario administrador requerido'),
 });
 
 export const actualizarDistribuidorSchema = crearDistribuidorSchema.partial();

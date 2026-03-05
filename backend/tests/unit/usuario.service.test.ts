@@ -43,7 +43,7 @@ describe('UsuarioService', () => {
     });
 
     describe('crearUsuario', () => {
-        const data = { email: 'new@test.co', nombre: 'N', apellido: 'U' } as any;
+        const data = { email: 'new@test.co', nombre: 'Nombre Usuario' } as any;
 
         it('debe crear un usuario asignando rol particular por defecto', async () => {
             prismaMock.usuario.findUnique.mockResolvedValue(null);

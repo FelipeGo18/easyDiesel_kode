@@ -37,6 +37,7 @@ describe('ActorService', () => {
         const data = {
             nombre: 'Estación Test', nit: '999-1', direccion: 'C1', ciudad: 'Bogotá',
             departamento: 'Cundinamarca', codigoSicom: 'S1', zonaId: 'z1',
+            usuarioId: 'u1',
         };
 
         it('debe crear una estación', async () => {
@@ -78,6 +79,7 @@ describe('ActorService', () => {
         const data = {
             nombre: 'Dist1', nit: '111-2', tipo: 'MAYORISTA' as const,
             direccion: 'C2', ciudad: 'Medellín', departamento: 'Antioquia',
+            usuarioId: 'u2',
         };
 
         it('debe crear un distribuidor', async () => {

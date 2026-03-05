@@ -11,10 +11,10 @@ export class UsuarioService {
         const usuarios = await prisma.usuario.findMany({
             include: {
                 rol: true,
-                estacion: {
+                estacionGestionada: {
                     select: { id: true, nombre: true }
                 },
-                distribuidor: {
+                distribuidorGestionado: {
                     select: { id: true, nombre: true }
                 }
             },
@@ -33,8 +33,8 @@ export class UsuarioService {
             where: { id },
             include: {
                 rol: true,
-                estacion: true,
-                distribuidor: true
+                estacionGestionada: true,
+                distribuidorGestionado: true
             }
         });
 
@@ -99,7 +99,6 @@ export class UsuarioService {
         // Preparar objeto de actualización
         const updateData: any = {
             nombre: data.nombre,
-            apellido: data.apellido,
         };
 
         if (data.email && data.email !== existe.email) {
@@ -117,23 +116,14 @@ export class UsuarioService {
 
         if (data.rolId) updateData.rol = { connect: { id: data.rolId } };
 
-        // Para desconectar estacion/distribuidor si data.*Id es null explícitamente, o conectar si viene un ID
-        if (data.estacionId !== undefined) {
-            updateData.estacion = data.estacionId ? { connect: { id: data.estacionId } } : { disconnect: true };
-        }
-
-        if (data.distribuidorId !== undefined) {
-            updateData.distribuidor = data.distribuidorId ? { connect: { id: data.distribuidorId } } : { disconnect: true };
-        }
-
         const usuario = await prisma.usuario.update({
             where: { id },
             data: updateData,
-            include: { rol: true, estacion: true, distribuidor: true }
+            include: { rol: true, estacionGestionada: true, distribuidorGestionado: true }
         });
 
-        const { passwordHash: _, ...updatedUser } = usuario;
-        return updatedUser;
+        const { passwordHash: _, ...newUser } = usuario;
+        return newUser;
     }
 
     /**

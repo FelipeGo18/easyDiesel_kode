@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { registerHandler, loginHandler, meHandler } from '../controllers/auth.controller';
+import { registerHandler, loginHandler, meHandler, googleCallbackHandler } from '../controllers/auth.controller';
 import { auth } from '../middleware/auth';
 
 const authRouter = Router();
@@ -18,15 +18,13 @@ const authRouter = Router();
  *         application/json:
  *           schema:
  *             type: object
- *             required: [email, password, nombre, apellido]
+ *             required: [email, password, nombre]
  *             properties:
  *               email:
  *                 type: string
  *               password:
  *                 type: string
  *               nombre:
- *                 type: string
- *               apellido:
  *                 type: string
  *     responses:
  *       201:
@@ -35,6 +33,50 @@ const authRouter = Router();
  *         description: Error de validación o email ya existe
  */
 authRouter.post('/register', registerHandler);
+
+/**
+ * @swagger
+ * /api/auth/google:
+ *   get:
+ *     summary: Inicia el flujo de autenticación de Google
+ *     tags: [Auth]
+ *     responses:
+ *       302:
+ *         description: Redirige a Google
+ */
+authRouter.get('/google', (req, res) => {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+    const scope = 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
+    res.redirect(authUrl);
+});
+
+/**
+ * @swagger
+ * /api/auth/google/callback:
+ *   get:
+ *     summary: Callback de Google OAuth
+ *     tags: [Auth]
+ *     parameters:
+ *       - name: code
+ *         in: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Autenticación exitosa, retorna JWT
+ */
+authRouter.get('/google/callback', async (req, res, next) => {
+    const { code } = req.query;
+    if (!code) {
+        res.status(400).json({ success: false, error: 'Código de Google no proporcionado' });
+        return;
+    }
+    // El resto de la lógica en el controlador
+     next();
+ }, googleCallbackHandler);
 
 /**
  * @swagger

@@ -14,6 +14,8 @@ export class ReporteService {
             data: {
                 tipo: data.tipo,
                 formato: data.formato,
+                periodoInicio: new Date(data.periodoInicio),
+                periodoFin: new Date(data.periodoFin),
                 parametros: data.parametros ?? {},
                 generadoPor: usuarioId,
             }
@@ -67,7 +69,7 @@ export class ReporteService {
         const skip = (page - 1) * limit;
         const [reportes, total] = await Promise.all([
             prisma.reporte.findMany({
-                include: { usuario: { select: { nombre: true, apellido: true, email: true } } },
+                include: { usuario: { select: { nombre: true, email: true } } },
                 orderBy: { createdAt: 'desc' },
                 skip,
                 take: limit,

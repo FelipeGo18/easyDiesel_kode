@@ -3,7 +3,7 @@
 !theme plain
 skinparam backgroundColor #FAFAFA
 skinparam defaultFontName Arial
-skinparam defaultFontSize 12
+skinparam defaultFontSize 13
 skinparam linetype ortho
 skinparam nodesep 40
 skinparam ranksep 60
@@ -11,11 +11,6 @@ skinparam ranksep 60
 skinparam rectangle {
   BackgroundColor #FAFAFA
   BorderColor #CCCCCC
-}
-skinparam node {
-  BackgroundColor #2C3E50
-  FontColor #FFFFFF
-  BorderColor #1A252F
 }
 skinparam component {
   BackgroundColor #EBF5FB
@@ -44,9 +39,8 @@ skinparam arrow {
 }
 
 ' ════════════════════════════════════════════════════════
-'  FILA 1 — ACTORES  (izquierda)  +  INTEGRACIONES (derecha)
+'  ACTORES
 ' ════════════════════════════════════════════════════════
-
 rectangle "**ACTORES**" as ACTORES #FEF9E7 {
   actor "Administrador\nde Plataforma" as ADMIN
   actor "Estacion\nde Servicio"        as ESTACION
@@ -64,51 +58,51 @@ rectangle "**INTEGRACIONES EXTERNAS**" as EXTERNAS #E8DAEF {
 }
 
 ' ════════════════════════════════════════════════════════
-'  FILA 2 — FRONTEND
+'  FRONTEND
 ' ════════════════════════════════════════════════════════
-
-rectangle "**CAPA DE PRESENTACION  —  React.js SPA**" as FRONTEND #D6EAF8 {
-  component "**M1** Auth\n(Login / JWT)"       as M1   #AED6F1
-  component "**M2** Gestion\nde Usuarios"      as M2   #AED6F1
-  component "**M3** Inventario\n(Tanques)"     as M3   #AED6F1
-  component "**M4** Precios\ny Zonas"          as M4   #AED6F1
-  component "**M5** Normativa\n(Motor Reglas)" as M5   #AED6F1
-  component "**M6** Reportes\n(PDF / Excel)"   as M6   #AED6F1
-  component "**M7** Auditoria\n(Log)"          as M7   #AED6F1
-  component "**M8** Dashboard\n(KPIs)"         as M8   #AED6F1
+rectangle "**CAPA DE PRESENTACION  —  React.js + Vite + TypeScript  (Vercel)**" as FRONTEND #D6EAF8 {
+  component "**M1** Auth\n(Login / JWT)"       as M1  #AED6F1
+  component "**M2** Gestion\nde Usuarios"      as M2  #AED6F1
+  component "**M3** Gestión de\nEstación"     as M3  #AED6F1
+  component "**M4** Precios\ny Zonas"          as M4  #AED6F1
+  component "**M5** Normativa\n(Motor Reglas)" as M5  #AED6F1
+  component "**M6** Reportes\n(PDF / Excel)"   as M6  #AED6F1
+  component "**M7** Auditoria\n(Log)"          as M7  #AED6F1
+  component "**M8** Dashboard\n(KPIs)"         as M8  #AED6F1
 }
 
 ' ════════════════════════════════════════════════════════
-'  FILA 3 — BACKEND
+'  BACKEND
 ' ════════════════════════════════════════════════════════
+rectangle "**CAPA DE SERVICIOS  —  Node.js + Express + TypeScript  (Railway)**" as BACKEND #D5F5E3 {
 
-rectangle "**CAPA DE SERVICIOS  —  Node.js + Express  (puerto 3000)**" as BACKEND #D5F5E3 {
-  component "Auth\nMiddleware\n(JWT/bcrypt)" as SVC_AUTH #A9DFBF
+  component "Auth Middleware\n(JWT / bcrypt)" as SVC_AUTH #A9DFBF
 
-  component "/auth"         as API_AUTH #A9DFBF
-  component "/usuarios"     as API_USR  #A9DFBF
+  component "/auth
+/auth/google" as API_AUTH #A9DFBF
+  component "/usuarios"          as API_USR  #A9DFBF
   component "/estaciones\n/tanques" as API_EST  #A9DFBF
-  component "/transacciones" as API_TRX  #A9DFBF
-  component "/precios\n/zonas"      as API_PRC  #A9DFBF
-  component "/decretos"     as API_DEC  #A9DFBF
-  component "/reportes"     as API_RPT  #A9DFBF
-  component "/auditoria"    as API_AUD  #A9DFBF
-  component "/dashboard"    as API_DASH #A9DFBF
+  component "/transacciones"     as API_TRX  #A9DFBF
+  component "/precios\n/zonas"   as API_PRC  #A9DFBF
+  component "/decretos"          as API_DEC  #A9DFBF
+  component "/reportes"          as API_RPT  #A9DFBF
+  component "/auditoria"         as API_AUD  #A9DFBF
+  component "/dashboard"         as API_DASH #A9DFBF
+  component "/publico\n(sin JWT)"as API_PUB  #C8F7C5
 
-  component "Sequelize ORM\n(modelos / migraciones)" as ORM #A9DFBF
+  component "Prisma ORM\n(modelos / migraciones)" as ORM #A9DFBF
 }
 
 ' ════════════════════════════════════════════════════════
-'  FILA 4 — DATOS
+'  DATOS
 ' ════════════════════════════════════════════════════════
-
-rectangle "**CAPA DE DATOS**" as DATOS #FDEBD0 {
-  database "**PostgreSQL 16**  (puerto 5432)\nusuarios / roles / estaciones_servicio\ndistribuidores / tanques\ntransacciones_combustible / entregas_distribuidor\nzonas_distribucion / precios_vigentes\ndecretos_normativos / auditoria_log / reportes" as PG    #F5CBA7
+rectangle "**CAPA DE DATOS  (Supabase)**" as DATOS #FDEBD0 {
+  database "**PostgreSQL 16**\nusuarios / roles\nestaciones_servicio / distribuidores\ntanques / transacciones_combustible\nentregas_distribuidor\nzonas_distribucion / precios_vigentes\ndecretos_normativos / auditoria_log / reportes" as PG    #F5CBA7
   database "**Archivos**\nPDF / Excel" as FILES #F5CBA7
 }
 
 ' ════════════════════════════════════════════════════════
-'  ORDEN VERTICAL entre bloques
+'  ORDEN VERTICAL
 ' ════════════════════════════════════════════════════════
 ACTORES  -[hidden]down-> FRONTEND
 FRONTEND -[hidden]down-> BACKEND
@@ -118,61 +112,70 @@ EXTERNAS -[hidden]down-> BACKEND
 ' ════════════════════════════════════════════════════════
 '  ACTORES → FRONTEND
 ' ════════════════════════════════════════════════════════
-ADMIN     -down-> M1 : HTTPS
-ADMIN     -down-> M2
-ADMIN     -down-> M4
-ADMIN     -down-> M5
+ADMIN      -down-> M1 : HTTPS
+ADMIN      -down-> M2
+ADMIN      -down-> M4
+ADMIN      -down-> M5
 
-ESTACION  -down-> M1 : HTTPS
-ESTACION  -down-> M3
-ESTACION  -down-> M6
-ESTACION  -down-> M8
+ESTACION   -down-> M1 : HTTPS
+ESTACION   -down-> M3
+ESTACION   -down-> M6
+ESTACION   -down-> M8
 
-DISTRIB   -down-> M1 : HTTPS
-DISTRIB   -down-> M3
-DISTRIB   -down-> M6
+DISTRIB    -down-> M1 : HTTPS
+DISTRIB    -down-> M3
+DISTRIB    -down-> M6
 
-REGULADOR -down-> M1 : HTTPS
-REGULADOR -down-> M6
-REGULADOR -down-> M7
-REGULADOR -down-> M8
+REGULADOR  -down-> M1 : HTTPS
+REGULADOR  -down-> M6
+REGULADOR  -down-> M7
+REGULADOR  -down-> M8
 
 PARTICULAR -down-> M1 : HTTPS
+PARTICULAR -down-> M4
+PARTICULAR -down-> M5
 PARTICULAR -down-> M8
 
 SUBSIDIADO -down-> M1 : HTTPS
+SUBSIDIADO -down-> M4
+SUBSIDIADO -down-> M5
 SUBSIDIADO -down-> M8
 
 ' ════════════════════════════════════════════════════════
-'  FRONTEND → BACKEND  (cada modulo a su API)
+'  AUTH MIDDLEWARE protege endpoints privados
 ' ════════════════════════════════════════════════════════
-M1  -down-> API_AUTH  : REST
-M2  -down-> API_USR   : REST
-M3  -down-> API_EST   : REST
-M3  -down-> API_TRX   : REST
-M4  -down-> API_PRC   : REST
-M5  -down-> API_DEC   : REST
-M6  -down-> API_RPT   : REST
-M7  -down-> API_AUD   : REST
-M8  -down-> API_DASH  : REST
+SVC_AUTH -right-> API_AUTH : protege
+SVC_AUTH -right-> API_USR  : protege
+SVC_AUTH -right-> API_EST  : protege
+SVC_AUTH -right-> API_TRX  : protege
+SVC_AUTH -right-> API_PRC  : protege
+SVC_AUTH -right-> API_DEC  : protege
+SVC_AUTH -right-> API_RPT  : protege
+SVC_AUTH -right-> API_AUD  : protege
+SVC_AUTH -right-> API_DASH : protege
+' API_PUB no pasa por SVC_AUTH (es publica con rate limiting)
 
 ' ════════════════════════════════════════════════════════
-'  AUTH MIDDLEWARE protege todos los endpoints
+'  FRONTEND → BACKEND
 ' ════════════════════════════════════════════════════════
-SVC_AUTH -right-> API_AUTH
-SVC_AUTH -right-> API_USR
-SVC_AUTH -right-> API_EST
-SVC_AUTH -right-> API_TRX
-SVC_AUTH -right-> API_PRC
-SVC_AUTH -right-> API_DEC
-SVC_AUTH -right-> API_RPT
-SVC_AUTH -right-> API_AUD
-SVC_AUTH -right-> API_DASH
+M1  -down-> API_AUTH : REST
+M2  -down-> API_USR  : REST
+M3  -down-> API_EST  : REST
+M3  -down-> API_TRX  : REST
+M4  -down-> API_PRC  : REST
+M4  -down-> API_PUB  : REST publico
+M5  -down-> API_DEC  : REST
+M5  -down-> API_PUB  : REST publico
+M6  -down-> API_RPT  : REST
+M7  -down-> API_AUD  : REST
+M8  -down-> API_DASH : REST
+M8  -down-> API_PUB  : REST publico
 
 ' ════════════════════════════════════════════════════════
-'  BACKEND → ORM → BASE DE DATOS
+'  BACKEND → ORM → BD
 ' ════════════════════════════════════════════════════════
-API_AUTH -down-> ORM
+API_AUTH  -down-> ORM
+PASSPORT  -down-> ORM
 API_USR  -down-> ORM
 API_EST  -down-> ORM
 API_TRX  -down-> ORM
@@ -181,14 +184,23 @@ API_DEC  -down-> ORM
 API_RPT  -down-> ORM
 API_AUD  -down-> ORM
 API_DASH -down-> ORM
+API_PUB  -down-> ORM
+PASSPORT -down-> ORM : "crea/recupera usuario"
 
-ORM     -down-> PG    : "SQL"
+ORM     -down-> PG    : "SQL / Prisma"
 API_RPT -down-> FILES : "genera archivos"
 
 ' ════════════════════════════════════════════════════════
-'  INTEGRACIONES EXTERNAS → BACKEND
+'  INTEGRACIONES EXTERNAS
 ' ════════════════════════════════════════════════════════
-IOT  -down-> API_EST  : "MQTT/HTTP\nnivel tanques"
+IOT      -down-> API_EST    : "MQTT/HTTP nivel tanques"
+GOAUTH   -down-> PASSPORT   : "OAuth 2.0 callback"
+PASSPORT -down-> API_AUTH   : "valida y crea JWT"
+GMAPS    -down-> M4         : "JS SDK mapas"
+GMAPS    -down-> M8         : "JS SDK mapas"
+GOAUTH -down-> PASSPORT : "OAuth 2.0 callback"
+GMAPS  -down-> M4       : "Maps JS SDK"
+GMAPS  -down-> M8       : "Maps JS SDK"
 GPS  -down-> API_TRX  : "HTTP ubicacion"
 FACT -down-> API_TRX  : "HTTP factura"
 API_RPT -right-> MINAS : "HTTP reporte oficial"
@@ -197,16 +209,54 @@ API_RPT -right-> MINAS : "HTTP reporte oficial"
 '  LEYENDA
 ' ════════════════════════════════════════════════════════
 legend right
-  |= Simbolo |= Significado |
-  | -->  | Conexion directa |
-  | ..>  | Llamada REST |
-  | Rojo | Usuario humano |
-  | Azul | Modulo Frontend (React) |
-  | Verde | Endpoint Backend (Node.js) |
-  | Naranja | Base de datos |
-  | Morado | Servicio externo |
+  |= Simbolo       |= Significado          |
+  | -->             | Conexion directa      |
+  | ..>             | Llamada REST          |
+  | Caja azul       | Modulo Frontend       |
+  | Caja verde      | Endpoint Backend      |
+  | Caja verde claro| Endpoint publico      |
+  | Naranja         | Base de datos         |
+  | Morado          | Servicio externo      |
+  | Google OAuth    | Login con Google      |
+  | Google Maps     | Mapa M4 y M8         |
 endlegend
 
-title Arquitectura -- Plataforma de Gestion de Combustibles\nDecreto 1428/2025  |  React + Node.js + PostgreSQL
+note as NOTA_PUB
+  <b>/publico — endpoints sin JWT</b>
+  GET /publico/precios
+  GET /publico/estaciones
+  GET /publico/zonas
+  GET /publico/decretos/vigentes
+  Rate limiting: 60 req/min por IP
+  Usado por: Particular y Subsidiado
+end note
+
+note as NOTA_GOOGLE
+  <b>Google OAuth 2.0</b>
+  GET /auth/google → redirect Google
+  GET /auth/google/callback → JWT propio
+  Passport.js gestiona el flujo
+  Compatible con login email+password
+  
+  <b>Google Maps API</b>
+  M4: mapa estaciones + precios por zona
+  M8: dashboard ciudadano con ubicacion
+  Requiere GOOGLE_MAPS_API_KEY en frontend
+end note
+
+note as NOTA_GOOGLE
+  <b>Google OAuth 2.0 (Passport.js)</b>
+  GET  /auth/google         → inicia flujo OAuth
+  GET  /auth/google/callback → recibe codigo
+  Genera JWT identico al login email/password
+  auth_provider: local | google | both
+  ---
+  <b>Google Maps JavaScript API</b>
+  M4: mapa con marcadores de estaciones + precios
+  M8: mini-mapa zona ciudadano + estaciones cercanas
+  API Key publica — restringir dominio en GCP
+end note
+
+title Arquitectura -- Plataforma de Gestion de Combustibles\nDecreto 1428/2025  |  React + Express + Prisma + PostgreSQL\nDespliegue: Vercel + Railway + Supabase
 
 @enduml

@@ -1,7 +1,25 @@
 import { Request, Response } from 'express';
 import { inventarioService } from '../services/inventario.service';
-import { registrarEntregaSchema, registrarTransaccionSchema } from '../validators/inventario.validator';
+import { registrarEntregaSchema, registrarTransaccionSchema, cierreTurnoSchema } from '../validators/inventario.validator';
 import { ZodError } from 'zod';
+
+export const cierreTurnoHandler = async (req: Request, res: Response) => {
+    try {
+        const validData = cierreTurnoSchema.parse(req.body);
+        const result = await inventarioService.cierreTurno(validData);
+        res.status(200).json({
+            success: true,
+            message: 'Cierre de turno procesado correctamente',
+            data: result,
+        });
+    } catch (error: any) {
+        if (error instanceof ZodError) {
+            res.status(400).json({ success: false, errors: error.issues });
+            return;
+        }
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
 
 export const registrarEntregaHandler = async (req: Request, res: Response) => {
     try {
