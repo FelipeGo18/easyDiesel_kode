@@ -1,32 +1,41 @@
 import { Router } from 'express';
-import type { Router as RouterType } from 'express';
 import { authRouter } from './auth.routes';
+import usuarioRouter from './usuario.routes';
+import actorRouter from './actor.routes';
+import tanqueRouter from './tanque.routes';
+import inventarioRouter from './inventario.routes';
+import { auth, authorize } from '../middleware/auth';
 
-const router: RouterType = Router();
+const router = Router();
 
-// ── Módulo 1: Auth ─────────────────────────────────────
+// Rutas Publicas
 router.use('/auth', authRouter);
 
-// ── Módulo 2: Usuarios ─────────────────────────────────
-// router.use('/usuarios', usuariosRouter);
+// Rutas Protegidas (todas las siguientes requieren estar autenticado)
+router.use(auth);
 
-// ── Módulo 3: Inventario ───────────────────────────────
-// router.use('/inventario', inventarioRouter);
+// Modulo 2: Usuarios y Actores
+router.use('/usuarios', authorize('admin'), usuarioRouter);
+router.use('/actores', authorize('admin', 'regulador'), actorRouter);
 
-// ── Módulo 4: Precios y Zonas ──────────────────────────
+// Modulo 3: Inventario y Tanques
+router.use('/tanques', authorize('admin', 'estacion'), tanqueRouter);
+router.use('/inventario', authorize('admin', 'estacion'), inventarioRouter);
+
+// Modulo 4: Precios y Zonas
 // router.use('/precios', preciosRouter);
 // router.use('/zonas', zonasRouter);
 
-// ── Módulo 5: Normativa ────────────────────────────────
+// Modulo 5: Normativa
 // router.use('/normativa', normativaRouter);
 
-// ── Módulo 6: Reportes ─────────────────────────────────
+// Modulo 6: Reportes
 // router.use('/reportes', reportesRouter);
 
-// ── Módulo 7: Auditoría ────────────────────────────────
+// Modulo 7: Auditoria
 // router.use('/auditoria', auditoriaRouter);
 
-// ── Módulo 8: Dashboard ────────────────────────────────
+// Modulo 8: Dashboard
 // router.use('/dashboard', dashboardRouter);
 
 export { router };
