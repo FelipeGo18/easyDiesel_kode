@@ -1,48 +1,268 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;600&display=swap');
 
-/* ── Design Tokens ─────────────────────────────────── */
+/* ══════════════════════════════════════════════════════
+   easyDiesel · Design Tokens — Industrial Precision
+   ══════════════════════════════════════════════════════ */
 @theme {
-  --color-primary-50:  #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
-  --color-primary-950: #172554;
+  /* ── Acento principal ── */
+  --color-amber-500: #F5A623;
+  --color-amber-600: #D4891A;
+  --color-amber-dim: #2a1a00;
 
-  --color-accent-50:  #fefce8;
-  --color-accent-100: #fef9c3;
-  --color-accent-200: #fef08a;
-  --color-accent-300: #fde047;
-  --color-accent-400: #facc15;
-  --color-accent-500: #eab308;
-  --color-accent-600: #ca8a04;
-  --color-accent-700: #a16207;
-  --color-accent-800: #854d0e;
-  --color-accent-900: #713f12;
+  /* ── Fondos ── */
+  --color-bg-base: #080808;
+  --color-bg-surface: #0f0f0f;
+  --color-bg-elevated: #161616;
+  --color-bg-hover: #1d1d1d;
 
-  --color-success-500: #22c55e;
-  --color-warning-500: #f59e0b;
-  --color-danger-500: #ef4444;
+  /* ── Bordes ── */
+  --color-border-subtle: #1a1a1a;
+  --color-border-default: #222222;
+  --color-border-strong: #2a2a2a;
 
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  /* ── Texto ── */
+  --color-text-primary: #E8E8E8;
+  --color-text-secondary: #888888;
+  --color-text-muted: #444444;
+  --color-text-inverted: #080808;
 
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  /* ── Semánticos ── */
+  --color-green-500: #2ECC71;
+  --color-green-dim: #0a2a15;
+  --color-red-500: #E74C3C;
+  --color-red-dim: #2a0a08;
+  --color-yellow-500: #F1C40F;
+  --color-yellow-dim: #2a2200;
+  --color-blue-500: #3498DB;
+  --color-blue-dim: #0a1a2a;
+
+  /* ── Tipografía ── */
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-heading: 'Syne', sans-serif;
+  --font-sans: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* ── Border Radius ── */
+  --radius-brand: 4px;
 }
 
-/* ── Base Styles ───────────────────────────────────── */
+/* ══════════════════════════════════════════════════════
+   Base Styles
+   ══════════════════════════════════════════════════════ */
 body {
-  @apply bg-gray-50 text-gray-900 font-sans antialiased;
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
 }
 
 #root {
   min-height: 100vh;
+}
+
+/* ══════════════════════════════════════════════════════
+   Typography Utilities
+   ══════════════════════════════════════════════════════ */
+.text-display {
+  font-family: var(--font-display);
+  font-size: 64px;
+  letter-spacing: 0.02em;
+}
+
+.text-h1 {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.text-h2 {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.text-body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.text-small {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+.text-mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.text-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ══════════════════════════════════════════════════════
+   Animations — Brand Motion
+   ══════════════════════════════════════════════════════ */
+
+/* 1. Fade-in-up — entrada de componentes */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-enter {
+  animation: fadeInUp 0.3s ease both;
+}
+
+/* 2. Pulse — indicador de sistema en vivo */
+@keyframes pulse-live {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.status-live {
+  animation: pulse-live 2s ease infinite;
+}
+
+/* 3. Pulse-ring — alerta o evento activo */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+/* 4. Scan-line — loading de datos en tabla */
+@keyframes scan {
+  from {
+    transform: translateY(-100%);
+  }
+
+  to {
+    transform: translateY(400%);
+  }
+}
+
+/* 5. Count-up — números de KPI al cargar */
+@keyframes countUp {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.kpi-value {
+  animation: countUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* 6. Stagger — lista de cards al cargar */
+.stagger-1 {
+  animation-delay: 0.05s;
+}
+
+.stagger-2 {
+  animation-delay: 0.10s;
+}
+
+.stagger-3 {
+  animation-delay: 0.15s;
+}
+
+.stagger-4 {
+  animation-delay: 0.20s;
+}
+
+.stagger-5 {
+  animation-delay: 0.25s;
+}
+
+.stagger-6 {
+  animation-delay: 0.30s;
+}
+
+.stagger-7 {
+  animation-delay: 0.35s;
+}
+
+.stagger-8 {
+  animation-delay: 0.40s;
+}
+
+/* ── Transitions ── */
+.interactive {
+  transition: background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.overlay-enter {
+  animation: fadeInUp 0.2s ease both;
+}
+
+/* ── Focus ring — inputs ── */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-amber-500);
+  transition: box-shadow 0.15s ease;
+}
+
+/* ══════════════════════════════════════════════════════
+   Scrollbar — Dark branded
+   ══════════════════════════════════════════════════════ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-base);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
 }

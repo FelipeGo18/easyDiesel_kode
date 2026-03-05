@@ -1,40 +1,116 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import './App.css';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { AppLayout } from '@/components/layout/AppLayout';
+import { HomePage } from '@/pages/HomePage';
+import { LoginPage } from '@/pages/LoginPage';
+import { DashboardPage } from '@/pages/DashboardPage';
+import type { ReactNode } from 'react';
+
+/* ── Protected route wrapper ── */
+function ProtectedRoute({ children }: { children: ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-bg-base flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 animate-enter">
+          <div className="w-12 h-12">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+              <defs>
+                <radialGradient id="dg-load" cx="38%" cy="28%" r="70%">
+                  <stop offset="0%" stopColor="#FFD580" />
+                  <stop offset="50%" stopColor="#F5A623" />
+                  <stop offset="100%" stopColor="#AA6A00" />
+                </radialGradient>
+                <radialGradient id="hbg-load" cx="50%" cy="38%" r="62%">
+                  <stop offset="0%" stopColor="#1e1100" />
+                  <stop offset="100%" stopColor="#060400" />
+                </radialGradient>
+              </defs>
+              <path d="M50 5 L91 27.5 L91 72.5 L50 95 L9 72.5 L9 27.5 Z" fill="url(#hbg-load)" />
+              <path d="M50 5 L91 27.5 L91 72.5 L50 95 L9 72.5 L9 27.5 Z" stroke="#F5A623" strokeWidth="2.2" fill="none" strokeLinejoin="miter" className="status-live" />
+              <path d="M50 21 C50 21 34 43 34 57 C34 67.5 41.3 76 50 76 C58.7 76 66 67.5 66 57 C66 43 50 21 50 21 Z" fill="url(#dg-load)" />
+            </svg>
+          </div>
+          <span className="text-[10px] font-mono text-text-muted uppercase tracking-widest">
+            Cargando...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      {/* ── Public routes ── */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/login" element={<LoginPage />} />
+
+      {/* ── Protected routes — inside AppLayout ── */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <AppLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/estacion" element={<PlaceholderPage title="Gestión de Estación" moduleId="M3" />} />
+        <Route path="/precios" element={<PlaceholderPage title="Precios y Zonas" moduleId="M4" />} />
+        <Route path="/normativa" element={<PlaceholderPage title="Normativa" moduleId="M5" />} />
+        <Route path="/reportes" element={<PlaceholderPage title="Reportes" moduleId="M6" />} />
+        <Route path="/auditoria" element={<PlaceholderPage title="Auditoría" moduleId="M7" />} />
+        <Route path="/usuarios" element={<PlaceholderPage title="Usuarios" moduleId="M2" />} />
+        <Route path="/auth-config" element={<PlaceholderPage title="Configuración Auth" moduleId="M1" />} />
+      </Route>
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+/* ── Placeholder for future modules ── */
+function PlaceholderPage({ title, moduleId }: { title: string; moduleId: string }) {
+  return (
+    <div className="animate-enter">
+      <div className="flex items-center gap-3 mb-2">
+        <h1 className="text-h1 text-text-primary">{title}</h1>
+        <span className="text-[9px] font-mono text-text-muted tracking-wider bg-bg-elevated px-2 py-0.5 rounded-[2px] border border-border-subtle">
+          {moduleId}
+        </span>
+      </div>
+      <p className="text-small text-text-secondary mb-8">
+        Este módulo está en desarrollo.
+      </p>
+
+      <div className="border border-border-subtle border-dashed rounded-[var(--radius-brand)] p-12 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-[var(--radius-brand)] bg-bg-elevated border border-border-default flex items-center justify-center">
+            <span className="text-amber-500 font-mono text-[14px] font-semibold">{moduleId}</span>
+          </div>
+          <p className="text-[13px] text-text-secondary">Contenido del módulo {title}</p>
+          <p className="text-[10px] font-mono text-text-muted mt-1 tracking-wider uppercase">Próximamente</p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gray-50">
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <main className="flex items-center justify-center min-h-screen">
-                <div className="text-center space-y-6 p-8">
-                  <h1 className="text-4xl font-bold text-primary-700">
-                    🛢️ Plataforma de Gestión de Combustibles
-                  </h1>
-                  <p className="text-lg text-gray-600 max-w-xl mx-auto">
-                    Sistema de control, trazabilidad y regulación de
-                    combustibles en estaciones de servicio colombianas.
-                  </p>
-                  <div className="flex gap-4 justify-center text-sm text-gray-500">
-                    <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full">
-                      React + Vite
-                    </span>
-                    <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full">
-                      TypeScript
-                    </span>
-                    <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full">
-                      Tailwind CSS v4
-                    </span>
-                  </div>
-                </div>
-              </main>
-            }
-          />
-        </Routes>
-      </div>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </BrowserRouter>
   );
 }
