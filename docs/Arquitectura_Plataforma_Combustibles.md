@@ -34,7 +34,7 @@ Puerto 3000 | JWT Auth Middleware | CORS | Rate Limiter
 
 ━━━━━━━━━━━━━━━ CAPA DATOS ━━━━━━━━━━━━━━━
 
-PostgreSQL (Puerto 5432) + Sequelize ORM
+PostgreSQL (Puerto 5432) + Prisma ORM
 ```
 
 ### 1.2 Stack Tecnológico
@@ -84,7 +84,7 @@ PostgreSQL (Puerto 5432) + Sequelize ORM
 
 ## 2. Modelo de Base de Datos
 
-Se utiliza PostgreSQL con Sequelize ORM. El modelo está normalizado en 3FN. A continuación se describen todas las tablas, sus campos, tipos y relaciones.
+Se utiliza PostgreSQL con Prisma ORM. El modelo está normalizado en 3FN. A continuación se describen todas las tablas, sus campos, tipos y relaciones.
 
 ### 2.1 Tablas Principales
 
@@ -99,11 +99,11 @@ Almacena todos los actores del sistema.
 | **id** | UUID | PK | Identificador único |
 | nombre | VARCHAR(100) | NOT NULL | Nombre completo |
 | email | VARCHAR(150) | UNIQUE | Correo electrónico (login) |
-| password_hash | VARCHAR(255) | NOT NULL | Contraseña hasheada con bcrypt |
+| password_hash | VARCHAR(255) | NULLABLE | Contraseña hasheada con bcrypt (null si auth_provider=google) |
 | **google_id** | VARCHAR(100) | UNIQUE | ID de Google OAuth. NULL si el usuario usa email/password |
-| **auth_provider** | ENUM('local','google') | DEFAULT local | Proveedor de autenticación: local (email+password) o google (OAuth 2.0) |
+| **auth_provider** | ENUM('LOCAL','GOOGLE') | DEFAULT LOCAL | Proveedor de autenticación: local (email+password) o google (OAuth 2.0) |
 | **foto_url** | TEXT | | URL de la foto de perfil. Provista por Google OAuth o cargada manualmente |
-| **rol_id** | INTEGER | FK | Referencia a tabla roles |
+| **rol_id** | UUID | FK | Referencia a tabla roles |
 | activo | BOOLEAN | DEFAULT T | Estado de la cuenta |
 | created_at | TIMESTAMP | NOT NULL | Fecha de creación |
 | updated_at | TIMESTAMP | NOT NULL | Última modificación |
@@ -114,7 +114,7 @@ Define los tipos de usuario del sistema.
 
 | **Campo** | **Tipo** | **Restricción** | **Descripción** |
 |---|---|---|---|
-| **id** | INTEGER | PK | Identificador del rol |
+| **id** | UUID | PK | Identificador del rol |
 | nombre | VARCHAR(50) | UNIQUE | Nombre del rol (admin, estacion, distribuidor…) |
 | descripcion | TEXT | | Descripción del rol |
 | permisos | JSONB | | Mapa de módulos y nivel de acceso |
@@ -131,8 +131,9 @@ Estaciones de gasolina registradas en la plataforma.
 | direccion | TEXT | NOT NULL | Dirección física |
 | ciudad | VARCHAR(100) | NOT NULL | Ciudad |
 | departamento | VARCHAR(100) | NOT NULL | Departamento |
-| **zona_id** | INTEGER | FK | Zona regulatoria asignada |
-| **usuario_id** | UUID | FK | Usuario gestor de la estación |
+| **codigo_sicom** | VARCHAR(50) | UNIQUE | Código SICOM del Ministerio |
+| **zona_id** | UUID | FK | Zona regulatoria asignada |
+| **usuario_id** | UUID | FK, UNIQUE | Usuario gestor de la estación |
 | latitud | DECIMAL(9,6) | | Coordenada GPS |
 | longitud | DECIMAL(9,6) | | Coordenada GPS |
 | activa | BOOLEAN | DEFAULT T | Estado operativo |
@@ -146,8 +147,11 @@ Distribuidores mayoristas de combustible.
 | **id** | UUID | PK | Identificador único |
 | nombre | VARCHAR(150) | NOT NULL | Razón social |
 | nit | VARCHAR(20) | UNIQUE | NIT |
-| tipo | ENUM | NOT NULL | mayorista / regulado |
-| **usuario_id** | UUID | FK | Usuario gestor |
+| tipo | ENUM | NOT NULL | MAYORISTA / REGULADO |
+| direccion | TEXT | NOT NULL | Dirección física |
+| ciudad | VARCHAR(100) | NOT NULL | Ciudad |
+| departamento | VARCHAR(100) | NOT NULL | Departamento |
+| **usuario_id** | UUID | FK, UNIQUE | Usuario gestor |
 | activo | BOOLEAN | DEFAULT T | Estado |
 
 ### 2.2 Tablas de Inventario y Transacciones
@@ -160,10 +164,11 @@ Tanques físicos de almacenamiento en cada estación.
 |---|---|---|---|
 | **id** | UUID | PK | Identificador del tanque |
 | **estacion_id** | UUID | FK | Estación a la que pertenece |
-| tipo_combustible | ENUM | NOT NULL | ACPM / gasolina_corriente / extra |
+| nombre | VARCHAR(100) | NOT NULL | Nombre o código del tanque |
+| tipo_combustible | ENUM | NOT NULL | ACPM / GASOLINA_CORRIENTE / GASOLINA_EXTRA |
 | capacidad_galones | DECIMAL(10,2) | NOT NULL | Capacidad máxima |
 | nivel_actual | DECIMAL(10,2) | NOT NULL | Nivel actual en galones |
-| nivel_minimo | DECIMAL(10,2) | | Nivel de alerta mínimo |
+| nivel_minimo | DECIMAL(10,2) | DEFAULT 0 | Nivel de alerta mínimo |
 | activo | BOOLEAN | DEFAULT T | Estado |
 
 #### 🗄 transacciones_combustible
@@ -175,15 +180,18 @@ Registro de cada compra/despacho de combustible.
 | **id** | UUID | PK | Identificador único de la transacción |
 | **estacion_id** | UUID | FK | Estación donde ocurre |
 | **tanque_id** | UUID | FK | Tanque involucrado |
-| tipo | ENUM | NOT NULL | entrada / salida |
-| volumen_galones | DECIMAL(10,3) | NOT NULL | Cantidad despachada/recibida |
+| **distribuidor_id** | UUID | FK | Distribuidor (nullable, solo para entradas) |
+| **entrega_id** | UUID | FK | Entrega asociada (nullable) |
+| tipo | ENUM | NOT NULL | ENTRADA / SALIDA |
+| tipo_combustible | ENUM | NOT NULL | ACPM / GASOLINA_CORRIENTE / GASOLINA_EXTRA |
+| tipo_servicio | ENUM | NOT NULL | PARTICULAR / PUBLICO / DIPLOMATICO / OFICIAL / CARGA |
+| galones | DECIMAL(10,3) | NOT NULL | Cantidad despachada/recibida |
+| precio_unitario | DECIMAL(10,2) | NOT NULL | Precio aplicado por galón |
+| precio_total | DECIMAL(10,2) | NOT NULL | Total de la transacción |
 | placa_vehiculo | VARCHAR(10) | | Placa del vehículo (salidas) |
-| tipo_servicio | ENUM | | particular / publico / diplomatico / oficial |
-| precio_galon | DECIMAL(10,2) | NOT NULL | Precio aplicado por galón |
+| estado | ENUM | DEFAULT COMPLETADA | COMPLETADA / ANULADA / PENDIENTE |
 | subsidio_aplicado | BOOLEAN | DEFAULT F | Si se aplicó subsidio |
 | decreto_aplicado | VARCHAR(50) | | Decreto que rige el precio |
-| **usuario_id** | UUID | FK | Usuario que registra |
-| **distribuidor_id** | UUID | FK | Distribuidor en entradas (nullable) |
 | created_at | TIMESTAMP | NOT NULL | Fecha y hora |
 
 #### 🗄 entregas_distribuidor
@@ -195,10 +203,12 @@ Entregas registradas por distribuidores a estaciones.
 | **id** | UUID | PK | Identificador único |
 | **distribuidor_id** | UUID | FK | Distribuidor que entrega |
 | **estacion_id** | UUID | FK | Estación receptora |
+| **tanque_id** | UUID | FK | Tanque destino |
 | tipo_combustible | ENUM | NOT NULL | Tipo de combustible entregado |
-| volumen_galones | DECIMAL(10,2) | NOT NULL | Volumen entregado |
-| precio_compra | DECIMAL(10,2) | NOT NULL | Precio de compra al distribuidor |
-| numero_guia | VARCHAR(50) | UNIQUE | Número de guía de transporte |
+| galones | DECIMAL(10,2) | NOT NULL | Volumen entregado |
+| precio_unitario | DECIMAL(10,2) | NOT NULL | Precio unitario de compra |
+| precio_total | DECIMAL(10,2) | NOT NULL | Total de la entrega |
+| numero_remision | VARCHAR(50) | UNIQUE | Número de remisión de transporte |
 | fecha_entrega | TIMESTAMP | NOT NULL | Fecha efectiva de entrega |
 | confirmada | BOOLEAN | DEFAULT F | Confirmación por la estación |
 
@@ -210,10 +220,11 @@ Zonas geográficas con precios diferenciados.
 
 | **Campo** | **Tipo** | **Restricción** | **Descripción** |
 |---|---|---|---|
-| **id** | INTEGER | PK | Identificador |
-| nombre | VARCHAR(100) | NOT NULL | Nombre de la zona |
+| **id** | UUID | PK | Identificador |
+| nombre | VARCHAR(100) | UNIQUE | Nombre de la zona |
 | descripcion | TEXT | | Descripción o lista de municipios |
-| tipo_zona | ENUM | NOT NULL | interconectada / no_interconectada |
+| tipo_zona | ENUM | NOT NULL | INTERCONECTADA / NO_INTERCONECTADA |
+| departamentos | TEXT[] | | Lista de departamentos en la zona |
 
 #### 🗄 precios_vigentes
 
@@ -222,12 +233,12 @@ Tabla de precios actuales por tipo de combustible, zona y tipo de servicio.
 | **Campo** | **Tipo** | **Restricción** | **Descripción** |
 |---|---|---|---|
 | **id** | UUID | PK | Identificador |
-| **zona_id** | INTEGER | FK | Zona aplicable |
-| tipo_combustible | ENUM | NOT NULL | ACPM / gasolina_corriente / extra |
-| tipo_servicio | ENUM | NOT NULL | particular / publico / diplomatico / oficial |
+| **zona_id** | UUID | FK | Zona aplicable |
+| tipo_combustible | ENUM | NOT NULL | ACPM / GASOLINA_CORRIENTE / GASOLINA_EXTRA |
+| tipo_servicio | ENUM | NOT NULL | PARTICULAR / PUBLICO / DIPLOMATICO / OFICIAL / CARGA |
 | precio_galon | DECIMAL(10,2) | NOT NULL | Precio por galón en COP |
-| subsidio | BOOLEAN | DEFAULT F | Indica si hay subsidio |
-| decreto_base | VARCHAR(50) | NOT NULL | Decreto que fija el precio |
+| subsidio_galon | DECIMAL(10,2) | DEFAULT 0 | Monto de subsidio por galón |
+| **decreto_id** | UUID | FK | Decreto que fija el precio |
 | vigencia_desde | DATE | NOT NULL | Inicio de vigencia |
 | vigencia_hasta | DATE | | Fin de vigencia (null = activo) |
 | activo | BOOLEAN | DEFAULT T | Estado |
@@ -238,13 +249,15 @@ Registro de decretos y resoluciones cargados al sistema.
 
 | **Campo** | **Tipo** | **Restricción** | **Descripción** |
 |---|---|---|---|
-| **id** | INTEGER | PK | Identificador |
-| numero | VARCHAR(50) | UNIQUE | Número del decreto (ej: 1428) |
-| anio | INTEGER | NOT NULL | Año de expedición |
-| entidad | VARCHAR(150) | NOT NULL | Entidad que lo expide |
-| descripcion | TEXT | NOT NULL | Resumen del decreto |
-| url_documento | TEXT | | Enlace al documento oficial |
+| **id** | UUID | PK | Identificador |
+| numero | VARCHAR(50) | UNIQUE | Número del decreto (ej: 1428/2025) |
+| titulo | VARCHAR(200) | NOT NULL | Título del decreto |
+| anio | INTEGER | | Año de expedición |
+| entidad | VARCHAR(150) | | Entidad que lo expide |
+| descripcion | TEXT | | Resumen del decreto |
+| documento_url | TEXT | | Enlace al documento oficial |
 | activo | BOOLEAN | DEFAULT T | Si está en vigencia |
+| fecha_expedicion | DATE | NOT NULL | Fecha de expedición |
 | fecha_vigencia | DATE | NOT NULL | Inicio de vigencia |
 
 ### 2.4 Tablas de Auditoría y Reportes
