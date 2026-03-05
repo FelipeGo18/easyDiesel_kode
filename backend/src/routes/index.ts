@@ -7,6 +7,8 @@ import inventarioRouter from './inventario.routes';
 import zonaRouter from './zona.routes';
 import precioRouter from './precio.routes';
 import decretoRouter from './decreto.routes';
+import auditoriaRouter from './auditoria.routes';
+import reporteRouter from './reporte.routes';
 import { auth, authorize } from '../middleware/auth';
 
 const router = Router();
@@ -30,11 +32,11 @@ router.use('/zonas', authorize('admin', 'regulador'), zonaRouter);
 router.use('/precios', authorize('admin', 'regulador'), precioRouter);
 router.use('/decretos', authorize('admin', 'regulador'), decretoRouter);
 
-// Modulo 5: Reportes
-// router.use('/reportes', reportesRouter);
+// Modulo 5: Auditoria (solo lectura para admin y auditor)
+router.use('/auditoria', authorize('admin', 'auditor'), auditoriaRouter);
 
-// Modulo 6: Auditoria
-// router.use('/auditoria', auditoriaRouter);
+// Modulo 6: Reportes
+router.use('/reportes', authorize('admin', 'regulador', 'estacion'), reporteRouter);
 
 // Modulo 7: Dashboard
 // router.use('/dashboard', dashboardRouter);
