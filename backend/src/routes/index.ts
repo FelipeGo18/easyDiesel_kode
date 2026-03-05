@@ -9,6 +9,7 @@ import precioRouter from './precio.routes';
 import decretoRouter from './decreto.routes';
 import auditoriaRouter from './auditoria.routes';
 import reporteRouter from './reporte.routes';
+import dashboardRouter from './dashboard.routes';
 import { auth, authorize } from '../middleware/auth';
 
 const router = Router();
@@ -39,6 +40,6 @@ router.use('/auditoria', authorize('admin', 'auditor'), auditoriaRouter);
 router.use('/reportes', authorize('admin', 'regulador', 'estacion'), reporteRouter);
 
 // Modulo 7: Dashboard
-// router.use('/dashboard', dashboardRouter);
+router.use('/dashboard', authorize('admin'), dashboardRouter);
 
 export { router };
