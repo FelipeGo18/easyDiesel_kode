@@ -44,6 +44,10 @@ app.get('/api/health', (_req, res) => {
 // ── Routes ─────────────────────────────────────────────
 app.use('/api', router);
 
+// ── Swagger ────────────────────────────────────────────
+import { setupSwagger } from './utils/swagger';
+setupSwagger(app);
+
 // ── Error handling ─────────────────────────────────────
 app.use(errorHandler);
 

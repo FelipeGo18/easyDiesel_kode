@@ -1,9 +1,12 @@
 import { prisma } from '../utils/prisma';
 import { GenerarReporteInput } from '../validators/reporte.validator';
+import { generarPDF } from '../utils/pdfGenerator';
+import { generarExcel, generarCSV } from '../utils/excelGenerator';
 
 export class ReporteService {
     /**
-     * Genera un registro de reporte y recopila los datos segun el tipo.
+     * Genera un registro de reporte y recopila los datos segun el tipo,
+     * devolviendo el archivo generado en Buffer.
      */
     async generarReporte(data: GenerarReporteInput, usuarioId: string) {
         // 1. Crear el registro del reporte
@@ -17,7 +20,7 @@ export class ReporteService {
         });
 
         // 2. Recopilar datos segun el tipo
-        let contenido: any;
+        let contenido: any[] = [];
 
         switch (data.tipo) {
             case 'INVENTARIO':
@@ -37,7 +40,24 @@ export class ReporteService {
                 break;
         }
 
-        return { reporte, contenido };
+        // 3. Generar el archivo fisico
+        const titulo = `Reporte de ${data.tipo}`;
+        let fileBuffer: Buffer;
+
+        switch (data.formato) {
+            case 'EXCEL':
+                fileBuffer = await generarExcel(titulo, contenido);
+                break;
+            case 'CSV':
+                fileBuffer = await generarCSV(titulo, contenido);
+                break;
+            case 'PDF':
+            default:
+                fileBuffer = await generarPDF(titulo, contenido);
+                break;
+        }
+
+        return { reporte, fileBuffer };
     }
 
     /**
