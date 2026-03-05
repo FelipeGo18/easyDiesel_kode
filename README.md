@@ -45,7 +45,7 @@ Supabase ─────────  PostgreSQL 16
 | ------------------------------- | ---------------------------------------------------- |
 | **M1 — Auth**            | Login, JWT, roles y permisos                         |
 | **M2 — Usuarios**        | CRUD de actores del sistema                          |
-| **M3 — Inventario**      | Entradas y salidas por tanque                        |
+| **M3 — Gestión de Estación** | Gestión de entradas/salidas de combustible por tanque y estación |
 | **M4 — Precios y Zonas** | Precios vigentes según decreto y zona               |
 | **M5 — Normativa**       | Motor de reglas para aplicación de decretos         |
 | **M6 — Reportes**        | Generación de informes PDF/Excel para el Ministerio |
@@ -72,7 +72,7 @@ Supabase ─────────  PostgreSQL 16
 ## 🗂️ Estructura del repositorio
 
 ```
-combustibles-app/
+easyDiesel_kode/
 ├── backend/
 │   ├── src/
 │   │   ├── routes/          # Definición de endpoints
@@ -113,19 +113,14 @@ combustibles-app/
 │   └── tsconfig.json
 │
 ├── docs/                    # Documentación técnica del proyecto
-│   ├── Arquitectura_Plataforma_Combustibles.docx
+│   ├── Arquitectura_Plataforma_Combustibles.md
 │   ├── arquitectura_combustibles.puml
 │   ├── modelo_base_datos_combustibles.puml
-│   └── estructura_carpetas.puml
-├── .skills/                 # Skills reutilizables para agentes de IA (skills.sh)
-│   ├── backend/
-│   │   └── SKILL.md         # Convenciones del backend (Express, Prisma, estructura)
-│   ├── frontend/
-│   │   └── SKILL.md         # Convenciones del frontend (React, Tailwind, shadcn/ui)
-│   ├── normativa/
-│   │   └── SKILL.md         # Reglas del Decreto 1428 y motor de precios
-│   └── db/
-│       └── SKILL.md         # Modelo de datos, relaciones y convenciones SQL
+│   └── branding/            # Assets SVG de marca
+├── normativa/               # Documentación normativa (decretos, reglas)
+│   └── decreto.md
+├── .agents/                 # Skills reutilizables para agentes de IA
+│   └── skills/
 ├── .gitignore
 └── README.md
 ```
@@ -145,8 +140,8 @@ combustibles-app/
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/combustibles-app.git
-cd combustibles-app
+git clone https://github.com/FelipeGo18/easyDiesel_kode.git
+cd easyDiesel_kode
 ```
 
 ### 2. Configurar el backend
@@ -225,10 +220,8 @@ Cobertura mínima esperada: **70%** en servicios del backend, con énfasis en el
 | Frontend       | [Vercel](https://vercel.com)                                   | Deploy automático desde `main` |
 | Backend        | [Railway](https://railway.app)                                 | Deploy automático desde `main` |
 | Base de datos  | [Supabase](https://supabase.com)                               | PostgreSQL gestionado             |
-| Autenticación | [Google OAuth 2.0](https://console.cloud.google.com)           | Login con Google via Passport.js  |
+| Autenticación | [Google OAuth 2.0](https://console.cloud.google.com)           | Login con Google                   |
 | Mapas          | [Google Maps JavaScript API](https://console.cloud.google.com) | Mapa interactivo en M4 y M8       |
-| Autenticación | [Google OAuth 2.0](https://console.cloud.google.com)           | Login con Google vía Passport.js |
-| Mapas          | [Google Maps JS API](https://console.cloud.google.com)         | Mapa de estaciones en M4 y M8     |
 
 Cada push a la rama `main` dispara el despliegue automático en Vercel y Railway.
 
@@ -251,7 +244,7 @@ Para visualizar el modelo entidad-relación, abrir `docs/modelo_base_datos_combu
 | `docs/Arquitectura_Plataforma_Combustibles.md` | Arquitectura, modelo de BD y diseño de API completo |
 | `docs/arquitectura_combustibles.puml`          | Diagrama de arquitectura (PlantUML)                  |
 | `docs/modelo_base_datos_combustibles.puml`     | Diagrama ERD (PlantUML)                              |
-| `docs/estructura_carpetas.puml`                | Estructura de carpetas del proyecto (PlantUML)       |
+| `normativa/decreto.md`                         | Reglas del Decreto 1428/2025 y motor de precios      |
 
 ---
 
@@ -269,39 +262,35 @@ Para visualizar el modelo entidad-relación, abrir `docs/modelo_base_datos_combu
 
 - [X] Arquitectura definida
 - [X] Modelo de base de datos diseñado
-- [X] API REST diseñada (11 grupos de endpoints)
+- [X] API REST diseñada (12 grupos de endpoints)
 - [X] Estructura de carpetas definida
-- [ ] Implementación backend
-- [ ] Implementación frontend
-- [ ] Pruebas unitarias
+- [X] Implementación backend (12 controllers, 12 services, 13 routes, middleware auth)
+- [X] Scaffolding frontend (React + Vite + Tailwind v4 + estructura base)
+- [X] Pruebas unitarias backend (11 archivos de tests con Jest)
+- [ ] Implementación frontend (páginas y componentes de negocio)
 - [ ] Despliegue en producción
 
 ---
 
 ## 🤖 AI Agent Skills
 
-Este proyecto usa [skills.sh](https://skills.sh) — el ecosistema abierto de skills para agentes de IA. Las skills son instrucciones reutilizables empaquetadas en archivos `SKILL.md` que permiten a cualquier agente (Claude Code, Cursor, Copilot, Codex) cargar el conocimiento específico del proyecto sin necesidad de re-explicarlo en cada sesión.
+Este proyecto usa skills de IA en `.agents/skills/`. Cada skill es un `SKILL.md` con instrucciones reutilizables para agentes (Gemini, Claude, Cursor, Copilot).
 
 ### Skills disponibles
 
-| Skill         | Descripción                                                                       |
-| ------------- | ---------------------------------------------------------------------------------- |
-| `backend`   | Convenciones de Express, estructura de rutas/controllers/services, patrones Prisma |
-| `frontend`  | Convenciones React + Vite, uso de shadcn/ui, estructura de hooks y servicios       |
-| `normativa` | Reglas del Decreto 1428/2025, lógica del motor de precios, tipos de servicio      |
-| `db`        | Modelo de datos, relaciones entre tablas, convenciones de nomenclatura SQL         |
+| Skill                       | Descripción                                                    |
+| --------------------------- | -------------------------------------------------------------- |
+| `nodejs-backend-patterns` | Patrones de backend Node.js con Express, middleware, auth      |
+| `prisma-expert`           | Schema design, migraciones, query optimization con Prisma ORM  |
+| `frontend-design`         | Interfaces frontend distintivas y de alta calidad              |
+| `tailwind-design-system`  | Sistema de diseño con Tailwind CSS v4                          |
+| `react-components`        | Componentes React modulares con Vite                           |
+| `ui-ux-pro-max`           | UI/UX design intelligence: 50 estilos, paletas, tipografías   |
+| `supabase-postgres-best-practices` | Optimización y best practices de Postgres            |
+| `web-design-guidelines`   | Revisión de UI contra Web Interface Guidelines                 |
+| `agent-browser`           | Automatización de browser para testing y scraping              |
 
-### Instalar las skills en tu agente
-
-```bash
-# Instalar todas las skills del proyecto
-pnpm dlx skills add ./  --all
-
-# Instalar una skill específica
-pnpm dlx skills add ./ --skill backend
-```
-
-> Las skills se instalan automáticamente en el agente que tengas configurado (Claude Code, Cursor, etc.)
+Las skills se cargan automáticamente desde `.agents/skills/` según el agente configurado.
 
 ---
 
