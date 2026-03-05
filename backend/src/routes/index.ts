@@ -4,6 +4,9 @@ import usuarioRouter from './usuario.routes';
 import actorRouter from './actor.routes';
 import tanqueRouter from './tanque.routes';
 import inventarioRouter from './inventario.routes';
+import zonaRouter from './zona.routes';
+import precioRouter from './precio.routes';
+import decretoRouter from './decreto.routes';
 import { auth, authorize } from '../middleware/auth';
 
 const router = Router();
@@ -22,20 +25,18 @@ router.use('/actores', authorize('admin', 'regulador'), actorRouter);
 router.use('/tanques', authorize('admin', 'estacion'), tanqueRouter);
 router.use('/inventario', authorize('admin', 'estacion'), inventarioRouter);
 
-// Modulo 4: Precios y Zonas
-// router.use('/precios', preciosRouter);
-// router.use('/zonas', zonasRouter);
+// Modulo 4: Precios, Zonas y Normativa
+router.use('/zonas', authorize('admin', 'regulador'), zonaRouter);
+router.use('/precios', authorize('admin', 'regulador'), precioRouter);
+router.use('/decretos', authorize('admin', 'regulador'), decretoRouter);
 
-// Modulo 5: Normativa
-// router.use('/normativa', normativaRouter);
-
-// Modulo 6: Reportes
+// Modulo 5: Reportes
 // router.use('/reportes', reportesRouter);
 
-// Modulo 7: Auditoria
+// Modulo 6: Auditoria
 // router.use('/auditoria', auditoriaRouter);
 
-// Modulo 8: Dashboard
+// Modulo 7: Dashboard
 // router.use('/dashboard', dashboardRouter);
 
 export { router };
