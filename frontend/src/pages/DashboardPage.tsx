@@ -207,15 +207,16 @@ export function DashboardPage() {
                                     onClick={() => navigate(mod.path)}
                                 >
                                     <div className="flex items-start justify-between mb-3">
-                                        <Icon name={mod.icon} size={20} className={mod.color} />
+                                        <div className="flex items-center gap-3">
+                                            <Icon name={mod.icon} size={20} className={mod.color} />
+                                            <h3 className="text-[14px] font-heading font-bold text-text-primary tracking-tight">
+                                                {mod.label}
+                                            </h3>
+                                        </div>
                                         <span className="text-[9px] font-mono text-text-muted tracking-wider">
                                             {mod.id}
                                         </span>
                                     </div>
-
-                                    <h3 className="text-[14px] font-heading font-bold text-text-primary mb-1 tracking-tight">
-                                        {mod.label}
-                                    </h3>
                                     <p className="text-[12px] text-text-secondary leading-relaxed mb-3">
                                         {mod.description}
                                     </p>
