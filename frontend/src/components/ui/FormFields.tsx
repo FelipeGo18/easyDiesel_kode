@@ -1,5 +1,5 @@
 import { type InputHTMLAttributes, type SelectHTMLAttributes, type TextareaHTMLAttributes, type ReactNode } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 
 /* ── Shared wrapper ── */
 function FieldWrapper({ label, error, children, htmlFor }: { label: string; error?: string; children: ReactNode; htmlFor?: string }) {
@@ -60,7 +60,7 @@ export function SelectField({ label, error, id, options, placeholder, ...props }
                         <option key={o.value} value={o.value}>{o.label}</option>
                     ))}
                 </select>
-                <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+                <Icon name="chevron-down" size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
             </div>
         </FieldWrapper>
     );

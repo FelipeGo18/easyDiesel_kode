@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="25 25 60 60" fill="none">
+<defs>
+  <style>
+    .s      { stroke: #F5A623; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .s-thin { stroke: #F5A623; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .f      { fill: #F5A623; }
+  </style>
+</defs>
+<g id="icon-bar-chart">
+  <line x1="40" y1="70" x2="70" y2="70" class="s"/><rect x="43" y="55" width="6" height="15" class="f"/><rect x="52" y="45" width="6" height="25" class="f"/><rect x="61" y="35" width="6" height="35" class="f"/>
+</g>
+</svg>

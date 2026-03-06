@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { Fuel, ArrowUpRight, ArrowDownLeft, ClipboardCheck, History, AlertTriangle } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { InputField, SelectField, TextAreaField } from '@/components/ui/FormFields';
@@ -9,13 +9,7 @@ import { KpiCard } from '@/components/ui/KpiCard';
 import { useToast } from '@/components/ui/Toast';
 import { useAuth } from '@/context/AuthContext';
 import { tanquesService, inventarioService, type RegistrarEntregaData, type RegistrarTransaccionData, type CierreTurnoData } from '@/services/inventario';
-import { type Tanque, type TipoCombustible, type TipoServicio } from '@/types';
-
-const tipoCombustibleOptions = [
-    { value: 'ACPM', label: 'ACPM' },
-    { value: 'GASOLINA_CORRIENTE', label: 'Gasolina Corriente' },
-    { value: 'GASOLINA_EXTRA', label: 'Gasolina Extra' },
-];
+import { type Tanque, type TipoServicio } from '@/types';
 
 const tipoServicioOptions = [
     { value: 'PARTICULAR', label: 'Particular' },
@@ -145,7 +139,7 @@ export function InventarioPage() {
             header: 'Tanque',
             render: (t) => (
                 <div className="flex items-center gap-2">
-                    <Fuel size={14} className="text-blue-500 shrink-0" />
+                    <Icon name="tank" size={14} className="text-blue-500 shrink-0" />
                     <span className="font-medium">{t.nombre}</span>
                 </div>
             ),
@@ -176,7 +170,7 @@ export function InventarioPage() {
                             <span>{percentage.toFixed(0)}%</span>
                         </div>
                         <div className="h-1.5 w-full bg-bg-elevated rounded-full overflow-hidden">
-                            <div 
+                            <div
                                 className={`h-full rounded-full transition-all ${isLow ? 'bg-red-500' : 'bg-blue-500'}`}
                                 style={{ width: `${Math.min(100, percentage)}%` }}
                             />
@@ -207,30 +201,30 @@ export function InventarioPage() {
                 </div>
                 <div className="flex gap-2">
                     <Button variant="ghost" size="sm">
-                        <History size={14} className="mr-1" />
+                        <Icon name="history" size={14} className="mr-1" />
                         Historial
                     </Button>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <KpiCard 
-                    label="Total Combustible" 
+                <KpiCard
+                    label="Total Combustible"
                     value={`${totalInventario.toLocaleString()} gal`}
-                    icon={<Fuel size={18} strokeWidth={1.5} />}
+                    icon={<Icon name="tank" size={18} />}
                     trend={{ direction: 'up', text: 'Capacidad total' }}
                 />
-                <KpiCard 
-                    label="Alertas de Nivel" 
+                <KpiCard
+                    label="Alertas de Nivel"
                     value={tanquesBajos.toString()}
-                    icon={<AlertTriangle size={18} strokeWidth={1.5} />}
+                    icon={<Icon name="alert" size={18} />}
                     trend={{ direction: tanquesBajos > 0 ? 'down' : 'neutral', text: 'Tanques bajo mínimo' }}
                     className={tanquesBajos > 0 ? 'border-red-500/50' : ''}
                 />
-                <KpiCard 
-                    label="Estación" 
+                <KpiCard
+                    label="Estación"
                     value={user?.estacion?.nombre || 'N/A'}
-                    icon={<ClipboardCheck size={18} strokeWidth={1.5} />}
+                    icon={<Icon name="clipboard-check" size={18} />}
                     trend={{ direction: 'neutral', text: `SICOM: ${user?.estacion?.codigoSicom || '—'}` }}
                 />
             </div>
@@ -243,37 +237,37 @@ export function InventarioPage() {
                 actions={(tanque) => (
                     <div className="flex gap-1">
                         <button
-                            onClick={(e) => { 
-                                e.stopPropagation(); 
+                            onClick={(e) => {
+                                e.stopPropagation();
                                 setSelectedTanque(tanque);
                                 setTransaccionModalOpen(true);
                             }}
                             className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-red-500"
                             title="Registrar Venta (Salida)"
                         >
-                            <ArrowUpRight size={14} />
+                            <Icon name="arrow-up-right" size={14} />
                         </button>
                         <button
-                            onClick={(e) => { 
-                                e.stopPropagation(); 
+                            onClick={(e) => {
+                                e.stopPropagation();
                                 setSelectedTanque(tanque);
                                 setEntregaModalOpen(true);
                             }}
                             className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-green-500"
                             title="Registrar Entrega (Entrada)"
                         >
-                            <ArrowDownLeft size={14} />
+                            <Icon name="arrow-down-left" size={14} />
                         </button>
                         <button
-                            onClick={(e) => { 
-                                e.stopPropagation(); 
+                            onClick={(e) => {
+                                e.stopPropagation();
                                 setSelectedTanque(tanque);
                                 setCierreModalOpen(true);
                             }}
                             className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-blue-500"
                             title="Cierre de Turno / Ajuste"
                         >
-                            <ClipboardCheck size={14} />
+                            <Icon name="clipboard-check" size={14} />
                         </button>
                     </div>
                 )}

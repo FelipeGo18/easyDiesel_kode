@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import { X } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 
 interface ModalProps {
     open: boolean;
@@ -46,7 +46,7 @@ export function Modal({ open, onClose, title, children, maxWidth = '480px' }: Mo
                         onClick={onClose}
                         className="p-1 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-text-primary"
                     >
-                        <X size={16} strokeWidth={1.5} />
+                        <Icon name="close" size={16} />
                     </button>
                 </div>
 

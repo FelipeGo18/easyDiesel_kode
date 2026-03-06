@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
-import { ArrowLeft, Mail, User, Lock } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 
 export function RegisterPage() {
     const { isAuthenticated, isLoading, registerWithEmail, loginWithGoogle } = useAuth();
@@ -30,7 +30,7 @@ export function RegisterPage() {
         setError('');
         setSuccess(false);
         setSubmitting(true);
-        
+
         try {
             await registerWithEmail(email, password, nombre);
             setSuccess(true);
@@ -93,7 +93,7 @@ export function RegisterPage() {
             <div className="flex-1 flex items-center justify-center px-6">
                 <div className="w-full max-w-sm animate-enter" style={{ animationDelay: '0.1s' }}>
                     <Link to="/" className="inline-flex items-center gap-1.5 text-[11px] font-mono text-text-muted hover:text-amber-500 uppercase tracking-wider interactive mb-8">
-                        <ArrowLeft size={14} strokeWidth={1.5} />
+                        <Icon name="arrow-left" size={14} />
                         Volver al inicio
                     </Link>
 
@@ -105,7 +105,7 @@ export function RegisterPage() {
                     {success ? (
                         <div className="bg-green-500/10 border border-green-500/30 rounded-brand p-6 text-center">
                             <div className="w-12 h-12 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Mail size={24} />
+                                <Icon name="mail" size={24} />
                             </div>
                             <h3 className="text-text-primary font-medium mb-2">¡Registro exitoso!</h3>
                             <p className="text-[13px] text-text-secondary mb-6">
@@ -120,7 +120,7 @@ export function RegisterPage() {
                             <div className="space-y-1.5">
                                 <label className="text-label text-text-secondary">Nombre completo</label>
                                 <div className="relative">
-                                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
+                                    <Icon name="user" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
                                     <input
                                         type="text"
                                         value={nombre}
@@ -135,7 +135,7 @@ export function RegisterPage() {
                             <div className="space-y-1.5">
                                 <label className="text-label text-text-secondary">Email</label>
                                 <div className="relative">
-                                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
+                                    <Icon name="mail" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
                                     <input
                                         type="email"
                                         value={email}
@@ -150,7 +150,7 @@ export function RegisterPage() {
                             <div className="space-y-1.5">
                                 <label className="text-label text-text-secondary">Contraseña</label>
                                 <div className="relative">
-                                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
+                                    <Icon name="lock" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
                                     <input
                                         type="password"
                                         value={password}

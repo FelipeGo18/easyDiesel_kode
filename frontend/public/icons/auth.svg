@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="25 25 60 60" fill="none">
+<defs>
+  <style>
+    
+    .s      { stroke: #F5A623; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .s-thin { stroke: #F5A623; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .s-dim  { stroke: #F5A623; stroke-width: 1.2; stroke-linecap: round; fill: none; opacity: 0.4; }
+    .f      { fill: #F5A623; }
+    .f-bg   { fill: #2a1a00; }
+    
+  </style>
+</defs>
+<g id="icon-auth">
+
+  
+  <path class="s" d="M55 26 L68 34 L68 48 L55 56 L42 48 L42 34 Z"/>
+  <rect class="s" x="38" y="54" width="34" height="24" rx="3"/>
+  <circle cx="55" cy="66" r="3.5" class="s"/>
+  <line x1="55" y1="70" x2="55" y2="74" stroke="#F5A623" stroke-width="1.8" stroke-linecap="round"/>
+  
+
+</g>
+</svg>

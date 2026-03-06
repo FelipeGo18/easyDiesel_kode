@@ -92,32 +92,7 @@ function AppRoutes() {
   );
 }
 
-/* ── Placeholder for future modules ── */
-function PlaceholderPage({ title, moduleId }: { title: string; moduleId: string }) {
-  return (
-    <div className="animate-enter">
-      <div className="flex items-center gap-3 mb-2">
-        <h1 className="text-h1 text-text-primary">{title}</h1>
-        <span className="text-[9px] font-mono text-text-muted tracking-wider bg-bg-elevated px-2 py-0.5 rounded-[2px] border border-border-subtle">
-          {moduleId}
-        </span>
-      </div>
-      <p className="text-small text-text-secondary mb-8">
-        Este módulo está en desarrollo.
-      </p>
 
-      <div className="border border-border-subtle border-dashed rounded-brand p-12 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-brand bg-bg-elevated border border-border-default flex items-center justify-center">
-            <span className="text-amber-500 font-mono text-[14px] font-semibold">{moduleId}</span>
-          </div>
-          <p className="text-[13px] text-text-secondary">Contenido del módulo {title}</p>
-          <p className="text-[10px] font-mono text-text-muted mt-1 tracking-wider uppercase">Próximamente</p>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function App() {
   return (

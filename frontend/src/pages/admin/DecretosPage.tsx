@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { Plus, Pencil, FileText } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { InputField, TextAreaField, CheckboxField } from '@/components/ui/FormFields';
@@ -99,7 +99,7 @@ export function DecretosPage() {
             header: 'Número',
             render: (d) => (
                 <div className="flex items-center gap-2">
-                    <FileText size={14} className="text-amber-500 shrink-0" />
+                    <Icon name="normativa" size={14} className="text-amber-500 shrink-0" />
                     <span className="font-mono text-[13px] font-medium">{d.numero}</span>
                 </div>
             ),
@@ -136,7 +136,7 @@ export function DecretosPage() {
                     </p>
                 </div>
                 <Button onClick={openCreate}>
-                    <Plus size={14} strokeWidth={1.5} />
+                    <Icon name="plus" size={14} />
                     Nuevo decreto
                 </Button>
             </div>
@@ -153,7 +153,7 @@ export function DecretosPage() {
                         className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-amber-500"
                         title="Editar"
                     >
-                        <Pencil size={14} />
+                        <Icon name="pencil" size={14} />
                     </button>
                 )}
             />

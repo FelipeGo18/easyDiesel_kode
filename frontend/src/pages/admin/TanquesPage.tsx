@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { Plus, Pencil, Fuel, Building2 } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { InputField, SelectField } from '@/components/ui/FormFields';
@@ -96,7 +96,7 @@ export function TanquesPage() {
             header: 'Tanque',
             render: (t) => (
                 <div className="flex items-center gap-2">
-                    <Fuel size={14} className="text-blue-500 shrink-0" />
+                    <Icon name="tank" size={14} className="text-blue-500 shrink-0" />
                     <span className="font-medium">{t.nombre}</span>
                 </div>
             ),
@@ -108,7 +108,7 @@ export function TanquesPage() {
                 const est = estaciones.find(e => e.id === t.estacionId);
                 return (
                     <div className="flex items-center gap-1.5 text-[12px]">
-                        <Building2 size={12} className="text-text-muted" />
+                        <Icon name="station" size={12} className="text-text-muted" />
                         <span>{est?.nombre || '—'}</span>
                     </div>
                 );
@@ -145,7 +145,7 @@ export function TanquesPage() {
                     </p>
                 </div>
                 <Button onClick={openCreate}>
-                    <Plus size={14} className="mr-1" />
+                    <Icon name="plus" size={14} className="mr-1" />
                     Nuevo Tanque
                 </Button>
             </div>
@@ -161,7 +161,7 @@ export function TanquesPage() {
                         className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-amber-500"
                         title="Editar"
                     >
-                        <Pencil size={14} />
+                        <Icon name="pencil" size={14} />
                     </button>
                 )}
             />

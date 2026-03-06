@@ -1,5 +1,5 @@
 import { useState, useMemo, type ReactNode } from 'react';
-import { Search, ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 
 export interface Column<T> {
     key: string;
@@ -75,11 +75,11 @@ export function DataTable<T extends Record<string, any>>({
     };
 
     const SortIcon = ({ col }: { col: string }) => {
-        if (sortKey !== col) return <ChevronsUpDown size={12} className="text-text-muted opacity-50" />;
+        if (sortKey !== col) return <Icon name="chevrons-up-down" size={12} className="text-text-muted opacity-50" />;
         return sortDir === 'asc' ? (
-            <ChevronUp size={12} className="text-amber-500" />
+            <Icon name="chevron-up" size={12} className="text-amber-500" />
         ) : (
-            <ChevronDown size={12} className="text-amber-500" />
+            <Icon name="chevron-down" size={12} className="text-amber-500" />
         );
     };
 
@@ -88,7 +88,7 @@ export function DataTable<T extends Record<string, any>>({
             {/* Search */}
             {searchable && (
                 <div className="relative max-w-xs">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+                    <Icon name="search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
                     <input
                         type="text"
                         value={search}
@@ -174,7 +174,7 @@ export function DataTable<T extends Record<string, any>>({
                             disabled={page === 0}
                             className="p-1.5 rounded-brand hover:bg-bg-elevated disabled:opacity-30 disabled:cursor-not-allowed interactive text-text-muted"
                         >
-                            <ChevronLeft size={14} />
+                            <Icon name="chevron-left" size={14} />
                         </button>
                         <span className="text-[11px] font-mono text-text-secondary px-2">
                             {page + 1} / {totalPages}
@@ -184,7 +184,7 @@ export function DataTable<T extends Record<string, any>>({
                             disabled={page >= totalPages - 1}
                             className="p-1.5 rounded-brand hover:bg-bg-elevated disabled:opacity-30 disabled:cursor-not-allowed interactive text-text-muted"
                         >
-                            <ChevronRight size={14} />
+                            <Icon name="chevron-right" size={14} />
                         </button>
                     </div>
                 </div>

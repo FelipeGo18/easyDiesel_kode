@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="25 25 60 60" fill="none">
+<defs>
+  <style>
+    .s      { stroke: #F5A623; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .s-thin { stroke: #F5A623; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .s-dim  { stroke: #F5A623; stroke-width: 1.2; stroke-linecap: round; fill: none; opacity: 0.4; }
+    .f      { fill: #F5A623; }
+    .f-bg   { fill: #2a1a00; }
+  </style>
+</defs>
+<g id="icon-arrow-left">
+  <line x1="68" y1="55" x2="42" y2="55" class="s"/><polyline points="50 47 42 55 50 63" class="s"/>
+</g>
+</svg>

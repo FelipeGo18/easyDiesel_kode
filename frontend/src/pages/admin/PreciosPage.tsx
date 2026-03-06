@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { Plus, Pencil, DollarSign } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { InputField, SelectField } from '@/components/ui/FormFields';
@@ -124,7 +124,7 @@ export function PreciosPage() {
             header: 'Combustible',
             render: (p) => (
                 <div className="flex items-center gap-2">
-                    <DollarSign size={14} className="text-amber-500 shrink-0" />
+                    <Icon name="prices" size={14} className="text-amber-500 shrink-0" />
                     <span className="font-mono text-[12px] font-medium uppercase">{p.tipoCombustible.replace('_', ' ')}</span>
                 </div>
             ),
@@ -176,7 +176,7 @@ export function PreciosPage() {
                     </p>
                 </div>
                 <Button onClick={openCreate} disabled={zonas.length === 0 || decretos.length === 0}>
-                    <Plus size={14} strokeWidth={1.5} />
+                    <Icon name="plus" size={14} className="mr-2" />
                     Nuevo precio
                 </Button>
             </div>
@@ -201,7 +201,7 @@ export function PreciosPage() {
                         className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-amber-500"
                         title="Editar"
                     >
-                        <Pencil size={14} />
+                        <Icon name="pencil" size={14} />
                     </button>
                 )}
             />

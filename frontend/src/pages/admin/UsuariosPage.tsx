@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { Plus, Pencil, UserX, Users } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { InputField, SelectField } from '@/components/ui/FormFields';
@@ -104,7 +104,7 @@ export function UsuariosPage() {
                         <img src={u.fotoUrl} alt="" className="w-7 h-7 rounded-full border border-border-default" />
                     ) : (
                         <div className="w-7 h-7 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
-                            <Users size={13} />
+                            <Icon name="users" size={13} />
                         </div>
                     )}
                     <div className="flex flex-col">
@@ -154,7 +154,7 @@ export function UsuariosPage() {
                     </p>
                 </div>
                 <Button onClick={openCreate}>
-                    <Plus size={14} strokeWidth={1.5} />
+                    <Icon name="plus" size={14} />
                     Nuevo usuario
                 </Button>
             </div>
@@ -172,7 +172,7 @@ export function UsuariosPage() {
                             className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-amber-500"
                             title="Editar"
                         >
-                            <Pencil size={14} />
+                            <Icon name="pencil" size={14} />
                         </button>
                         {u.activo && (
                             <button
@@ -180,7 +180,7 @@ export function UsuariosPage() {
                                 className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-red-500"
                                 title="Desactivar"
                             >
-                                <UserX size={14} />
+                                <Icon name="user-x" size={14} />
                             </button>
                         )}
                     </>
