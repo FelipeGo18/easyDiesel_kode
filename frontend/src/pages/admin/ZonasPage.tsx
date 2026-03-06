@@ -1,5 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { Plus, Pencil, MapPin } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { InputField, TextAreaField, SelectField } from '@/components/ui/FormFields';
@@ -15,10 +16,15 @@ const tipoZonaOptions = [
 
 export function ZonasPage() {
     const toast = useToast();
+    const { user } = useAuth();
     const [zonas, setZonas] = useState<Zona[]>([]);
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
     const [editing, setEditing] = useState<Zona | null>(null);
+
+    // Lógica de permisos
+    const rolNombre = typeof user?.rol === 'object' ? user.rol.nombre : user?.rol;
+    const canWrite = rolNombre === 'admin';
 
     // Form state
     const [nombre, setNombre] = useState('');
@@ -127,15 +133,15 @@ export function ZonasPage() {
         <div className="animate-enter">
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-h1 text-text-primary">Zonas de distribución</h1>
-                    <p className="text-small text-text-secondary mt-1">
-                        Gestiona las zonas geográficas para la distribución de combustibles.
-                    </p>
+                    <h1 className="text-h1 text-text-primary mb-1">Zonas de distribución</h1>
+                    <p className="text-small text-text-secondary">Configuración de regiones y departamentos regulados</p>
                 </div>
-                <Button onClick={openCreate}>
-                    <Plus size={14} strokeWidth={1.5} />
-                    Nueva zona
-                </Button>
+                {canWrite && (
+                    <Button onClick={openCreate} size="sm">
+                        <Plus size={16} strokeWidth={1.5} />
+                        Nueva zona
+                    </Button>
+                )}
             </div>
 
             <DataTable
@@ -144,7 +150,7 @@ export function ZonasPage() {
                 loading={loading}
                 searchPlaceholder="Buscar por nombre o departamento..."
                 emptyMessage="No hay zonas registradas. Crea la primera."
-                actions={(zona) => (
+                actions={(zona) => canWrite ? (
                     <button
                         onClick={(e) => { e.stopPropagation(); openEdit(zona); }}
                         className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-amber-500"
@@ -152,7 +158,7 @@ export function ZonasPage() {
                     >
                         <Pencil size={14} />
                     </button>
-                )}
+                ) : null}
             />
 
             {/* Modal crear/editar */}

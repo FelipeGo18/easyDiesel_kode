@@ -5,6 +5,7 @@ interface JwtPayload {
     userId: string;
     email: string;
     rol: string;
+    permisos?: string[];
 }
 
 // Extiende el tipo Request para incluir el usuario autenticado
@@ -44,19 +45,27 @@ export const auth = (req: Request, res: Response, next: NextFunction): void => {
 };
 
 /**
- * Middleware de autorización por roles.
- * Uso: authorize('admin', 'regulador')
+ * Middleware de autorización por permisos.
+ * Uso: can('inventario:crear', 'inventario:editar')
  */
-export const authorize = (...roles: string[]) => {
+export const can = (...requiredPermisos: string[]) => {
     return (req: Request, res: Response, next: NextFunction): void => {
         if (!req.user) {
             res.status(401).json({ error: 'No autenticado' });
             return;
         }
 
-        if (!roles.includes(req.user.rol)) {
+        // El admin tiene todos los permisos
+        if (req.user.rol === 'admin') {
+            return next();
+        }
+
+        const userPermisos = req.user.permisos || [];
+        const hasAllPermisos = requiredPermisos.every(p => userPermisos.includes(p));
+
+        if (!hasAllPermisos) {
             res.status(403).json({
-                error: 'No tienes permisos para acceder a este recurso',
+                error: 'No tienes los permisos necesarios para realizar esta acción',
             });
             return;
         }

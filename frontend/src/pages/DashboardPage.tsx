@@ -105,6 +105,24 @@ export function DashboardPage() {
     const { user } = useAuth();
     const navigate = useNavigate();
 
+    // Lógica de visualización condicional basada en roles
+    const rolNombre = typeof user?.rol === 'object' ? user.rol.nombre : user?.rol;
+    const isParticular = rolNombre === 'particular';
+
+    // Filtrar módulos según permisos (simplificado por ahora)
+    const availableModules = modules.filter(m => {
+        if (isParticular) return false; // El particular no debería estar aquí, pero por seguridad
+        if (rolNombre === 'admin') return true;
+        
+        // Reglas específicas por rol
+        if (rolNombre === 'estacion') return ['M3', 'M6'].includes(m.id);
+        if (rolNombre === 'distribuidor') return ['M3', 'M6'].includes(m.id);
+        if (rolNombre === 'regulador') return ['M4', 'M5', 'M6', 'M7'].includes(m.id);
+        if (rolNombre === 'auditor') return ['M6', 'M7'].includes(m.id);
+        
+        return false;
+    });
+
     const greeting = () => {
         const hour = new Date().getHours();
         if (hour < 12) return 'Buenos días';
@@ -173,13 +191,13 @@ export function DashboardPage() {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                        {modules.map((mod, i) => {
+                        {availableModules.map((mod, i) => {
                             const Icon = mod.icon;
                             return (
                                 <Card
                                     key={mod.id}
                                     variant="interactive"
-                                    className="animate-enter group"
+                                    className="animate-enter group rounded-brand"
                                     style={{ animationDelay: `${(i + 1) * 60}ms` }}
                                     onClick={() => navigate(mod.path)}
                                 >

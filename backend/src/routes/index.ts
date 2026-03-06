@@ -11,7 +11,7 @@ import decretoRouter from './decreto.routes';
 import auditoriaRouter from './auditoria.routes';
 import reporteRouter from './reporte.routes';
 import dashboardRouter from './dashboard.routes';
-import { auth, authorize } from '../middleware/auth';
+import { auth, can } from '../middleware/auth';
 
 const router = Router();
 
@@ -23,25 +23,25 @@ router.use('/publico', publicoRouter);
 router.use(auth);
 
 // Modulo 2: Usuarios y Actores
-router.use('/usuarios', authorize('admin'), usuarioRouter);
-router.use('/actores', authorize('admin', 'regulador'), actorRouter);
+router.use('/usuarios', can('usuarios:leer', 'usuarios:escribir'), usuarioRouter);
+router.use('/actores', can('actores:leer', 'actores:escribir'), actorRouter);
 
 // Modulo 3: Inventario y Tanques
-router.use('/tanques', authorize('admin', 'estacion'), tanqueRouter);
-router.use('/inventario', authorize('admin', 'estacion'), inventarioRouter);
+router.use('/tanques', can('tanques:leer', 'tanques:escribir'), tanqueRouter);
+router.use('/inventario', can('inventario:leer', 'inventario:escribir'), inventarioRouter);
 
 // Modulo 4: Precios, Zonas y Normativa
-router.use('/zonas', authorize('admin', 'regulador'), zonaRouter);
-router.use('/precios', authorize('admin', 'regulador'), precioRouter);
-router.use('/decretos', authorize('admin', 'regulador'), decretoRouter);
+router.use('/zonas', can('zonas:leer', 'zonas:escribir'), zonaRouter);
+router.use('/precios', can('precios:leer', 'precios:escribir'), precioRouter);
+router.use('/decretos', can('decretos:leer', 'decretos:escribir'), decretoRouter);
 
 // Modulo 5: Auditoria (solo lectura para admin y auditor)
-router.use('/auditoria', authorize('admin', 'auditor'), auditoriaRouter);
+router.use('/auditoria', can('auditoria:leer'), auditoriaRouter);
 
 // Modulo 6: Reportes
-router.use('/reportes', authorize('admin', 'regulador', 'estacion'), reporteRouter);
+router.use('/reportes', can('reportes:generar'), reporteRouter);
 
 // Modulo 7: Dashboard
-router.use('/dashboard', authorize('admin'), dashboardRouter);
+router.use('/dashboard', can('dashboard:leer'), dashboardRouter);
 
 export { router };
