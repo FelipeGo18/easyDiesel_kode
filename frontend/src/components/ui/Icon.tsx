@@ -15,6 +15,7 @@ export function Icon({ name, size = 24, strokeWidth, className, ...props }: Icon
             width={size}
             height={size}
             className={cn('inline-block shrink-0', className)}
+            style={{ transform: 'scale(1.6)' }}
             {...props}
         />
     );
