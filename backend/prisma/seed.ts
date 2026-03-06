@@ -10,19 +10,50 @@ async function seed() {
     // 1. ROLES
     // ──────────────────────────────────────────
     const roles = [
-        { nombre: 'admin', descripcion: 'Administrador de plataforma — acceso completo' },
-        { nombre: 'estacion', descripcion: 'Estación de servicio — inventario, transacciones, reportes propios' },
-        { nombre: 'distribuidor', descripcion: 'Distribuidor mayorista — registro de entregas, reportes' },
-        { nombre: 'regulador', descripcion: 'Autoridad reguladora — solo lectura: normativa, reportes, dashboard' },
-        { nombre: 'auditor', descripcion: 'Auditor — solo lectura: logs de auditoría' },
-        { nombre: 'particular', descripcion: 'Ciudadano — consulta precios, planifica viajes' },
-        { nombre: 'distribuidor_regulado', descripcion: 'Distribuidor regulado — inventario y normativa' },
+        { 
+            nombre: 'admin', 
+            descripcion: 'Administrador de plataforma — acceso completo',
+            permisos: ['all']
+        },
+        { 
+            nombre: 'estacion', 
+            descripcion: 'Estación de servicio — inventario, transacciones, reportes propios',
+            permisos: ['inventario:leer', 'inventario:escribir', 'transacciones:leer', 'transacciones:escribir', 'reportes:generar']
+        },
+        { 
+            nombre: 'distribuidor', 
+            descripcion: 'Distribuidor mayorista — registro de entregas, reportes',
+            permisos: ['entregas:leer', 'entregas:escribir', 'reportes:generar']
+        },
+        { 
+            nombre: 'regulador', 
+            descripcion: 'Autoridad reguladora — solo lectura: normativa, reportes, dashboard',
+            permisos: ['normativa:leer', 'reportes:leer', 'dashboard:leer']
+        },
+        { 
+            nombre: 'auditor', 
+            descripcion: 'Auditor — solo lectura: logs de auditoría',
+            permisos: ['auditoria:leer', 'reportes:leer']
+        },
+        { 
+            nombre: 'particular', 
+            descripcion: 'Ciudadano — consulta precios, planifica viajes',
+            permisos: ['precios:leer']
+        },
+        { 
+            nombre: 'distribuidor_regulado', 
+            descripcion: 'Distribuidor regulado — inventario y normativa',
+            permisos: ['inventario:leer', 'normativa:leer', 'reportes:generar']
+        },
     ];
 
     for (const rol of roles) {
         await prisma.rol.upsert({
             where: { nombre: rol.nombre },
-            update: { descripcion: rol.descripcion },
+            update: { 
+                descripcion: rol.descripcion,
+                permisos: rol.permisos
+            },
             create: rol,
         });
     }

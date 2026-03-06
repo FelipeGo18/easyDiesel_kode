@@ -5,6 +5,8 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
+import { ReportesPage } from '@/pages/ReportesPage';
+import { AuditoriaPage } from '@/pages/AuditoriaPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { ZonasPage } from '@/pages/admin/ZonasPage';
 import { DecretosPage } from '@/pages/admin/DecretosPage';
@@ -80,8 +82,8 @@ function AppRoutes() {
         <Route path="/normativa" element={<DecretosPage />} />
         <Route path="/usuarios" element={<UsuariosPage />} />
         <Route path="/estacion" element={<InventarioPage />} />
-        <Route path="/reportes" element={<PlaceholderPage title="Reportes" moduleId="M6" />} />
-        <Route path="/auditoria" element={<PlaceholderPage title="Auditoría" moduleId="M7" />} />
+        <Route path="/reportes" element={<ReportesPage />} />
+        <Route path="/auditoria" element={<AuditoriaPage />} />
       </Route>
 
       {/* Fallback */}

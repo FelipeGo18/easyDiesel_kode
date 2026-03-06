@@ -188,24 +188,29 @@ export function HomePage() {
                                             <div className="p-1">
                                                 {(() => {
                                                     const rolNombre = typeof user?.rol === 'object' ? user.rol.nombre : user?.rol;
-                                                    const rolesConPanel = ['admin', 'regulador', 'estacion', 'distribuidor', 'auditor', 'distribuidor_regulado'];
-                                                    return rolesConPanel.includes(rolNombre || '') ? (
-                                                        <button
-                                                            onClick={() => { navigate('/dashboard'); setShowProfileMenu(false); }}
-                                                            className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-text-secondary hover:text-text-primary hover:bg-bg-elevated rounded-sm transition-colors"
-                                                        >
-                                                            <LayoutDashboard size={14} strokeWidth={1.5} />
-                                                            Mi panel
-                                                        </button>
-                                                    ) : null;
+                                                    const isParticular = rolNombre === 'particular';
+
+                                                    return (
+                                                        <>
+                                                            {!isParticular && (
+                                                                <button
+                                                                    onClick={() => { navigate('/dashboard'); setShowProfileMenu(false); }}
+                                                                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-text-secondary hover:text-text-primary hover:bg-bg-elevated rounded-sm transition-colors"
+                                                                >
+                                                                    <LayoutDashboard size={14} strokeWidth={1.5} />
+                                                                    Mi panel
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                onClick={() => { logout(); setShowProfileMenu(false); }}
+                                                                className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-red-500 hover:bg-red-500/5 rounded-sm transition-colors"
+                                                            >
+                                                                <LogOut size={14} strokeWidth={1.5} />
+                                                                Cerrar sesión
+                                                            </button>
+                                                        </>
+                                                    );
                                                 })()}
-                                                <button
-                                                    onClick={() => { logout(); setShowProfileMenu(false); }}
-                                                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-red-500 hover:bg-red-500/5 rounded-sm transition-colors"
-                                                >
-                                                    <LogOut size={14} strokeWidth={1.5} />
-                                                    Cerrar sesión
-                                                </button>
                                             </div>
                                         </div>
                                     </>

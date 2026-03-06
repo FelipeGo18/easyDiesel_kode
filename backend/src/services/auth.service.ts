@@ -18,7 +18,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const SALT_ROUNDS = 12;
 
-function signToken(payload: { userId: string; email: string; rol: string }): string {
+function signToken(payload: { userId: string; email: string; rol: string; permisos?: string[] }): string {
     const secret = process.env.JWT_SECRET || 'default-secret';
     const expiresIn = process.env.JWT_EXPIRES_IN || '8h';
     return jwt.sign(payload, secret, { expiresIn } as jwt.SignOptions);
@@ -79,6 +79,7 @@ export class AuthService {
             userId: usuario.id,
             email: usuario.email,
             rol: usuario.rol.nombre,
+            permisos: (usuario.rol.permisos as any) || [],
         });
 
         return {
@@ -88,6 +89,7 @@ export class AuthService {
                 email: usuario.email,
                 nombre: usuario.nombre,
                 rol: usuario.rol.nombre,
+                permisos: (usuario.rol.permisos as any) || [],
             },
         };
     }
@@ -125,6 +127,7 @@ export class AuthService {
             userId: usuario.id,
             email: usuario.email,
             rol: usuario.rol.nombre,
+            permisos: (usuario.rol.permisos as any) || [],
         });
 
         return {
@@ -134,6 +137,7 @@ export class AuthService {
                 email: usuario.email,
                 nombre: usuario.nombre,
                 rol: usuario.rol.nombre,
+                permisos: (usuario.rol.permisos as any) || [],
             },
         };
     }
@@ -191,6 +195,7 @@ export class AuthService {
             userId: usuario.id,
             email: usuario.email,
             rol: usuario.rol.nombre,
+            permisos: (usuario.rol.permisos as any) || [],
         });
 
         return {
@@ -201,6 +206,7 @@ export class AuthService {
                 nombre: usuario.nombre,
                 rol: usuario.rol.nombre,
                 fotoUrl: usuario.fotoUrl,
+                permisos: (usuario.rol.permisos as any) || [],
             },
         };
     }
