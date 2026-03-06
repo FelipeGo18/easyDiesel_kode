@@ -58,38 +58,38 @@ export interface Rol {
 
 /* ── Zonas ── */
 export const zonasService = {
-    getAll: () => api.get<Zona[]>('/zonas').then(r => r.data),
-    getById: (id: string) => api.get<Zona>(`/zonas/${id}`).then(r => r.data),
-    create: (data: Partial<Zona>) => api.post<Zona>('/zonas', data).then(r => r.data),
-    update: (id: string, data: Partial<Zona>) => api.put<Zona>(`/zonas/${id}`, data).then(r => r.data),
+    getAll: () => api.get<any>('/zonas').then(r => r.data.data as Zona[]),
+    getById: (id: string) => api.get<any>(`/zonas/${id}`).then(r => r.data.data as Zona),
+    create: (data: Partial<Zona>) => api.post<any>('/zonas', data).then(r => r.data.data as Zona),
+    update: (id: string, data: Partial<Zona>) => api.put<any>(`/zonas/${id}`, data).then(r => r.data.data as Zona),
 };
 
 /* ── Decretos ── */
 export const decretosService = {
-    getAll: () => api.get<Decreto[]>('/decretos').then(r => r.data),
-    getById: (id: string) => api.get<Decreto>(`/decretos/${id}`).then(r => r.data),
-    create: (data: Partial<Decreto>) => api.post<Decreto>('/decretos', data).then(r => r.data),
-    update: (id: string, data: Partial<Decreto>) => api.put<Decreto>(`/decretos/${id}`, data).then(r => r.data),
+    getAll: () => api.get<any>('/decretos').then(r => r.data.data as Decreto[]),
+    getById: (id: string) => api.get<any>(`/decretos/${id}`).then(r => r.data.data as Decreto),
+    create: (data: Partial<Decreto>) => api.post<any>('/decretos', data).then(r => r.data.data as Decreto),
+    update: (id: string, data: Partial<Decreto>) => api.put<any>(`/decretos/${id}`, data).then(r => r.data.data as Decreto),
 };
 
 /* ── Precios ── */
 export const preciosService = {
-    getAll: (params?: Record<string, string>) => api.get<Precio[]>('/precios', { params }).then(r => r.data),
-    getById: (id: string) => api.get<Precio>(`/precios/${id}`).then(r => r.data),
-    create: (data: Partial<Precio>) => api.post<Precio>('/precios', data).then(r => r.data),
-    update: (id: string, data: Partial<Precio>) => api.put<Precio>(`/precios/${id}`, data).then(r => r.data),
+    getAll: (params?: Record<string, string>) => api.get<any>('/precios', { params }).then(r => r.data.data as Precio[]),
+    getById: (id: string) => api.get<any>(`/precios/${id}`).then(r => r.data.data as Precio),
+    create: (data: Partial<Precio>) => api.post<any>('/precios', data).then(r => r.data.data as Precio),
+    update: (id: string, data: Partial<Precio>) => api.put<any>(`/precios/${id}`, data).then(r => r.data.data as Precio),
 };
 
 /* ── Usuarios ── */
 export const usuariosService = {
-    getAll: () => api.get<Usuario[]>('/usuarios').then(r => r.data),
-    getById: (id: string) => api.get<Usuario>(`/usuarios/${id}`).then(r => r.data),
-    create: (data: Record<string, any>) => api.post<Usuario>('/usuarios', data).then(r => r.data),
-    update: (id: string, data: Record<string, any>) => api.put<Usuario>(`/usuarios/${id}`, data).then(r => r.data),
-    deactivate: (id: string) => api.delete(`/usuarios/${id}`).then(r => r.data),
+    getAll: () => api.get<any>('/usuarios').then(r => r.data.data as Usuario[]),
+    getById: (id: string) => api.get<any>(`/usuarios/${id}`).then(r => r.data.data as Usuario),
+    create: (data: Record<string, any>) => api.post<any>('/usuarios', data).then(r => r.data.data as Usuario),
+    update: (id: string, data: Record<string, any>) => api.put<any>(`/usuarios/${id}`, data).then(r => r.data.data as Usuario),
+    deactivate: (id: string) => api.delete<any>(`/usuarios/${id}`).then(r => r.data.data),
 };
 
 /* ── Roles (para selectores) ── */
 export const rolesService = {
-    getAll: () => api.get<Rol[]>('/usuarios/roles').then(r => r.data),
+    getAll: () => api.get<any>('/usuarios/roles').then(r => r.data.data as Rol[]),
 };
