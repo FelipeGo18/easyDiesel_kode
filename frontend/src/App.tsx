@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/LoginPage';
+import { RegisterPage } from '@/pages/RegisterPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import type { ReactNode } from 'react';
 
@@ -53,6 +54,7 @@ function AppRoutes() {
       {/* ── Public routes ── */}
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
 
       {/* ── Protected routes — inside AppLayout ── */}
       <Route
@@ -92,9 +94,9 @@ function PlaceholderPage({ title, moduleId }: { title: string; moduleId: string 
         Este módulo está en desarrollo.
       </p>
 
-      <div className="border border-border-subtle border-dashed rounded-[var(--radius-brand)] p-12 flex items-center justify-center">
+      <div className="border border-border-subtle border-dashed rounded-brand p-12 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-[var(--radius-brand)] bg-bg-elevated border border-border-default flex items-center justify-center">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-brand bg-bg-elevated border border-border-default flex items-center justify-center">
             <span className="text-amber-500 font-mono text-[14px] font-semibold">{moduleId}</span>
           </div>
           <p className="text-[13px] text-text-secondary">Contenido del módulo {title}</p>

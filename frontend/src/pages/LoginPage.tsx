@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Fuel, ArrowLeft } from 'lucide-react';
 
 export function LoginPage() {
-    const { isAuthenticated, isLoading, login } = useAuth();
+    const { isAuthenticated, isLoading, login, loginWithGoogle } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -36,9 +36,13 @@ export function LoginPage() {
         }
     };
 
-    const handleGoogleLogin = () => {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-        window.location.href = `${apiUrl}/auth/google`;
+    const handleGoogleLogin = async () => {
+        try {
+            setError('');
+            await loginWithGoogle();
+        } catch (err: any) {
+            setError('Error al conectar con Google: ' + (err.message || 'Intenta de nuevo.'));
+        }
     };
 
     return (
@@ -107,7 +111,7 @@ export function LoginPage() {
                         {['Control', 'Trazabilidad', 'Normativa', 'Reportes'].map((tag) => (
                             <span
                                 key={tag}
-                                className="text-[9px] font-mono uppercase tracking-[0.1em] px-2.5 py-1 rounded-[2px] bg-amber-dim text-amber-500/70 border border-amber-500/10"
+                                className="text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-[2px] bg-amber-dim text-amber-500/70 border border-amber-500/10"
                             >
                                 {tag}
                             </span>
@@ -153,7 +157,7 @@ export function LoginPage() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="usuario@correo.com"
                                 required
-                                className="w-full px-3.5 py-2.5 bg-bg-elevated border border-border-default rounded-[var(--radius-brand)] text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive"
+                                className="w-full px-3.5 py-2.5 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive"
                             />
                         </div>
 
@@ -167,13 +171,13 @@ export function LoginPage() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
                                 required
-                                className="w-full px-3.5 py-2.5 bg-bg-elevated border border-border-default rounded-[var(--radius-brand)] text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive"
+                                className="w-full px-3.5 py-2.5 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive"
                             />
                         </div>
 
                         {/* Error */}
                         {error && (
-                            <div className="px-3 py-2 bg-red-dim border border-red-500/30 rounded-[var(--radius-brand)]">
+                            <div className="px-3 py-2 bg-red-dim border border-red-500/30 rounded-brand">
                                 <p className="text-[12px] font-mono text-red-500">{error}</p>
                             </div>
                         )}
@@ -182,6 +186,13 @@ export function LoginPage() {
                         <Button type="submit" className="w-full" isLoading={submitting}>
                             Iniciar sesión
                         </Button>
+
+                        <p className="text-center text-[12px] text-text-muted mt-4">
+                            ¿No tienes una cuenta?{' '}
+                            <Link to="/register" className="text-amber-500 hover:underline font-medium">
+                                Regístrate aquí
+                            </Link>
+                        </p>
                     </form>
 
                     {/* Divider */}

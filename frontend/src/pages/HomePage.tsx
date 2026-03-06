@@ -14,6 +14,8 @@ import {
     TrendingDown,
     Clock,
     Newspaper,
+    User,
+    LogOut,
     ChevronDown,
     Navigation,
 } from 'lucide-react';
@@ -96,11 +98,11 @@ const noticiasMock = [
 
 export function HomePage() {
     const navigate = useNavigate();
-    const { isAuthenticated } = useAuth();
-
+    const { isAuthenticated, user, logout } = useAuth();
     const [zonaSeleccionada, setZonaSeleccionada] = useState('1');
     const [combustibleSeleccionado, setCombustibleSeleccionado] = useState('ACPM');
     const [servicioSeleccionado, setServicioSeleccionado] = useState('PARTICULAR');
+    const [showProfileMenu, setShowProfileMenu] = useState(false);
 
     const precioActual = preciosMock[combustibleSeleccionado]?.[servicioSeleccionado];
 
@@ -155,10 +157,54 @@ export function HomePage() {
                     {/* Auth actions */}
                     <div className="flex items-center gap-3">
                         {isAuthenticated ? (
-                            <Button size="sm" onClick={() => navigate('/dashboard')}>
-                                <LayoutDashboard size={14} strokeWidth={1.5} />
-                                Mi panel
-                            </Button>
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                                    className="flex items-center gap-2 p-1.5 rounded-full hover:bg-bg-elevated transition-colors border border-transparent hover:border-border-subtle group"
+                                >
+                                    {user?.fotoUrl ? (
+                                        <img src={user.fotoUrl} alt={user.nombre} className="w-8 h-8 rounded-full border border-border-default" />
+                                    ) : (
+                                        <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
+                                            <User size={16} strokeWidth={1.5} />
+                                        </div>
+                                    )}
+                                    <ChevronDown size={14} className={`text-text-muted transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {showProfileMenu && (
+                                    <>
+                                        <div className="fixed inset-0 z-10" onClick={() => setShowProfileMenu(false)} />
+                                        <div className="absolute right-0 mt-2 w-56 bg-bg-base border border-border-subtle rounded-brand shadow-xl z-20 overflow-hidden animate-enter">
+                                            <div className="px-4 py-3 border-b border-border-subtle bg-bg-elevated/30">
+                                                <p className="text-[13px] font-medium text-text-primary truncate">{user?.nombre}</p>
+                                                <p className="text-[11px] text-text-muted truncate">{user?.email}</p>
+                                                <div className="mt-1">
+                                                    <Badge variant="amber" className="text-[9px] uppercase tracking-wider">
+                                                        {typeof user?.rol === 'object' ? user.rol.nombre : user?.rol}
+                                                    </Badge>
+                                                </div>
+                                            </div>
+                                            <div className="p-1">
+                                                <button
+                                                    onClick={() => { navigate('/dashboard'); setShowProfileMenu(false); }}
+                                                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-text-secondary hover:text-text-primary hover:bg-bg-elevated rounded-sm transition-colors"
+                                                >
+                                                    <LayoutDashboard size={14} strokeWidth={1.5} />
+                                                    Mi panel
+                                                </button>
+                                                <button
+                                                    onClick={() => { logout(); setShowProfileMenu(false); }}
+                                                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-red-500 hover:bg-red-500/5 rounded-sm transition-colors"
+                                                >
+                                                    <LogOut size={14} strokeWidth={1.5} />
+                                                    Cerrar sesión
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         ) : (
                             <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
                                 <LogIn size={14} strokeWidth={1.5} />
@@ -228,7 +274,7 @@ export function HomePage() {
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* ── Filters panel ── */}
-                        <div className="bg-bg-surface border border-border-subtle rounded-[var(--radius-brand)] p-5 space-y-5">
+                        <div className="bg-bg-surface border border-border-subtle rounded-brand p-5 space-y-5">
                             <h3 className="text-label text-text-secondary mb-3">Filtros de consulta</h3>
 
                             {/* Zona */}
@@ -239,7 +285,7 @@ export function HomePage() {
                                         id="select-zona"
                                         value={zonaSeleccionada}
                                         onChange={(e) => setZonaSeleccionada(e.target.value)}
-                                        className="w-full px-3 py-2.5 bg-bg-elevated border border-border-default rounded-[var(--radius-brand)] text-text-primary text-[13px] font-sans appearance-none cursor-pointer interactive pr-8"
+                                        className="w-full px-3 py-2.5 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[13px] font-sans appearance-none cursor-pointer interactive pr-8"
                                     >
                                         {zonas.map(z => <option key={z.id} value={z.id}>{z.nombre}</option>)}
                                     </select>
@@ -255,7 +301,7 @@ export function HomePage() {
                                         <button
                                             key={tc.id}
                                             onClick={() => setCombustibleSeleccionado(tc.id)}
-                                            className={`w-full text-left px-3 py-2 rounded-[var(--radius-brand)] text-[13px] font-sans interactive border cursor-pointer ${combustibleSeleccionado === tc.id
+                                            className={`w-full text-left px-3 py-2 rounded-brand text-[13px] font-sans interactive border cursor-pointer ${combustibleSeleccionado === tc.id
                                                     ? 'bg-amber-dim border-amber-500/30 text-amber-500'
                                                     : 'bg-bg-elevated border-border-subtle text-text-secondary hover:border-border-strong hover:text-text-primary'
                                                 }`}
@@ -274,7 +320,7 @@ export function HomePage() {
                                         <button
                                             key={ts.id}
                                             onClick={() => setServicioSeleccionado(ts.id)}
-                                            className={`px-2.5 py-2 rounded-[var(--radius-brand)] text-[11px] font-mono uppercase tracking-wider interactive border cursor-pointer text-center ${servicioSeleccionado === ts.id
+                                            className={`px-2.5 py-2 rounded-brand text-[11px] font-mono uppercase tracking-wider interactive border cursor-pointer text-center ${servicioSeleccionado === ts.id
                                                     ? 'bg-amber-dim border-amber-500/30 text-amber-500'
                                                     : 'bg-bg-elevated border-border-subtle text-text-muted hover:border-border-strong hover:text-text-primary'
                                                 }`}
@@ -289,7 +335,7 @@ export function HomePage() {
                         {/* ── Price result ── */}
                         <div className="lg:col-span-2 space-y-4">
                             {/* Main price card */}
-                            <div className="bg-bg-surface border border-border-subtle rounded-[var(--radius-brand)] p-6 animate-enter">
+                            <div className="bg-bg-surface border border-border-subtle rounded-brand p-6 animate-enter">
                                 <div className="flex items-start justify-between mb-6">
                                     <div>
                                         <span className="text-label text-text-muted">Precio por galón</span>
@@ -312,19 +358,19 @@ export function HomePage() {
                                 {/* Details grid */}
                                 {precioActual && (
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-border-subtle">
-                                        <div className="bg-bg-elevated rounded-[var(--radius-brand)] p-3">
+                                        <div className="bg-bg-elevated rounded-brand p-3">
                                             <span className="text-label text-text-muted block mb-1">Subsidio</span>
                                             <span className="font-mono text-[14px] text-green-500 font-semibold">
                                                 {precioActual.subsidio > 0 ? formatCOP(precioActual.subsidio) : 'No aplica'}
                                             </span>
                                             <span className="block text-[9px] font-mono text-text-muted mt-0.5">/galón</span>
                                         </div>
-                                        <div className="bg-bg-elevated rounded-[var(--radius-brand)] p-3">
+                                        <div className="bg-bg-elevated rounded-brand p-3">
                                             <span className="text-label text-text-muted block mb-1">Decreto</span>
                                             <span className="font-mono text-[13px] text-text-primary">{precioActual.decreto}</span>
                                             <span className="block text-[9px] font-mono text-text-muted mt-0.5">vigente</span>
                                         </div>
-                                        <div className="bg-bg-elevated rounded-[var(--radius-brand)] p-3">
+                                        <div className="bg-bg-elevated rounded-brand p-3">
                                             <span className="text-label text-text-muted block mb-1">Servicio</span>
                                             <span className="font-mono text-[13px] text-text-primary">
                                                 {tiposServicio.find(t => t.id === servicioSeleccionado)?.label}
@@ -344,7 +390,7 @@ export function HomePage() {
                                         <button
                                             key={tc.id}
                                             onClick={() => setCombustibleSeleccionado(tc.id)}
-                                            className={`text-left bg-bg-surface border rounded-[var(--radius-brand)] p-4 interactive animate-enter cursor-pointer ${isActive ? 'border-amber-500/40' : 'border-border-subtle hover:border-border-strong'
+                                            className={`text-left bg-bg-surface border rounded-brand p-4 interactive animate-enter cursor-pointer ${isActive ? 'border-amber-500/40' : 'border-border-subtle hover:border-border-strong'
                                                 }`}
                                             style={{ animationDelay: `${i * 60}ms` }}
                                         >
@@ -395,7 +441,7 @@ export function HomePage() {
                         {estacionesMock.map((est, i) => (
                             <div
                                 key={est.nombre}
-                                className="bg-bg-elevated border border-border-subtle rounded-[var(--radius-brand)] p-4 hover:border-border-strong interactive animate-enter"
+                                className="bg-bg-elevated border border-border-subtle rounded-brand p-4 hover:border-border-strong interactive animate-enter"
                                 style={{ animationDelay: `${i * 60}ms` }}
                             >
                                 <div className="flex items-start justify-between mb-2">
@@ -439,7 +485,7 @@ export function HomePage() {
                         {noticiasMock.map((noticia, i) => (
                             <article
                                 key={noticia.id}
-                                className="bg-bg-surface border border-border-subtle rounded-[var(--radius-brand)] p-5 hover:border-border-strong interactive group animate-enter cursor-pointer"
+                                className="bg-bg-surface border border-border-subtle rounded-brand p-5 hover:border-border-strong interactive group animate-enter cursor-pointer"
                                 style={{ animationDelay: `${i * 80}ms` }}
                             >
                                 <div className="flex items-center justify-between mb-3">

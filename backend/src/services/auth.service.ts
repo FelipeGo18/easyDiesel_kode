@@ -1,7 +1,16 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { createClient } from '@supabase/supabase-js';
 import { prisma } from '../utils/prisma';
 import type { RegisterInput, LoginInput } from '../validators/auth.validator';
+
+// ──────────────────────────────────────────
+// Supabase Client (Backend)
+// ──────────────────────────────────────────
+
+const supabaseUrl = process.env.SUPABASE_URL || 'https://gfuctahftqgxvoxhdxkb.supabase.co';
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // ──────────────────────────────────────────
 // Helpers
@@ -194,6 +203,31 @@ export class AuthService {
                 fotoUrl: usuario.fotoUrl,
             },
         };
+    }
+
+    /**
+     * Autentica o registra un usuario mediante un access_token de Supabase.
+     */
+    async loginWithSupabaseToken(accessToken: string) {
+        // 1. Verificar el token con Supabase
+        const { data: { user: supabaseUser }, error } = await supabase.auth.getUser(accessToken);
+
+        if (error || !supabaseUser) {
+            throw Object.assign(new Error('Token de Supabase inválido o expirado'), { statusCode: 401 });
+        }
+
+        const email = supabaseUser.email!;
+        const nombre = supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || email.split('@')[0];
+        const googleId = supabaseUser.id;
+        const fotoUrl = supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture;
+
+        // 2. Sincronizar con nuestra base de datos (reusando lógica de loginWithGoogle)
+        return this.loginWithGoogle({
+            email,
+            nombre,
+            googleId,
+            fotoUrl
+        });
     }
 
     /**
