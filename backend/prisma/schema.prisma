@@ -75,7 +75,7 @@ enum AuthProvider {
 
 model Rol {
   id          String    @id @default(uuid())
-  nombre      String    @unique // admin, estacion, distribuidor, regulador, auditor, particular, subsidiado, distribuidor_regulado
+  nombre      String    @unique // admin, estacion, distribuidor, regulador, auditor, particular, distribuidor_regulado
   descripcion String?
   permisos    Json?     @db.JsonB // Permisos JSONB como en el PlantUML
   createdAt   DateTime  @default(now()) @map("created_at")

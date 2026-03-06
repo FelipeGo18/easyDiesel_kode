@@ -70,7 +70,7 @@ export function Topbar() {
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[12px] text-text-primary font-sans">{user.nombre}</span>
-                            <span className="text-[9px] font-mono text-amber-500/60 uppercase tracking-wider">{user.rol}</span>
+                            <span className="text-[9px] font-mono text-amber-500/60 uppercase tracking-wider">{typeof user.rol === 'object' ? user.rol.nombre : user.rol}</span>
                         </div>
                     </div>
                 )}

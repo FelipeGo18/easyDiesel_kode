@@ -3,7 +3,6 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import {
-    Lock,
     Users,
     Fuel,
     MapPin,
@@ -14,24 +13,25 @@ import {
     LogOut,
     ChevronLeft,
     ChevronRight,
+    Home,
 } from 'lucide-react';
 
 interface NavItem {
     label: string;
     path: string;
-    icon: typeof Lock;
+    icon: typeof Home;
     moduleId: string;
 }
 
 const navItems: NavItem[] = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, moduleId: 'M8' },
-    { label: 'Estación', path: '/estacion', icon: Fuel, moduleId: 'M3' },
-    { label: 'Precios', path: '/precios', icon: MapPin, moduleId: 'M4' },
+    { label: 'Zonas', path: '/zonas', icon: MapPin, moduleId: 'M4' },
+    { label: 'Precios', path: '/precios', icon: Fuel, moduleId: 'M4' },
     { label: 'Normativa', path: '/normativa', icon: FileText, moduleId: 'M5' },
+    { label: 'Usuarios', path: '/usuarios', icon: Users, moduleId: 'M2' },
+    { label: 'Estación', path: '/estacion', icon: Fuel, moduleId: 'M3' },
     { label: 'Reportes', path: '/reportes', icon: BarChart2, moduleId: 'M6' },
     { label: 'Auditoría', path: '/auditoria', icon: Shield, moduleId: 'M7' },
-    { label: 'Usuarios', path: '/usuarios', icon: Users, moduleId: 'M2' },
-    { label: 'Auth', path: '/auth-config', icon: Lock, moduleId: 'M1' },
 ];
 
 export function Sidebar() {
@@ -140,6 +140,25 @@ export function Sidebar() {
                         );
                     })}
                 </div>
+
+                {/* Link to public home */}
+                <div className="mt-3 pt-3 border-t border-border-subtle">
+                    <NavLink
+                        to="/"
+                        className={cn(
+                            'flex items-center gap-2.5 px-3 py-2.5 rounded-brand',
+                            'text-text-muted hover:text-text-primary hover:bg-bg-elevated interactive',
+                            collapsed && 'justify-center px-0'
+                        )}
+                    >
+                        <Home size={16} strokeWidth={1.5} className="shrink-0" />
+                        {!collapsed && (
+                            <span className="text-[13px] font-sans font-normal truncate">
+                                Página principal
+                            </span>
+                        )}
+                    </NavLink>
+                </div>
             </nav>
 
             {/* ── User / Footer ── */}
@@ -154,7 +173,7 @@ export function Sidebar() {
                         </div>
                         <div className="flex flex-col overflow-hidden">
                             <span className="text-[12px] text-text-primary truncate">{user.nombre}</span>
-                            <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider">{user.rol}</span>
+                            <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider">{typeof user.rol === 'object' ? user.rol.nombre : user.rol}</span>
                         </div>
                     </div>
                 )}

@@ -63,9 +63,10 @@ Supabase ─────────  PostgreSQL 16
 | `distribuidor`          | Registro de entregas, reportes                 |
 | `regulador`             | Solo lectura — normativa, reportes, dashboard |
 | `auditor`               | Solo lectura — logs de auditoría             |
-| `particular`            | Consulta de precios vigentes                   |
-| `subsidiado`            | Consulta de precios con subsidio               |
+| `particular`            | Consulta de precios, planificación de viajes   |
 | `distribuidor_regulado` | Inventario y normativa                         |
+
+> **Nota:** Los usuarios no autenticados tienen acceso de solo vista a precios y estaciones. El subsidio no es un rol, sino un cálculo automático del sistema basado en el tipo de servicio del vehículo, determinado por el trabajador de la estación en el momento del despacho.
 
 ---
 

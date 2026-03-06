@@ -186,13 +186,19 @@ export function HomePage() {
                                                 </div>
                                             </div>
                                             <div className="p-1">
-                                                <button
-                                                    onClick={() => { navigate('/dashboard'); setShowProfileMenu(false); }}
-                                                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-text-secondary hover:text-text-primary hover:bg-bg-elevated rounded-sm transition-colors"
-                                                >
-                                                    <LayoutDashboard size={14} strokeWidth={1.5} />
-                                                    Mi panel
-                                                </button>
+                                                {(() => {
+                                                    const rolNombre = typeof user?.rol === 'object' ? user.rol.nombre : user?.rol;
+                                                    const rolesConPanel = ['admin', 'regulador', 'estacion', 'distribuidor', 'auditor', 'distribuidor_regulado'];
+                                                    return rolesConPanel.includes(rolNombre || '') ? (
+                                                        <button
+                                                            onClick={() => { navigate('/dashboard'); setShowProfileMenu(false); }}
+                                                            className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-text-secondary hover:text-text-primary hover:bg-bg-elevated rounded-sm transition-colors"
+                                                        >
+                                                            <LayoutDashboard size={14} strokeWidth={1.5} />
+                                                            Mi panel
+                                                        </button>
+                                                    ) : null;
+                                                })()}
                                                 <button
                                                     onClick={() => { logout(); setShowProfileMenu(false); }}
                                                     className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-red-500 hover:bg-red-500/5 rounded-sm transition-colors"
@@ -302,8 +308,8 @@ export function HomePage() {
                                             key={tc.id}
                                             onClick={() => setCombustibleSeleccionado(tc.id)}
                                             className={`w-full text-left px-3 py-2 rounded-brand text-[13px] font-sans interactive border cursor-pointer ${combustibleSeleccionado === tc.id
-                                                    ? 'bg-amber-dim border-amber-500/30 text-amber-500'
-                                                    : 'bg-bg-elevated border-border-subtle text-text-secondary hover:border-border-strong hover:text-text-primary'
+                                                ? 'bg-amber-dim border-amber-500/30 text-amber-500'
+                                                : 'bg-bg-elevated border-border-subtle text-text-secondary hover:border-border-strong hover:text-text-primary'
                                                 }`}
                                         >
                                             {tc.label}
@@ -321,8 +327,8 @@ export function HomePage() {
                                             key={ts.id}
                                             onClick={() => setServicioSeleccionado(ts.id)}
                                             className={`px-2.5 py-2 rounded-brand text-[11px] font-mono uppercase tracking-wider interactive border cursor-pointer text-center ${servicioSeleccionado === ts.id
-                                                    ? 'bg-amber-dim border-amber-500/30 text-amber-500'
-                                                    : 'bg-bg-elevated border-border-subtle text-text-muted hover:border-border-strong hover:text-text-primary'
+                                                ? 'bg-amber-dim border-amber-500/30 text-amber-500'
+                                                : 'bg-bg-elevated border-border-subtle text-text-muted hover:border-border-strong hover:text-text-primary'
                                                 }`}
                                         >
                                             {ts.label}

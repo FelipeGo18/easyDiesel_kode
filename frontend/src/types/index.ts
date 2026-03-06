@@ -34,7 +34,6 @@ export type RolUsuario =
     | 'regulador'
     | 'auditor'
     | 'particular'
-    | 'subsidiado'
     | 'distribuidor_regulado';
 
 export interface Usuario {
