@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="25 25 60 60" fill="none">
+<defs>
+  <style>
+    
+    .s      { stroke: #F5A623; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .s-thin { stroke: #F5A623; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .s-dim  { stroke: #F5A623; stroke-width: 1.2; stroke-linecap: round; fill: none; opacity: 0.4; }
+    .f      { fill: #F5A623; }
+    .f-bg   { fill: #2a1a00; }
+    
+  </style>
+</defs>
+<g id="icon-tank">
+
+  
+  <ellipse class="s" cx="55" cy="32" rx="20" ry="6"/>
+  <line class="s" x1="35" y1="32" x2="35" y2="72"/>
+  <line class="s" x1="75" y1="32" x2="75" y2="72"/>
+  <ellipse cx="55" cy="72" rx="20" ry="6" class="f-bg" stroke="#F5A623" stroke-width="1.8"/>
+  <path d="M35 54 Q55 60 75 54 L75 72 Q55 78 35 72 Z" fill="#F5A623" opacity="0.15"/>
+  <line x1="78" y1="32" x2="82" y2="32" stroke="#F5A623" stroke-width="1" opacity="0.4"/>
+  <line x1="78" y1="54" x2="84" y2="54" stroke="#F5A623" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="78" y1="72" x2="82" y2="72" stroke="#F5A623" stroke-width="1" opacity="0.4"/>
+  
+
+</g>
+</svg>

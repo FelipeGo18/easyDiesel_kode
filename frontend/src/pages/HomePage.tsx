@@ -3,22 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import {
-    Fuel,
-    MapPin,
-    ArrowRight,
-    LogIn,
-    LayoutDashboard,
-    Search,
-    TrendingUp,
-    TrendingDown,
-    Clock,
-    Newspaper,
-    User,
-    LogOut,
-    ChevronDown,
-    Navigation,
-} from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 
 /* ── Mock data: precios vigentes ── */
 const zonas = [
@@ -166,10 +151,10 @@ export function HomePage() {
                                         <img src={user.fotoUrl} alt={user.nombre} className="w-8 h-8 rounded-full border border-border-default" />
                                     ) : (
                                         <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
-                                            <User size={16} strokeWidth={1.5} />
+                                            <Icon name="user" size={16} strokeWidth={1.5} />
                                         </div>
                                     )}
-                                    <ChevronDown size={14} className={`text-text-muted transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} />
+                                    <Icon name="chevron-down" size={14} className={`text-text-muted transition-transform duration-200 ${showProfileMenu ? 'rotate-180' : ''}`} />
                                 </button>
 
                                 {showProfileMenu && (
@@ -197,7 +182,7 @@ export function HomePage() {
                                                                     onClick={() => { navigate('/dashboard'); setShowProfileMenu(false); }}
                                                                     className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-text-secondary hover:text-text-primary hover:bg-bg-elevated rounded-sm transition-colors"
                                                                 >
-                                                                    <LayoutDashboard size={14} strokeWidth={1.5} />
+                                                                    <Icon name="dashboard" size={14} />
                                                                     Mi panel
                                                                 </button>
                                                             )}
@@ -205,7 +190,7 @@ export function HomePage() {
                                                                 onClick={() => { logout(); setShowProfileMenu(false); }}
                                                                 className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-red-500 hover:bg-red-500/5 rounded-sm transition-colors"
                                                             >
-                                                                <LogOut size={14} strokeWidth={1.5} />
+                                                                <Icon name="logout" size={14} />
                                                                 Cerrar sesión
                                                             </button>
                                                         </>
@@ -218,7 +203,7 @@ export function HomePage() {
                             </div>
                         ) : (
                             <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
-                                <LogIn size={14} strokeWidth={1.5} />
+                                <Icon name="login" size={14} />
                                 Iniciar sesión
                             </Button>
                         )}
@@ -265,7 +250,7 @@ export function HomePage() {
                         className="inline-flex items-center gap-2 text-amber-500 text-[12px] font-mono uppercase tracking-wider hover:text-amber-600 interactive"
                     >
                         Consultar ahora
-                        <ChevronDown size={14} strokeWidth={1.5} className="animate-bounce" />
+                        <Icon name="chevron-down" size={14} className="animate-bounce" />
                     </a>
                 </div>
             </section>
@@ -276,7 +261,7 @@ export function HomePage() {
             <section id="precios" className="py-16 px-6 border-t border-border-subtle">
                 <div className="max-w-6xl mx-auto">
                     <div className="flex items-center gap-2 mb-2">
-                        <Search size={18} strokeWidth={1.5} className="text-amber-500" />
+                        <Icon name="search" size={18} className="text-amber-500" />
                         <h2 className="text-h1 text-text-primary">Consulta de precios</h2>
                     </div>
                     <p className="text-small text-text-secondary mb-8">
@@ -300,7 +285,7 @@ export function HomePage() {
                                     >
                                         {zonas.map(z => <option key={z.id} value={z.id}>{z.nombre}</option>)}
                                     </select>
-                                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+                                    <Icon name="chevron-down" size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
                                 </div>
                             </div>
 
@@ -410,9 +395,9 @@ export function HomePage() {
                                                     {tc.id === 'ACPM' ? 'ACPM' : tc.id === 'GASOLINA_CORRIENTE' ? 'Corriente' : 'Extra'}
                                                 </span>
                                                 {p && p.subsidio > 0 ? (
-                                                    <TrendingDown size={12} className="text-green-500" />
+                                                    <Icon name="trending-down" size={12} className="text-green-500" />
                                                 ) : (
-                                                    <TrendingUp size={12} className="text-text-muted" />
+                                                    <Icon name="trending-up" size={12} className="text-text-muted" />
                                                 )}
                                             </div>
                                             <span className={`font-display text-[28px] leading-none ${isActive ? 'text-amber-500' : 'text-text-primary'}`}>
@@ -435,7 +420,7 @@ export function HomePage() {
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <div className="flex items-center gap-2 mb-1">
-                                <MapPin size={18} strokeWidth={1.5} className="text-amber-500" />
+                                <Icon name="map" size={18} className="text-amber-500" />
                                 <h2 className="text-h1 text-text-primary">Estaciones cercanas</h2>
                             </div>
                             <p className="text-small text-text-secondary">
@@ -443,7 +428,7 @@ export function HomePage() {
                             </p>
                         </div>
                         <Button variant="ghost" size="sm">
-                            <Navigation size={14} strokeWidth={1.5} />
+                            <Icon name="navigation" size={14} />
                             Ver en mapa
                         </Button>
                     </div>
@@ -457,7 +442,7 @@ export function HomePage() {
                             >
                                 <div className="flex items-start justify-between mb-2">
                                     <div className="flex items-center gap-2">
-                                        <Fuel size={16} strokeWidth={1.5} className="text-amber-500 shrink-0" />
+                                        <Icon name="tank" size={16} className="text-amber-500 shrink-0" />
                                         <h3 className="text-[14px] font-sans font-medium text-text-primary">{est.nombre}</h3>
                                     </div>
                                     <Badge variant={est.activa ? 'green' : 'red'}>
@@ -466,7 +451,7 @@ export function HomePage() {
                                 </div>
                                 <div className="ml-6 space-y-1">
                                     <p className="text-[12px] font-sans text-text-secondary flex items-center gap-1.5">
-                                        <MapPin size={11} strokeWidth={1.5} className="text-text-muted" />
+                                        <Icon name="map" size={11} className="text-text-muted" />
                                         {est.ciudad}
                                     </p>
                                     <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider">
@@ -485,7 +470,7 @@ export function HomePage() {
             <section id="noticias" className="py-16 px-6 border-t border-border-subtle">
                 <div className="max-w-6xl mx-auto">
                     <div className="flex items-center gap-2 mb-2">
-                        <Newspaper size={18} strokeWidth={1.5} className="text-amber-500" />
+                        <Icon name="newspaper" size={18} className="text-amber-500" />
                         <h2 className="text-h1 text-text-primary">Noticias de combustibles</h2>
                     </div>
                     <p className="text-small text-text-secondary mb-8">
@@ -502,7 +487,7 @@ export function HomePage() {
                                 <div className="flex items-center justify-between mb-3">
                                     <Badge variant="amber">{noticia.tag}</Badge>
                                     <span className="text-[9px] font-mono text-text-muted flex items-center gap-1">
-                                        <Clock size={9} strokeWidth={1.5} />
+                                        <Icon name="clock" size={9} />
                                         {noticia.fecha}
                                     </span>
                                 </div>
@@ -514,7 +499,7 @@ export function HomePage() {
                                 </p>
                                 <div className="flex items-center mt-4 text-[10px] font-mono text-text-muted group-hover:text-amber-500 transition-colors uppercase tracking-wider">
                                     Leer más
-                                    <ArrowRight size={10} className="ml-1 transition-transform group-hover:translate-x-0.5" />
+                                    <Icon name="arrow-right" size={10} className="ml-1 transition-transform group-hover:translate-x-0.5" />
                                 </div>
                             </article>
                         ))}
@@ -536,7 +521,7 @@ export function HomePage() {
                         </div>
                         <Button onClick={() => navigate('/login')}>
                             Iniciar sesión
-                            <ArrowRight size={14} strokeWidth={1.5} />
+                            <Icon name="arrow-right" size={14} />
                         </Button>
                     </div>
                 </section>
@@ -548,7 +533,7 @@ export function HomePage() {
             <footer className="py-8 px-6 border-t border-border-subtle">
                 <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-2.5">
-                        <Fuel size={16} strokeWidth={1.5} className="text-amber-500 opacity-50" />
+                        <Icon name="tank" size={16} className="text-amber-500 opacity-50" />
                         <span className="text-[11px] font-mono text-text-muted tracking-wider uppercase">
                             easyDiesel
                         </span>

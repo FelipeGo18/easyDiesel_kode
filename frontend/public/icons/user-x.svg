@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="25 25 60 60" fill="none">
+<defs>
+  <style>
+    .s      { stroke: #F5A623; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .s-thin { stroke: #F5A623; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .s-dim  { stroke: #F5A623; stroke-width: 1.2; stroke-linecap: round; fill: none; opacity: 0.4; }
+    .f      { fill: #F5A623; }
+    .f-bg   { fill: #2a1a00; }
+  </style>
+</defs>
+<g id="icon-user-x">
+  <circle cx="55" cy="45" r="10" class="s"/><path class="s" d="M40 70 C40 60 70 60 70 70"/><path class="s" d="M72 40 L82 50 M82 40 L72 50"/>
+</g>
+</svg>

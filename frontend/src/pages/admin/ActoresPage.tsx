@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { Plus, Pencil, Building2, Truck, MapPin, User } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { InputField, SelectField } from '@/components/ui/FormFields';
@@ -16,13 +16,13 @@ export function ActoresPage() {
     const [activeTab, setActiveTab] = useState<'estaciones' | 'distribuidores'>('estaciones');
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
-    
+
     // Data states
     const [estaciones, setEstaciones] = useState<EstacionServicio[]>([]);
     const [distribuidores, setDistribuidores] = useState<Distribuidor[]>([]);
     const [zonas, setZonas] = useState<Zona[]>([]);
     const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-    
+
     // Form state
     const [editing, setEditing] = useState<any | null>(null);
     const [formData, setFormData] = useState<any>({});
@@ -102,7 +102,7 @@ export function ActoresPage() {
             header: 'Nombre',
             render: (e) => (
                 <div className="flex items-center gap-2">
-                    <Building2 size={14} className="text-blue-500 shrink-0" />
+                    <Icon name="station" size={14} className="text-blue-500 shrink-0" />
                     <span className="font-medium">{e.nombre}</span>
                 </div>
             ),
@@ -119,7 +119,7 @@ export function ActoresPage() {
             header: 'Administrador',
             render: (e) => (
                 <div className="flex items-center gap-1.5 text-[12px]">
-                    <User size={12} className="text-text-muted" />
+                    <Icon name="users" size={12} className="text-text-muted" />
                     <span>{e.usuario?.nombre || '—'}</span>
                 </div>
             )
@@ -132,7 +132,7 @@ export function ActoresPage() {
             header: 'Nombre',
             render: (d) => (
                 <div className="flex items-center gap-2">
-                    <Truck size={14} className="text-green-500 shrink-0" />
+                    <Icon name="truck" size={14} className="text-green-500 shrink-0" />
                     <span className="font-medium">{d.nombre}</span>
                 </div>
             ),
@@ -152,7 +152,7 @@ export function ActoresPage() {
             header: 'Responsable',
             render: (d) => (
                 <div className="flex items-center gap-1.5 text-[12px]">
-                    <User size={12} className="text-text-muted" />
+                    <Icon name="users" size={12} className="text-text-muted" />
                     <span>{d.usuario?.nombre || '—'}</span>
                 </div>
             )
@@ -169,7 +169,7 @@ export function ActoresPage() {
                     </p>
                 </div>
                 <Button onClick={openCreate}>
-                    <Plus size={14} className="mr-1" />
+                    <Icon name="plus" size={14} className="mr-1" />
                     {activeTab === 'estaciones' ? 'Nueva Estación' : 'Nuevo Distribuidor'}
                 </Button>
             </div>
@@ -198,21 +198,39 @@ export function ActoresPage() {
                 </button>
             </div>
 
-            <DataTable
-                columns={activeTab === 'estaciones' ? estacionColumns : distribuidorColumns}
-                data={activeTab === 'estaciones' ? estaciones : distribuidores}
-                loading={loading}
-                searchPlaceholder={`Buscar ${activeTab}...`}
-                actions={(actor) => (
-                    <button
-                        onClick={(e) => { e.stopPropagation(); openEdit(actor); }}
-                        className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-amber-500"
-                        title="Editar"
-                    >
-                        <Pencil size={14} />
-                    </button>
-                )}
-            />
+            {activeTab === 'estaciones' ? (
+                <DataTable
+                    columns={estacionColumns}
+                    data={estaciones}
+                    loading={loading}
+                    searchPlaceholder="Buscar estaciones..."
+                    actions={(actor) => (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); openEdit(actor); }}
+                            className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-amber-500"
+                            title="Editar"
+                        >
+                            <Icon name="pencil" size={14} />
+                        </button>
+                    )}
+                />
+            ) : (
+                <DataTable
+                    columns={distribuidorColumns}
+                    data={distribuidores}
+                    loading={loading}
+                    searchPlaceholder="Buscar distribuidores..."
+                    actions={(actor) => (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); openEdit(actor); }}
+                            className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-amber-500"
+                            title="Editar"
+                        >
+                            <Icon name="pencil" size={14} />
+                        </button>
+                    )}
+                />
+            )}
 
             {/* Modal */}
             <Modal
@@ -235,7 +253,7 @@ export function ActoresPage() {
                             required
                         />
                     </div>
-                    
+
                     {activeTab === 'distribuidores' && (
                         <SelectField
                             label="Tipo de Distribuidor"

@@ -1,14 +1,5 @@
 import { useState, useEffect } from 'react';
-import { 
-    Shield, 
-    RefreshCcw,
-    User,
-    Database,
-    Activity,
-    Eye,
-    Globe,
-    Clock
-} from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -77,7 +68,7 @@ export function AuditoriaPage() {
             render: (l) => (
                 <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
-                        <User size={12} />
+                        <Icon name="user" size={12} />
                     </div>
                     <span className="text-[12px] text-text-secondary">{l.usuario.nombre}</span>
                 </div>
@@ -126,19 +117,19 @@ export function AuditoriaPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-h1 text-text-primary mb-1 flex items-center gap-2">
-                        <Shield size={24} className="text-amber-500" />
+                        <Icon name="shield" size={24} className="text-amber-500" />
                         Rastro de Auditoría
                     </h1>
                     <p className="text-small text-text-secondary">Monitoreo inmutable de todas las operaciones del sistema.</p>
                 </div>
                 <Button variant="ghost" size="sm" onClick={fetchLogs}>
-                    <RefreshCcw size={14} className={loading ? 'animate-spin' : ''} />
+                    <Icon name="refresh" size={14} className={loading ? 'animate-spin' : ''} />
                     Refrescar
                 </Button>
             </div>
 
             <Card className="overflow-hidden border-border-subtle">
-                <DataTable 
+                <DataTable
                     columns={columns}
                     data={logs}
                     loading={loading}
@@ -170,21 +161,21 @@ export function AuditoriaPage() {
                         <div className="grid grid-cols-3 gap-4">
                             <div className="bg-bg-elevated p-3 rounded-brand border border-border-subtle">
                                 <div className="flex items-center gap-2 text-amber-500 mb-1">
-                                    <Activity size={14} />
+                                    <Icon name="activity" size={14} />
                                     <span className="text-[10px] font-bold uppercase">Acción</span>
                                 </div>
                                 <p className="text-[13px] text-text-primary">{selectedLog.accion}</p>
                             </div>
                             <div className="bg-bg-elevated p-3 rounded-brand border border-border-subtle">
                                 <div className="flex items-center gap-2 text-blue-500 mb-1">
-                                    <Database size={14} />
+                                    <Icon name="database" size={14} />
                                     <span className="text-[10px] font-bold uppercase">Módulo</span>
                                 </div>
                                 <p className="text-[13px] text-text-primary">{selectedLog.modulo}</p>
                             </div>
                             <div className="bg-bg-elevated p-3 rounded-brand border border-border-subtle">
                                 <div className="flex items-center gap-2 text-green-500 mb-1">
-                                    <Globe size={14} />
+                                    <Icon name="globe" size={14} />
                                     <span className="text-[10px] font-bold uppercase">Origen (IP)</span>
                                 </div>
                                 <p className="text-[13px] text-text-primary">{selectedLog.ip || 'Interno'}</p>
@@ -194,7 +185,7 @@ export function AuditoriaPage() {
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <h4 className="text-[11px] font-bold text-text-secondary uppercase flex items-center gap-2">
-                                    <Eye size={12} />
+                                    <Icon name="eye" size={12} />
                                     Cambios Realizados
                                 </h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -216,7 +207,7 @@ export function AuditoriaPage() {
 
                         <div className="pt-4 border-t border-border-subtle flex justify-between items-center">
                             <div className="flex items-center gap-2 text-text-muted">
-                                <Clock size={12} />
+                                <Icon name="clock" size={12} />
                                 <span className="text-[11px]">{new Date(selectedLog.createdAt).toLocaleString()}</span>
                             </div>
                             <Button variant="ghost" size="sm" onClick={() => setModalOpen(false)}>Cerrar</Button>

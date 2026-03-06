@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
-import { Fuel, ArrowLeft } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 
 export function LoginPage() {
     const { isAuthenticated, isLoading, login, loginWithGoogle } = useAuth();
@@ -128,13 +128,13 @@ export function LoginPage() {
                         to="/"
                         className="inline-flex items-center gap-1.5 text-[11px] font-mono text-text-muted hover:text-amber-500 uppercase tracking-wider interactive mb-8"
                     >
-                        <ArrowLeft size={14} strokeWidth={1.5} />
+                        <Icon name="arrow-left" size={14} />
                         Volver al inicio
                     </Link>
 
                     {/* Mobile logo */}
                     <div className="lg:hidden flex items-center gap-3 mb-10">
-                        <Fuel size={28} strokeWidth={1.5} className="text-amber-500" />
+                        <Icon name="tank" size={28} className="text-amber-500" />
                         <div className="flex flex-col">
                             <span className="text-text-secondary text-[13px] font-sans leading-none tracking-wide">easy</span>
                             <span className="text-amber-500 font-display text-[22px] leading-none tracking-[0.06em]">DIESEL</span>

@@ -2,39 +2,26 @@ import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import {
-    Users,
-    Fuel,
-    MapPin,
-    FileText,
-    BarChart2,
-    Shield,
-    LayoutDashboard,
-    LogOut,
-    ChevronLeft,
-    ChevronRight,
-    Home,
-    Building2,
-} from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 
 interface NavItem {
     label: string;
     path: string;
-    icon: typeof Home;
+    icon: string;
     moduleId: string;
 }
 
 const navItems: NavItem[] = [
-    { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, moduleId: 'M8' },
-    { label: 'Zonas', path: '/zonas', icon: MapPin, moduleId: 'M4' },
-    { label: 'Actores', path: '/actores', icon: Building2, moduleId: 'M1' },
-    { label: 'Tanques', path: '/tanques', icon: Fuel, moduleId: 'M2' },
-    { label: 'Precios', path: '/precios', icon: Fuel, moduleId: 'M4' },
-    { label: 'Normativa', path: '/normativa', icon: FileText, moduleId: 'M5' },
-    { label: 'Usuarios', path: '/usuarios', icon: Users, moduleId: 'M2' },
-    { label: 'Inventario', path: '/estacion', icon: Fuel, moduleId: 'M3' },
-    { label: 'Reportes', path: '/reportes', icon: BarChart2, moduleId: 'M6' },
-    { label: 'Auditoría', path: '/auditoria', icon: Shield, moduleId: 'M7' },
+    { label: 'Dashboard', path: '/dashboard', icon: 'dashboard', moduleId: 'M8' },
+    { label: 'Zonas', path: '/zonas', icon: 'map', moduleId: 'M4' },
+    { label: 'Actores', path: '/actores', icon: 'station', moduleId: 'M1' },
+    { label: 'Tanques', path: '/tanques', icon: 'tank', moduleId: 'M2' },
+    { label: 'Precios', path: '/precios', icon: 'prices', moduleId: 'M4' },
+    { label: 'Normativa', path: '/normativa', icon: 'normativa', moduleId: 'M5' },
+    { label: 'Usuarios', path: '/usuarios', icon: 'users', moduleId: 'M2' },
+    { label: 'Inventario', path: '/estacion', icon: 'station', moduleId: 'M3' },
+    { label: 'Reportes', path: '/reportes', icon: 'reports', moduleId: 'M6' },
+    { label: 'Auditoría', path: '/auditoria', icon: 'audit', moduleId: 'M7' },
 ];
 
 export function Sidebar() {
@@ -94,7 +81,6 @@ export function Sidebar() {
             <nav className="flex-1 overflow-y-auto py-3 px-2">
                 <div className="space-y-0.5">
                     {navItems.map((item) => {
-                        const Icon = item.icon;
                         const isActive = location.pathname === item.path ||
                             (item.path !== '/' && location.pathname.startsWith(item.path));
 
@@ -116,11 +102,11 @@ export function Sidebar() {
                                 )}
 
                                 <Icon
+                                    name={item.icon}
                                     size={16}
-                                    strokeWidth={1.5}
                                     className={cn(
                                         'shrink-0',
-                                        isActive ? 'text-amber-500' : 'text-text-muted group-hover:text-text-secondary'
+                                        isActive ? 'text-amber-500' : 'opacity-70 group-hover:opacity-100 group-hover:brightness-125'
                                     )}
                                 />
 
@@ -154,7 +140,7 @@ export function Sidebar() {
                             collapsed && 'justify-center px-0'
                         )}
                     >
-                        <Home size={16} strokeWidth={1.5} className="shrink-0" />
+                        <Icon name="normativa" size={16} className="shrink-0 opacity-70 group-hover:opacity-100" />
                         {!collapsed && (
                             <span className="text-[13px] font-sans font-normal truncate">
                                 Página principal
@@ -190,7 +176,7 @@ export function Sidebar() {
                         collapsed && 'justify-center'
                     )}
                 >
-                    <LogOut size={16} strokeWidth={1.5} />
+                    <Icon name="logout" size={16} />
                     {!collapsed && (
                         <span className="text-[12px] font-mono uppercase tracking-wider">Salir</span>
                     )}
@@ -202,7 +188,7 @@ export function Sidebar() {
                 onClick={() => setCollapsed(!collapsed)}
                 className="flex items-center justify-center h-10 border-t border-border-subtle text-text-muted hover:text-text-secondary interactive"
             >
-                {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+                {collapsed ? <Icon name="chevron-right" size={16} /> : <Icon name="chevron-left" size={16} />}
             </button>
         </aside>
     );

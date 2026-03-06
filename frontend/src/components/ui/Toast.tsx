@@ -1,5 +1,5 @@
 import { useState, useCallback, createContext, useContext, type ReactNode } from 'react';
-import { CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 
 type ToastType = 'success' | 'error';
 
@@ -46,19 +46,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                     <div
                         key={t.id}
                         className={`flex items-start gap-2.5 px-4 py-3 rounded-brand border shadow-xl animate-enter ${t.type === 'success'
-                                ? 'bg-bg-base border-green-500/30'
-                                : 'bg-bg-base border-red-500/30'
+                            ? 'bg-bg-base border-green-500/30'
+                            : 'bg-bg-base border-red-500/30'
                             }`}
                     >
                         {t.type === 'success' ? (
-                            <CheckCircle2 size={16} className="text-green-500 shrink-0 mt-0.5" />
+                            <Icon name="check" size={16} className="text-green-500 shrink-0 mt-0.5" />
                         ) : (
-                            <AlertCircle size={16} className="text-red-500 shrink-0 mt-0.5" />
+                            <Icon name="alert" size={16} className="text-red-500 shrink-0 mt-0.5" />
                         )}
                         <p className="text-[13px] text-text-primary font-sans flex-1">{t.message}</p>
-                        <button onClick={() => remove(t.id)} className="text-text-muted hover:text-text-primary shrink-0">
-                            <X size={14} />
-                        </button>
+                        <Icon name="close" size={14} />
                     </div>
                 ))}
             </div>

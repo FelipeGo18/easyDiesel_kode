@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { Plus, Pencil, MapPin } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 import { useAuth } from '@/context/AuthContext';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
@@ -99,7 +99,7 @@ export function ZonasPage() {
             header: 'Nombre',
             render: (z) => (
                 <div className="flex items-center gap-2">
-                    <MapPin size={14} className="text-amber-500 shrink-0" />
+                    <Icon name="map" size={14} className="text-amber-500 shrink-0" />
                     <span className="font-medium">{z.nombre}</span>
                 </div>
             ),
@@ -138,7 +138,7 @@ export function ZonasPage() {
                 </div>
                 {canWrite && (
                     <Button onClick={openCreate} size="sm">
-                        <Plus size={16} strokeWidth={1.5} />
+                        <Icon name="plus" size={16} className="shrink-0" />
                         Nueva zona
                     </Button>
                 )}
@@ -156,7 +156,7 @@ export function ZonasPage() {
                         className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-amber-500"
                         title="Editar"
                     >
-                        <Pencil size={14} />
+                        <Icon name="pencil" size={14} />
                     </button>
                 ) : null}
             />

@@ -3,21 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import {
-    Fuel,
-    BarChart2,
-    MapPin,
-    AlertTriangle,
-    LayoutDashboard,
-    Users,
-    FileText,
-    Shield,
-    ArrowRight,
-    Activity,
-    Clock,
-    Building2,
-    Truck,
-} from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 import { useNavigate } from 'react-router-dom';
 import { dashboardService, type DashboardSummary } from '@/services/dashboard';
 import { useToast } from '@/components/ui/Toast';
@@ -27,7 +13,7 @@ const modules = [
         id: 'M1',
         label: 'Actores',
         description: 'Estaciones y distribuidores',
-        icon: Building2,
+        icon: 'station',
         path: '/actores',
         color: 'text-blue-500',
     },
@@ -35,7 +21,7 @@ const modules = [
         id: 'M2',
         label: 'Tanques',
         description: 'Gestión física de tanques',
-        icon: Fuel,
+        icon: 'tank',
         path: '/tanques',
         color: 'text-amber-500',
     },
@@ -43,7 +29,7 @@ const modules = [
         id: 'M3',
         label: 'Inventario',
         description: 'Entradas, salidas y cierres',
-        icon: Fuel,
+        icon: 'clipboard-check',
         path: '/estacion',
         color: 'text-orange-500',
     },
@@ -51,7 +37,7 @@ const modules = [
         id: 'M4',
         label: 'Precios',
         description: 'Precios vigentes por zona',
-        icon: MapPin,
+        icon: 'map',
         path: '/precios',
         color: 'text-indigo-500',
     },
@@ -59,7 +45,7 @@ const modules = [
         id: 'M5',
         label: 'Normativa',
         description: 'Decretos y reglamentación',
-        icon: FileText,
+        icon: 'normativa',
         path: '/normativa',
         color: 'text-yellow-500',
     },
@@ -67,7 +53,7 @@ const modules = [
         id: 'M6',
         label: 'Reportes',
         description: 'Informes para el Ministerio',
-        icon: BarChart2,
+        icon: 'bar-chart',
         path: '/reportes',
         color: 'text-green-500',
     },
@@ -75,7 +61,7 @@ const modules = [
         id: 'M7',
         label: 'Auditoría',
         description: 'Registro de operaciones',
-        icon: Shield,
+        icon: 'shield',
         path: '/auditoria',
         color: 'text-red-500',
     },
@@ -83,7 +69,7 @@ const modules = [
         id: 'M8',
         label: 'Usuarios',
         description: 'Accesos y roles',
-        icon: Users,
+        icon: 'users',
         path: '/usuarios',
         color: 'text-purple-500',
     },
@@ -120,13 +106,13 @@ export function DashboardPage() {
     const availableModules = modules.filter(m => {
         if (isParticular) return false; // El particular no debería estar aquí, pero por seguridad
         if (rolNombre === 'admin') return true;
-        
+
         // Reglas específicas por rol
         if (rolNombre === 'estacion') return ['M3', 'M6'].includes(m.id);
         if (rolNombre === 'distribuidor') return ['M3', 'M6'].includes(m.id);
         if (rolNombre === 'regulador') return ['M4', 'M5', 'M6', 'M7'].includes(m.id);
         if (rolNombre === 'auditor') return ['M6', 'M7'].includes(m.id);
-        
+
         return false;
     });
 
@@ -163,7 +149,7 @@ export function DashboardPage() {
                 </div>
 
                 <Badge variant="green">
-                    <Activity size={10} className="mr-1" />
+                    <Icon name="activity" size={10} className="mr-1" />
                     Sistema en línea
                 </Badge>
             </div>
@@ -173,28 +159,28 @@ export function DashboardPage() {
                 <KpiCard
                     label="Ventas totales"
                     value={summary?.operaciones.transacciones.toLocaleString() || '0'}
-                    icon={<BarChart2 size={18} strokeWidth={1.5} className="text-blue-500" />}
+                    icon={<Icon name="bar-chart" size={18} className="text-blue-500" />}
                     trend={{ direction: 'up', text: 'Transacciones registradas' }}
                     delay={0}
                 />
                 <KpiCard
                     label="Abastecimientos"
                     value={summary?.operaciones.entregas.toLocaleString() || '0'}
-                    icon={<Truck size={18} strokeWidth={1.5} className="text-green-500" />}
+                    icon={<Icon name="truck" size={18} className="text-green-500" />}
                     trend={{ direction: 'up', text: 'Entradas de combustible' }}
                     delay={50}
                 />
                 <KpiCard
                     label="Estaciones"
                     value={summary?.estaciones.toLocaleString() || '0'}
-                    icon={<Building2 size={18} strokeWidth={1.5} className="text-amber-500" />}
+                    icon={<Icon name="station" size={18} className="text-amber-500" />}
                     trend={{ direction: 'neutral', text: 'Puntos de servicio' }}
                     delay={100}
                 />
                 <KpiCard
                     label="Alertas Stock"
                     value={summary?.inventario.tanquesEnAlerta.toLocaleString() || '0'}
-                    icon={<AlertTriangle size={18} strokeWidth={1.5} className={summary?.inventario.tanquesEnAlerta ? 'text-red-500' : 'text-text-muted'} />}
+                    icon={<Icon name="alert" size={18} className={summary?.inventario.tanquesEnAlerta ? 'text-red-500' : 'text-text-muted'} />}
                     trend={{ direction: summary?.inventario.tanquesEnAlerta ? 'down' : 'neutral', text: 'Tanques bajo mínimo' }}
                     delay={150}
                     className={summary?.inventario.tanquesEnAlerta ? 'border-red-500/50' : ''}
@@ -206,13 +192,12 @@ export function DashboardPage() {
                 {/* Modules grid */}
                 <div className="lg:col-span-2">
                     <div className="flex items-center gap-2 mb-4">
-                        <LayoutDashboard size={16} strokeWidth={1.5} className="text-amber-500" />
+                        <Icon name="dashboard" size={16} className="text-amber-500" />
                         <h2 className="text-h2 text-text-primary">Módulos</h2>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                         {availableModules.map((mod, i) => {
-                            const Icon = mod.icon;
                             return (
                                 <Card
                                     key={mod.id}
@@ -222,9 +207,7 @@ export function DashboardPage() {
                                     onClick={() => navigate(mod.path)}
                                 >
                                     <div className="flex items-start justify-between mb-3">
-                                        <div className="p-2 rounded-[var(--radius-brand)] bg-bg-hover">
-                                            <Icon size={20} strokeWidth={1.5} className={mod.color} />
-                                        </div>
+                                        <Icon name={mod.icon} size={20} className={mod.color} />
                                         <span className="text-[9px] font-mono text-text-muted tracking-wider">
                                             {mod.id}
                                         </span>
@@ -239,7 +222,7 @@ export function DashboardPage() {
 
                                     <div className="flex items-center text-[10px] font-mono text-text-muted group-hover:text-amber-500 transition-colors uppercase tracking-wider">
                                         Abrir módulo
-                                        <ArrowRight size={10} className="ml-1 transition-transform group-hover:translate-x-0.5" />
+                                        <Icon name="arrow-right" size={10} className="ml-1 transition-transform group-hover:translate-x-0.5" />
                                     </div>
                                 </Card>
                             );
@@ -250,7 +233,7 @@ export function DashboardPage() {
                 {/* Recent activity */}
                 <div>
                     <div className="flex items-center gap-2 mb-4">
-                        <Clock size={16} strokeWidth={1.5} className="text-amber-500" />
+                        <Icon name="clock" size={16} className="text-amber-500" />
                         <h2 className="text-h2 text-text-primary">Actividad reciente</h2>
                     </div>
 
@@ -291,7 +274,7 @@ export function DashboardPage() {
                     {summary?.inventario?.alertas && summary.inventario.alertas.length > 0 && (
                         <div className="mt-4">
                             <div className="flex items-center gap-2 mb-3">
-                                <AlertTriangle size={16} strokeWidth={1.5} className="text-red-500" />
+                                <Icon name="alert" size={16} className="text-red-500" />
                                 <h2 className="text-h2 text-text-primary text-[14px]">Alertas de Inventario</h2>
                             </div>
                             <div className="space-y-2">

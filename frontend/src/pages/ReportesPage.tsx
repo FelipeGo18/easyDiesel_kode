@@ -1,13 +1,5 @@
 import { useState, useEffect } from 'react';
-import { 
-    FileText, 
-    Download, 
-    Calendar, 
-    FileSpreadsheet, 
-    FilePieChart,
-    RefreshCcw,
-    History
-} from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -29,10 +21,10 @@ interface ReporteRegistro {
 }
 
 const tiposReporte = [
-    { id: 'INVENTARIO', label: 'Estado de Inventarios', icon: FilePieChart, description: 'Niveles actuales de tanques y capacidad disponible.' },
-    { id: 'TRANSACCIONES', label: 'Ventas y Despachos', icon: History, description: 'Registro detallado de entradas y salidas de combustible.' },
-    { id: 'PRECIOS', label: 'Histórico de Precios', icon: FileSpreadsheet, description: 'Evolución de precios por zona y tipo de combustible.' },
-    { id: 'NORMATIVO', label: 'Cumplimiento Normativo', icon: FileText, description: 'Decretos vigentes y resoluciones aplicadas.' },
+    { id: 'INVENTARIO', label: 'Estado de Inventarios', icon: 'pie-chart', description: 'Niveles actuales de tanques y capacidad disponible.' },
+    { id: 'TRANSACCIONES', label: 'Ventas y Despachos', icon: 'history', description: 'Registro detallado de entradas y salidas de combustible.' },
+    { id: 'PRECIOS', label: 'Histórico de Precios', icon: 'spreadsheet', description: 'Evolución de precios por zona y tipo de combustible.' },
+    { id: 'NORMATIVO', label: 'Cumplimiento Normativo', icon: 'normativa', description: 'Decretos vigentes y resoluciones aplicadas.' },
 ];
 
 export function ReportesPage() {
@@ -40,7 +32,7 @@ export function ReportesPage() {
     const [reportes, setReportes] = useState<ReporteRegistro[]>([]);
     const [loading, setLoading] = useState(true);
     const [generating, setGenerating] = useState<string | null>(null);
-    
+
     // Filtros para generación
     const [tipoSeleccionado, setTipoSeleccionado] = useState(tiposReporte[0].id);
     const [formato, setFormato] = useState<'PDF' | 'EXCEL'>('PDF');
@@ -102,7 +94,7 @@ export function ReportesPage() {
             render: (r) => (
                 <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-bg-elevated rounded-md text-amber-500">
-                        <FileText size={14} />
+                        <Icon name="normativa" size={14} />
                     </div>
                     <span className="font-medium text-[13px]">{r.tipo}</span>
                 </div>
@@ -149,7 +141,7 @@ export function ReportesPage() {
                 <div className="lg:col-span-1 space-y-6">
                     <Card className="p-6 border-amber-500/20 bg-amber-500/2">
                         <h3 className="text-[14px] font-bold text-text-primary mb-4 flex items-center gap-2">
-                            <RefreshCcw size={16} className="text-amber-500" />
+                            <Icon name="refresh" size={16} className="text-amber-500" />
                             Generar Nuevo Informe
                         </h3>
 
@@ -162,13 +154,12 @@ export function ReportesPage() {
                                         <button
                                             key={t.id}
                                             onClick={() => setTipoSeleccionado(t.id)}
-                                            className={`flex items-start gap-3 p-3 rounded-brand border text-left transition-all interactive ${
-                                                tipoSeleccionado === t.id 
-                                                ? 'bg-amber-dim border-amber-500/40 ring-1 ring-amber-500/20' 
-                                                : 'bg-bg-elevated border-border-subtle hover:border-border-strong'
-                                            }`}
+                                            className={`flex items-start gap-3 p-3 rounded-brand border text-left transition-all interactive ${tipoSeleccionado === t.id
+                                                    ? 'bg-amber-dim border-amber-500/40 ring-1 ring-amber-500/20'
+                                                    : 'bg-bg-elevated border-border-subtle hover:border-border-strong'
+                                                }`}
                                         >
-                                            <t.icon size={18} className={tipoSeleccionado === t.id ? 'text-amber-500' : 'text-text-muted'} />
+                                            <Icon name={t.icon} size={18} className={tipoSeleccionado === t.id ? 'text-amber-500' : 'text-text-muted'} />
                                             <div>
                                                 <p className={`text-[12px] font-bold ${tipoSeleccionado === t.id ? 'text-amber-500' : 'text-text-primary'}`}>{t.label}</p>
                                                 <p className="text-[10px] text-text-muted leading-tight mt-0.5">{t.description}</p>
@@ -182,10 +173,10 @@ export function ReportesPage() {
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1.5">
                                     <label className="text-label text-text-secondary flex items-center gap-1.5">
-                                        <Calendar size={12} /> Inicio
+                                        <Icon name="calendar" size={12} /> Inicio
                                     </label>
-                                    <input 
-                                        type="date" 
+                                    <input
+                                        type="date"
                                         value={fechaInicio}
                                         onChange={(e) => setFechaInicio(e.target.value)}
                                         className="w-full bg-bg-base border border-border-default rounded-md px-2 py-1.5 text-[12px] interactive"
@@ -193,10 +184,10 @@ export function ReportesPage() {
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-label text-text-secondary flex items-center gap-1.5">
-                                        <Calendar size={12} /> Fin
+                                        <Icon name="calendar" size={12} /> Fin
                                     </label>
-                                    <input 
-                                        type="date" 
+                                    <input
+                                        type="date"
                                         value={fechaFin}
                                         onChange={(e) => setFechaFin(e.target.value)}
                                         className="w-full bg-bg-base border border-border-default rounded-md px-2 py-1.5 text-[12px] interactive"
@@ -208,27 +199,27 @@ export function ReportesPage() {
                             <div className="space-y-2">
                                 <label className="text-label text-text-secondary">Formato de descarga</label>
                                 <div className="flex gap-2">
-                                    <button 
+                                    <button
                                         onClick={() => setFormato('PDF')}
                                         className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-[11px] font-mono border transition-colors ${formato === 'PDF' ? 'bg-amber-500 text-white border-amber-500' : 'bg-bg-elevated border-border-subtle text-text-secondary hover:border-border-strong'}`}
                                     >
-                                        <FileText size={14} /> PDF
+                                        <Icon name="normativa" size={14} /> PDF
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={() => setFormato('EXCEL')}
                                         className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-[11px] font-mono border transition-colors ${formato === 'EXCEL' ? 'bg-green-600 text-white border-green-600' : 'bg-bg-elevated border-border-subtle text-text-secondary hover:border-border-strong'}`}
                                     >
-                                        <FileSpreadsheet size={14} /> EXCEL
+                                        <Icon name="spreadsheet" size={14} /> EXCEL
                                     </button>
                                 </div>
                             </div>
 
-                            <Button 
-                                className="w-full mt-2" 
+                            <Button
+                                className="w-full mt-2"
                                 onClick={handleGenerar}
                                 isLoading={!!generating}
                             >
-                                <Download size={16} />
+                                <Icon name="download" size={16} />
                                 Generar Informe
                             </Button>
                         </div>
@@ -239,16 +230,16 @@ export function ReportesPage() {
                 <div className="lg:col-span-2 space-y-6">
                     <div className="flex items-center justify-between">
                         <h3 className="text-[14px] font-bold text-text-primary flex items-center gap-2">
-                            <History size={16} className="text-text-muted" />
+                            <Icon name="history" size={16} className="text-text-muted" />
                             Historial de Actividad
                         </h3>
                         <Button variant="ghost" size="sm" onClick={fetchReportes}>
-                            <RefreshCcw size={12} className={loading ? 'animate-spin' : ''} />
+                            <Icon name="refresh" size={12} className={loading ? 'animate-spin' : ''} />
                             Actualizar
                         </Button>
                     </div>
 
-                    <DataTable 
+                    <DataTable
                         columns={columns}
                         data={reportes}
                         loading={loading}

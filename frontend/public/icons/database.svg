@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="25 25 60 60" fill="none">
+<defs>
+  <style>
+    .s      { stroke: #F5A623; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .s-thin { stroke: #F5A623; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .f      { fill: #F5A623; }
+  </style>
+</defs>
+<g id="icon-database">
+  <ellipse cx="55" cy="40" rx="14" ry="5" class="s"/><path class="s" d="M41 40 L41 70 A 14 5 0 0 0 69 70 L69 40"/><path class="s" d="M41 55 A 14 5 0 0 0 69 55"/>
+</g>
+</svg>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="25 25 60 60" fill="none">
+<defs>
+  <style>
+    
+    .s      { stroke: #F5A623; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .s-thin { stroke: #F5A623; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .s-dim  { stroke: #F5A623; stroke-width: 1.2; stroke-linecap: round; fill: none; opacity: 0.4; }
+    .f      { fill: #F5A623; }
+    .f-bg   { fill: #2a1a00; }
+    
+  </style>
+</defs>
+<g id="icon-nozzle">
+
+  
+  <!-- Grip -->
+  <rect class="s" x="40" y="34" width="12" height="26" rx="2"/>
+  <!-- Gatillo -->
+  <path class="s-thin" d="M52 42 L58 42 L58 48 L52 48"/>
+  <!-- Boquilla saliente -->
+  <rect x="43" y="60" width="6" height="3" rx="1" fill="#F5A623"/>
+  <line x1="46" y1="63" x2="46" y2="72" stroke="#F5A623" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- Gota -->
+  <path d="M46 74 C46 74 44.5 77 44.5 78.5 C44.5 79.5 45.2 80 46 80 C46.8 80 47.5 79.5 47.5 78.5 C47.5 77 46 74 46 74 Z" fill="#F5A623" opacity="0.6"/>
+  <!-- Manguera -->
+  <path class="s" d="M46 34 C46 28 52 24 58 24 C66 24 70 30 70 38"/>
+  <circle cx="70" cy="38" r="2.5" class="f" opacity="0.5"/>
+  
+
+</g>
+</svg>

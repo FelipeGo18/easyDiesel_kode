@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="25 25 60 60" fill="none">
+<defs>
+  <style>
+    .s      { stroke: #F5A623; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .s-thin { stroke: #F5A623; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .f      { fill: #F5A623; }
+  </style>
+</defs>
+<g id="icon-arrow-right">
+  <line x1="42" y1="55" x2="68" y2="55" class="s"/><polyline points="60 47 68 55 60 63" class="s"/>
+</g>
+</svg>

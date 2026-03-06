@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 
 interface KpiCardProps {
     label: string;
@@ -18,10 +18,10 @@ export function KpiCard({ label, value, trend, icon, className, delay = 0 }: Kpi
         neutral: 'text-text-muted',
     };
 
-    const TrendIcon = trend
-        ? trend.direction === 'up' ? TrendingUp
-            : trend.direction === 'down' ? TrendingDown
-                : Minus
+    const iconName = trend
+        ? trend.direction === 'up' ? 'trending-up'
+            : trend.direction === 'down' ? 'trending-down'
+                : 'minus'
         : null;
 
     return (
@@ -48,10 +48,9 @@ export function KpiCard({ label, value, trend, icon, className, delay = 0 }: Kpi
                 </span>
             </div>
 
-            {/* Trend */}
-            {trend && TrendIcon && (
+            {trend && iconName && (
                 <div className={cn('flex items-center gap-1.5 mt-3', trendColors[trend.direction])}>
-                    <TrendIcon size={12} strokeWidth={1.5} />
+                    <Icon name={iconName} size={12} />
                     <span className="font-mono text-[10px] tracking-wider">{trend.text}</span>
                 </div>
             )}
