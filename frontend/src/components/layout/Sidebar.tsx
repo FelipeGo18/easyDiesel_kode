@@ -14,6 +14,7 @@ import {
     ChevronLeft,
     ChevronRight,
     Home,
+    Building2,
 } from 'lucide-react';
 
 interface NavItem {
@@ -26,10 +27,12 @@ interface NavItem {
 const navItems: NavItem[] = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, moduleId: 'M8' },
     { label: 'Zonas', path: '/zonas', icon: MapPin, moduleId: 'M4' },
+    { label: 'Actores', path: '/actores', icon: Building2, moduleId: 'M1' },
+    { label: 'Tanques', path: '/tanques', icon: Fuel, moduleId: 'M2' },
     { label: 'Precios', path: '/precios', icon: Fuel, moduleId: 'M4' },
     { label: 'Normativa', path: '/normativa', icon: FileText, moduleId: 'M5' },
     { label: 'Usuarios', path: '/usuarios', icon: Users, moduleId: 'M2' },
-    { label: 'Estación', path: '/estacion', icon: Fuel, moduleId: 'M3' },
+    { label: 'Inventario', path: '/estacion', icon: Fuel, moduleId: 'M3' },
     { label: 'Reportes', path: '/reportes', icon: BarChart2, moduleId: 'M6' },
     { label: 'Auditoría', path: '/auditoria', icon: Shield, moduleId: 'M7' },
 ];

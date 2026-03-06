@@ -12,6 +12,9 @@ import { ZonasPage } from '@/pages/admin/ZonasPage';
 import { DecretosPage } from '@/pages/admin/DecretosPage';
 import { PreciosPage } from '@/pages/admin/PreciosPage';
 import { UsuariosPage } from '@/pages/admin/UsuariosPage';
+import { InventarioPage } from '@/pages/admin/InventarioPage';
+import { ActoresPage } from '@/pages/admin/ActoresPage';
+import { TanquesPage } from '@/pages/admin/TanquesPage';
 import type { ReactNode } from 'react';
 
 /* ── Protected route wrapper ── */
@@ -74,9 +77,11 @@ function AppRoutes() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/zonas" element={<ZonasPage />} />
         <Route path="/precios" element={<PreciosPage />} />
+        <Route path="/actores" element={<ActoresPage />} />
+        <Route path="/tanques" element={<TanquesPage />} />
         <Route path="/normativa" element={<DecretosPage />} />
         <Route path="/usuarios" element={<UsuariosPage />} />
-        <Route path="/estacion" element={<PlaceholderPage title="Gestión de Estación" moduleId="M3" />} />
+        <Route path="/estacion" element={<InventarioPage />} />
         <Route path="/reportes" element={<ReportesPage />} />
         <Route path="/auditoria" element={<AuditoriaPage />} />
       </Route>

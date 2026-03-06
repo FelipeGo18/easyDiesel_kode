@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { Card } from '@/components/ui/Card';
@@ -14,31 +15,50 @@ import {
     ArrowRight,
     Activity,
     Clock,
+    Building2,
+    Truck,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { dashboardService, type DashboardSummary } from '@/services/dashboard';
+import { useToast } from '@/components/ui/Toast';
 
-/* ── Module grid items ── */
 const modules = [
     {
-        id: 'M3',
-        label: 'Gestión de Estación',
-        description: 'Entradas, salidas y control de tanques',
+        id: 'M1',
+        label: 'Actores',
+        description: 'Estaciones y distribuidores',
+        icon: Building2,
+        path: '/actores',
+        color: 'text-blue-500',
+    },
+    {
+        id: 'M2',
+        label: 'Tanques',
+        description: 'Gestión física de tanques',
         icon: Fuel,
-        path: '/estacion',
+        path: '/tanques',
         color: 'text-amber-500',
     },
     {
+        id: 'M3',
+        label: 'Inventario',
+        description: 'Entradas, salidas y cierres',
+        icon: Fuel,
+        path: '/estacion',
+        color: 'text-orange-500',
+    },
+    {
         id: 'M4',
-        label: 'Precios y Zonas',
-        description: 'Precios vigentes por decreto y zona',
+        label: 'Precios',
+        description: 'Precios vigentes por zona',
         icon: MapPin,
         path: '/precios',
-        color: 'text-blue-500',
+        color: 'text-indigo-500',
     },
     {
         id: 'M5',
         label: 'Normativa',
-        description: 'Decretos y reglas regulatorias',
+        description: 'Decretos y reglamentación',
         icon: FileText,
         path: '/normativa',
         color: 'text-yellow-500',
@@ -46,7 +66,7 @@ const modules = [
     {
         id: 'M6',
         label: 'Reportes',
-        description: 'Informes PDF/Excel para el Ministerio',
+        description: 'Informes para el Ministerio',
         icon: BarChart2,
         path: '/reportes',
         color: 'text-green-500',
@@ -54,56 +74,43 @@ const modules = [
     {
         id: 'M7',
         label: 'Auditoría',
-        description: 'Registro inmutable de operaciones',
+        description: 'Registro de operaciones',
         icon: Shield,
         path: '/auditoria',
         color: 'text-red-500',
     },
     {
-        id: 'M2',
+        id: 'M8',
         label: 'Usuarios',
-        description: 'Gestión de actores del sistema',
+        description: 'Accesos y roles',
         icon: Users,
         path: '/usuarios',
-        color: 'text-amber-500',
-    },
-];
-
-/* ── Recent activity (mock) ── */
-const recentActivity = [
-    {
-        id: '1',
-        action: 'Despacho registrado',
-        detail: 'ABC-123 · 12.5 gal ACPM',
-        time: 'Hace 3 min',
-        status: 'green' as const,
-    },
-    {
-        id: '2',
-        action: 'Entrega confirmada',
-        detail: 'Terpel → Tanque T-02',
-        time: 'Hace 18 min',
-        status: 'blue' as const,
-    },
-    {
-        id: '3',
-        action: 'Alerta de nivel bajo',
-        detail: 'Tanque T-01 — 15% capacidad',
-        time: 'Hace 42 min',
-        status: 'red' as const,
-    },
-    {
-        id: '4',
-        action: 'Precio actualizado',
-        detail: 'Zona Centro · Dec. 1428/2025',
-        time: 'Hace 2 hrs',
-        status: 'yellow' as const,
+        color: 'text-purple-500',
     },
 ];
 
 export function DashboardPage() {
-    const { user } = useAuth();
+    const { user } = useAuth() as any;
     const navigate = useNavigate();
+    const toast = useToast();
+    const [summary, setSummary] = useState<DashboardSummary | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            const data = await dashboardService.getSummary();
+            setSummary(data);
+        } catch (err: any) {
+            toast.error('Error al cargar resumen: ' + (err.response?.data?.error || err.message));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     // Lógica de visualización condicional basada en roles
     const rolNombre = typeof user?.rol === 'object' ? user.rol.nombre : user?.rol;
@@ -130,6 +137,18 @@ export function DashboardPage() {
         return 'Buenas noches';
     };
 
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-[60vh]">
+                <div className="animate-pulse flex flex-col items-center">
+                    <div className="w-12 h-12 bg-bg-elevated rounded-full mb-4" />
+                    <div className="h-4 w-32 bg-bg-elevated rounded mb-2" />
+                    <div className="h-3 w-48 bg-bg-elevated rounded" />
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6 animate-enter">
             {/* ── Header ── */}
@@ -139,45 +158,46 @@ export function DashboardPage() {
                         {greeting()}, {user?.nombre?.split(' ')[0] || 'Usuario'}
                     </h1>
                     <p className="text-small text-text-secondary mt-1">
-                        Resumen de operaciones de la plataforma
+                        Resumen de operaciones de la plataforma - {user?.estacion?.nombre || 'Panel Administrativo'}
                     </p>
                 </div>
 
                 <Badge variant="green">
                     <Activity size={10} className="mr-1" />
-                    Sistema operativo
+                    Sistema en línea
                 </Badge>
             </div>
 
             {/* ── KPI Grid ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <KpiCard
-                    label="Galones hoy"
-                    value="1,284"
-                    icon={<Fuel size={18} strokeWidth={1.5} />}
-                    trend={{ direction: 'up', text: '+8.3% vs ayer' }}
+                    label="Ventas totales"
+                    value={summary?.operaciones.transacciones.toLocaleString() || '0'}
+                    icon={<BarChart2 size={18} strokeWidth={1.5} className="text-blue-500" />}
+                    trend={{ direction: 'up', text: 'Transacciones registradas' }}
                     delay={0}
                 />
                 <KpiCard
-                    label="Transacciones"
-                    value="47"
-                    icon={<BarChart2 size={18} strokeWidth={1.5} />}
-                    trend={{ direction: 'up', text: '+12 vs ayer' }}
+                    label="Abastecimientos"
+                    value={summary?.operaciones.entregas.toLocaleString() || '0'}
+                    icon={<Truck size={18} strokeWidth={1.5} className="text-green-500" />}
+                    trend={{ direction: 'up', text: 'Entradas de combustible' }}
                     delay={50}
                 />
                 <KpiCard
-                    label="Estaciones activas"
-                    value="6"
-                    icon={<MapPin size={18} strokeWidth={1.5} />}
-                    trend={{ direction: 'neutral', text: 'Sin cambios' }}
+                    label="Estaciones"
+                    value={summary?.estaciones.toLocaleString() || '0'}
+                    icon={<Building2 size={18} strokeWidth={1.5} className="text-amber-500" />}
+                    trend={{ direction: 'neutral', text: 'Puntos de servicio' }}
                     delay={100}
                 />
                 <KpiCard
-                    label="Alertas"
-                    value="2"
-                    icon={<AlertTriangle size={18} strokeWidth={1.5} />}
-                    trend={{ direction: 'down', text: '-3 vs ayer' }}
+                    label="Alertas Stock"
+                    value={summary?.inventario.tanquesEnAlerta.toLocaleString() || '0'}
+                    icon={<AlertTriangle size={18} strokeWidth={1.5} className={summary?.inventario.tanquesEnAlerta ? 'text-red-500' : 'text-text-muted'} />}
+                    trend={{ direction: summary?.inventario.tanquesEnAlerta ? 'down' : 'neutral', text: 'Tanques bajo mínimo' }}
                     delay={150}
+                    className={summary?.inventario.tanquesEnAlerta ? 'border-red-500/50' : ''}
                 />
             </div>
 
@@ -236,30 +256,62 @@ export function DashboardPage() {
 
                     <Card className="p-0 overflow-hidden">
                         <div className="divide-y divide-border-subtle">
-                            {recentActivity.map((item, i) => (
+                            {(!summary?.operaciones?.recientes || summary.operaciones.recientes.length === 0) && (
+                                <div className="p-8 text-center text-text-muted text-[12px]">
+                                    No hay transacciones recientes
+                                </div>
+                            )}
+                            {summary?.operaciones?.recientes?.map((item: any, i: number) => (
                                 <div
                                     key={item.id}
                                     className="px-4 py-3.5 hover:bg-bg-hover interactive animate-enter"
                                     style={{ animationDelay: `${(i + 1) * 80}ms` }}
                                 >
                                     <div className="flex items-start gap-3">
-                                        <Badge variant={item.status} className="mt-0.5 shrink-0">
-                                            {item.status === 'green' ? '✓' : item.status === 'red' ? '!' : item.status === 'blue' ? 'i' : '⚠'}
+                                        <Badge variant={item.tipo === 'SALIDA' ? 'amber' : 'green'} className="mt-0.5 shrink-0 px-1 py-0 min-w-[20px] text-center">
+                                            {item.tipo === 'SALIDA' ? '↓' : '↑'}
                                         </Badge>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[13px] text-text-primary font-sans">{item.action}</p>
+                                            <p className="text-[13px] text-text-primary font-sans">
+                                                {item.tipo === 'SALIDA' ? 'Venta registrada' : 'Abastecimiento'}
+                                            </p>
                                             <p className="text-[11px] font-mono text-text-secondary mt-0.5 truncate">
-                                                {item.detail}
+                                                {item.estacion?.nombre || '—'} · {Number(item.galones).toLocaleString()} gal {item.tanque?.tipoCombustible || ''}
                                             </p>
                                         </div>
                                         <span className="text-[9px] font-mono text-text-muted whitespace-nowrap">
-                                            {item.time}
+                                            {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </span>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </Card>
+
+                    {summary?.inventario?.alertas && summary.inventario.alertas.length > 0 && (
+                        <div className="mt-4">
+                            <div className="flex items-center gap-2 mb-3">
+                                <AlertTriangle size={16} strokeWidth={1.5} className="text-red-500" />
+                                <h2 className="text-h2 text-text-primary text-[14px]">Alertas de Inventario</h2>
+                            </div>
+                            <div className="space-y-2">
+                                {summary.inventario.alertas.map((alerta: any) => (
+                                    <Card key={alerta.id} className="p-3 bg-red-500/5 border-red-500/20">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <p className="text-[13px] font-bold text-red-600">{alerta.nombre}</p>
+                                                <p className="text-[11px] text-text-secondary">{alerta.estacion_nombre}</p>
+                                            </div>
+                                            <Badge variant="red">{Math.round((Number(alerta.nivel_actual) / (Number(alerta.capacidad_galones) || 1)) * 100)}%</Badge>
+                                        </div>
+                                        <p className="text-[11px] mt-2 text-text-muted">
+                                            Actual: <span className="text-red-600 font-bold">{Number(alerta.nivel_actual).toLocaleString()} gal</span> / Min: {Number(alerta.nivel_minimo).toLocaleString()} gal
+                                        </p>
+                                    </Card>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
