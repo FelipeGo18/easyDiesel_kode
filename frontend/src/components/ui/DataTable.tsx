@@ -23,7 +23,7 @@ interface DataTableProps<T> {
 
 export function DataTable<T extends Record<string, any>>({
     columns,
-    data,
+    data = [], // Garantizar que data siempre sea un array
     searchable = true,
     searchPlaceholder = 'Buscar...',
     pageSize = 10,
@@ -37,19 +37,22 @@ export function DataTable<T extends Record<string, any>>({
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
     const [page, setPage] = useState(0);
 
+    const safeData = Array.isArray(data) ? data : [];
+
     const filtered = useMemo(() => {
-        if (!search.trim()) return data;
+        if (!search.trim()) return safeData;
         const q = search.toLowerCase();
-        return data.filter((row) =>
+        return safeData.filter((row) =>
             columns.some((col) => {
                 const val = row[col.key];
                 return val != null && String(val).toLowerCase().includes(q);
             })
         );
-    }, [data, search, columns]);
+    }, [safeData, search, columns]);
 
     const sorted = useMemo(() => {
         if (!sortKey) return filtered;
+        if (!Array.isArray(filtered)) return []; // Asegurarse de que filtered es un array
         return [...filtered].sort((a, b) => {
             const av = a[sortKey] ?? '';
             const bv = b[sortKey] ?? '';
@@ -58,8 +61,9 @@ export function DataTable<T extends Record<string, any>>({
         });
     }, [filtered, sortKey, sortDir]);
 
-    const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
-    const paged = sorted.slice(page * pageSize, (page + 1) * pageSize);
+    const sortedArray = Array.isArray(sorted) ? sorted : [];
+    const totalPages = Math.max(1, Math.ceil(sortedArray.length / pageSize));
+    const paged = sortedArray.slice(page * pageSize, (page + 1) * pageSize);
 
     const handleSort = (key: string) => {
         if (sortKey === key) {
@@ -162,7 +166,7 @@ export function DataTable<T extends Record<string, any>>({
             {totalPages > 1 && (
                 <div className="flex items-center justify-between">
                     <span className="text-[11px] font-mono text-text-muted uppercase tracking-wider">
-                        {sorted.length} resultado{sorted.length !== 1 ? 's' : ''}
+                        {sortedArray.length} resultado{sortedArray.length !== 1 ? 's' : ''}
                     </span>
                     <div className="flex items-center gap-1">
                         <button
