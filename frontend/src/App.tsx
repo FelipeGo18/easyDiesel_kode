@@ -1,10 +1,15 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { ToastProvider } from '@/components/ui/Toast';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { HomePage } from '@/pages/HomePage';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { DashboardPage } from '@/pages/DashboardPage';
+import { ZonasPage } from '@/pages/admin/ZonasPage';
+import { DecretosPage } from '@/pages/admin/DecretosPage';
+import { PreciosPage } from '@/pages/admin/PreciosPage';
+import { UsuariosPage } from '@/pages/admin/UsuariosPage';
 import type { ReactNode } from 'react';
 
 /* ── Protected route wrapper ── */
@@ -65,13 +70,13 @@ function AppRoutes() {
         }
       >
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/zonas" element={<ZonasPage />} />
+        <Route path="/precios" element={<PreciosPage />} />
+        <Route path="/normativa" element={<DecretosPage />} />
+        <Route path="/usuarios" element={<UsuariosPage />} />
         <Route path="/estacion" element={<PlaceholderPage title="Gestión de Estación" moduleId="M3" />} />
-        <Route path="/precios" element={<PlaceholderPage title="Precios y Zonas" moduleId="M4" />} />
-        <Route path="/normativa" element={<PlaceholderPage title="Normativa" moduleId="M5" />} />
         <Route path="/reportes" element={<PlaceholderPage title="Reportes" moduleId="M6" />} />
         <Route path="/auditoria" element={<PlaceholderPage title="Auditoría" moduleId="M7" />} />
-        <Route path="/usuarios" element={<PlaceholderPage title="Usuarios" moduleId="M2" />} />
-        <Route path="/auth-config" element={<PlaceholderPage title="Configuración Auth" moduleId="M1" />} />
       </Route>
 
       {/* Fallback */}
@@ -111,7 +116,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <ToastProvider>
+          <AppRoutes />
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );

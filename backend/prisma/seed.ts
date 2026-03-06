@@ -15,8 +15,7 @@ async function seed() {
         { nombre: 'distribuidor', descripcion: 'Distribuidor mayorista — registro de entregas, reportes' },
         { nombre: 'regulador', descripcion: 'Autoridad reguladora — solo lectura: normativa, reportes, dashboard' },
         { nombre: 'auditor', descripcion: 'Auditor — solo lectura: logs de auditoría' },
-        { nombre: 'particular', descripcion: 'Usuario particular — consulta de precios vigentes' },
-        { nombre: 'subsidiado', descripcion: 'Usuario con subsidio — consulta de precios con subsidio' },
+        { nombre: 'particular', descripcion: 'Ciudadano — consulta precios, planifica viajes' },
         { nombre: 'distribuidor_regulado', descripcion: 'Distribuidor regulado — inventario y normativa' },
     ];
 
