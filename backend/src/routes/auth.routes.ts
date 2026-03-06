@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { registerHandler, loginHandler, meHandler, googleCallbackHandler } from '../controllers/auth.controller';
+import { registerHandler, loginHandler, meHandler, googleCallbackHandler, supabaseLoginHandler } from '../controllers/auth.controller';
 import { auth } from '../middleware/auth';
 
 const authRouter = Router();
@@ -103,6 +103,28 @@ authRouter.get('/google/callback', async (req, res, next) => {
  *         description: Credenciales inválidas
  */
 authRouter.post('/login', loginHandler);
+
+/**
+ * @swagger
+ * /api/auth/supabase-login:
+ *   post:
+ *     summary: Login con token de Supabase
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [access_token]
+ *             properties:
+ *               access_token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login exitoso
+ */
+authRouter.post('/supabase-login', supabaseLoginHandler);
 
 // ── Rutas protegidas ───────────────────────────────────
 

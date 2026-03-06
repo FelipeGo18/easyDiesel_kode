@@ -1,0 +1,36 @@
+[33mcommit 6e997bc3c02b66ba1799a113c341db9678fd1f98[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mhaider[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Merge: 84d35c2 b8c5d4e
+Author: Haider2231 <90928229+Haider2231@users.noreply.github.com>
+Date:   Thu Mar 5 15:51:04 2026 -0600
+
+    Merge pull request #14 from FelipeGo18/haider
+    
+    feat: Initialize backend project with core dependencies, testing setu…
+
+[33mcommit b8c5d4e549a5cc958936b2963e48e0971d722fec[m[33m ([m[1;31morigin/haider[m[33m)[m
+Merge: 15c2603 84d35c2
+Author: Haider2231 <90928229+Haider2231@users.noreply.github.com>
+Date:   Thu Mar 5 15:50:55 2026 -0600
+
+    Merge branch 'main' into haider
+
+[33mcommit 15c2603a4f48116bb3c2d34a436333b0b2214b49[m
+Author: Haider2231 <haiderandres1369@gmail.com>
+Date:   Thu Mar 5 16:47:06 2026 -0500
+
+    feat: Initialize backend project with core dependencies, testing setup, and a comprehensive database schema.
+
+[33mcommit 84d35c2f1ed6d23f8f56f21c3a885c77d8337067[m
+Merge: 1fdfade 4675970
+Author: FelipeGo18 <150061574+FelipeGo18@users.noreply.github.com>
+Date:   Thu Mar 5 15:08:27 2026 -0600
+
+    Merge pull request #13 from FelipeGo18/felipe
+    
+    feat: Implement initial login page with email/password and Google aut…
+
+[33mcommit 4675970f64940783005ddddf08a1f5abb0083fc8[m[33m ([m[1;31morigin/felipe[m[33m)[m
+Author: FelipeGo18 <gonzalezgarzon14@hotmail.com>
+Date:   Thu Mar 5 16:07:37 2026 -0500
+
+    feat: Implement initial login page with email/password and Google authentication.

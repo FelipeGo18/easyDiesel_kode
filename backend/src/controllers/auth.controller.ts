@@ -116,6 +116,34 @@ export const loginHandler = async (
 };
 
 /**
+ * POST /api/auth/supabase-login
+ * Intercambia un access_token de Supabase por un JWT de nuestro backend
+ */
+export const supabaseLoginHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const { access_token } = req.body;
+        if (!access_token) {
+            res.status(400).json({ success: false, error: 'Token de Supabase no proporcionado' });
+            return;
+        }
+
+        const result = await authService.loginWithSupabaseToken(access_token);
+
+        res.status(200).json({
+            success: true,
+            message: 'Login con Supabase exitoso',
+            data: result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
  * GET /api/auth/me
  */
 export const meHandler = async (
