@@ -1,6 +1,5 @@
 @startuml Arquitectura_Plataforma_Combustibles
 
-!theme plain
 skinparam backgroundColor #FAFAFA
 skinparam defaultFontName Arial
 skinparam defaultFontSize 13
@@ -55,6 +54,8 @@ rectangle "**INTEGRACIONES EXTERNAS**" as EXTERNAS #E8DAEF {
   cloud "API GPS /\nTracking"           as GPS
   cloud "Facturacion\nElectronica"      as FACT
   cloud "Ministerio\nde Minas"          as MINAS
+  cloud "Google OAuth API"              as GOAUTH
+  cloud "Google Maps API"               as GMAPS
 }
 
 ' ════════════════════════════════════════════════════════
@@ -77,9 +78,9 @@ rectangle "**CAPA DE PRESENTACION  —  React.js + Vite + TypeScript  (Vercel)**
 rectangle "**CAPA DE SERVICIOS  —  Node.js + Express + TypeScript  (Railway)**" as BACKEND #D5F5E3 {
 
   component "Auth Middleware\n(JWT / bcrypt)" as SVC_AUTH #A9DFBF
+  component "Passport.js\nOAuth 2.0" as PASSPORT #A9DFBF
 
-  component "/auth
-/auth/google" as API_AUTH #A9DFBF
+  component "/auth\n/auth/google" as API_AUTH #A9DFBF
   component "/usuarios"          as API_USR  #A9DFBF
   component "/estaciones\n/tanques" as API_EST  #A9DFBF
   component "/transacciones"     as API_TRX  #A9DFBF
@@ -198,9 +199,6 @@ GOAUTH   -down-> PASSPORT   : "OAuth 2.0 callback"
 PASSPORT -down-> API_AUTH   : "valida y crea JWT"
 GMAPS    -down-> M4         : "JS SDK mapas"
 GMAPS    -down-> M8         : "JS SDK mapas"
-GOAUTH -down-> PASSPORT : "OAuth 2.0 callback"
-GMAPS  -down-> M4       : "Maps JS SDK"
-GMAPS  -down-> M8       : "Maps JS SDK"
 GPS  -down-> API_TRX  : "HTTP ubicacion"
 FACT -down-> API_TRX  : "HTTP factura"
 API_RPT -right-> MINAS : "HTTP reporte oficial"
@@ -229,19 +227,6 @@ note as NOTA_PUB
   GET /publico/decretos/vigentes
   Rate limiting: 60 req/min por IP
   Usado por: Particular y Subsidiado
-end note
-
-note as NOTA_GOOGLE
-  <b>Google OAuth 2.0</b>
-  GET /auth/google → redirect Google
-  GET /auth/google/callback → JWT propio
-  Passport.js gestiona el flujo
-  Compatible con login email+password
-  
-  <b>Google Maps API</b>
-  M4: mapa estaciones + precios por zona
-  M8: dashboard ciudadano con ubicacion
-  Requiere GOOGLE_MAPS_API_KEY en frontend
 end note
 
 note as NOTA_GOOGLE
