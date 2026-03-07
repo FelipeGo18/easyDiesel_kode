@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
@@ -6,10 +6,11 @@ import { InputField, SelectField, TextAreaField } from '@/components/ui/FormFiel
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { KpiCard } from '@/components/ui/KpiCard';
-import { useToast } from '@/components/ui/Toast';
-import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/components/ui/useToast';
+import { useAuth } from '@/context/useAuth';
 import { tanquesService, inventarioService, type RegistrarEntregaData, type RegistrarTransaccionData, type CierreTurnoData } from '@/services/inventario';
-import { type Tanque, type TipoServicio } from '@/types';
+import { getErrorMessage } from '@/lib/http';
+import { type AuthenticatedUser, type Tanque, type TipoServicio } from '@/types';
 
 const tipoServicioOptions = [
     { value: 'PARTICULAR', label: 'Particular' },
@@ -20,7 +21,7 @@ const tipoServicioOptions = [
 ];
 
 export function InventarioPage() {
-    const { user } = useAuth() as any;
+    const { user } = useAuth();
     const toast = useToast();
     const [tanques, setTanques] = useState<Tanque[]>([]);
     const [loading, setLoading] = useState(true);
@@ -44,7 +45,6 @@ export function InventarioPage() {
         tipo: 'SALIDA',
         tipoServicio: 'PARTICULAR',
         galones: 0,
-        precioUnitario: 0,
         placaVehiculo: '',
     });
 
@@ -53,40 +53,42 @@ export function InventarioPage() {
         observaciones: '',
     });
 
-    const fetchTanques = async () => {
-        if (!user?.estacion?.id) return;
+    const fetchTanques = useCallback(async () => {
+        const currentUser = user as AuthenticatedUser | null;
+        if (!currentUser?.estacion?.id) return;
         try {
             setLoading(true);
-            const data = await tanquesService.getAll(user.estacion.id);
+            const data = await tanquesService.getAll(currentUser.estacion.id);
             setTanques(Array.isArray(data) ? data : []);
-        } catch (err: any) {
-            toast.error('Error al cargar tanques: ' + (err.response?.data?.error || err.message));
+        } catch (error: unknown) {
+            toast.error(`Error al cargar tanques: ${getErrorMessage(error)}`);
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast, user]);
 
     useEffect(() => {
         fetchTanques();
-    }, [user?.estacion?.id]);
+    }, [fetchTanques]);
 
     const handleEntregaSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        if (!selectedTanque || !user?.estacion?.id) return;
+        const currentUser = user as AuthenticatedUser | null;
+        if (!selectedTanque || !currentUser?.estacion?.id) return;
         setSubmitting(true);
         try {
             await inventarioService.registrarEntrega({
                 ...entregaForm as RegistrarEntregaData,
                 tanqueId: selectedTanque.id,
-                estacionId: user.estacion.id,
+                estacionId: currentUser.estacion.id,
                 tipoCombustible: selectedTanque.tipoCombustible,
-                distribuidorId: user.distribuidor?.id || 'dist-default', // Fallback or logic to select distribuidor
+                distribuidorId: currentUser.distribuidor?.id || '',
             });
             toast.success('Entrega registrada correctamente');
             setEntregaModalOpen(false);
             fetchTanques();
-        } catch (err: any) {
-            toast.error(err.response?.data?.error || 'Error al registrar entrega');
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, 'Error al registrar entrega'));
         } finally {
             setSubmitting(false);
         }
@@ -94,20 +96,25 @@ export function InventarioPage() {
 
     const handleTransaccionSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        if (!selectedTanque || !user?.estacion?.id) return;
+        const currentUser = user as AuthenticatedUser | null;
+        if (!selectedTanque || !currentUser?.estacion?.id) return;
         setSubmitting(true);
         try {
+            if (!transaccionForm.galones || Number(transaccionForm.galones) <= 0) {
+                throw new Error('La cantidad de galones debe ser mayor a 0');
+            }
+
             await inventarioService.registrarTransaccion({
                 ...transaccionForm as RegistrarTransaccionData,
                 tanqueId: selectedTanque.id,
-                estacionId: user.estacion.id,
+                estacionId: currentUser.estacion.id,
                 tipoCombustible: selectedTanque.tipoCombustible,
             });
             toast.success('Transacción registrada correctamente');
             setTransaccionModalOpen(false);
             fetchTanques();
-        } catch (err: any) {
-            toast.error(err.response?.data?.error || 'Error al registrar transacción');
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, 'Error al registrar transacción'));
         } finally {
             setSubmitting(false);
         }
@@ -115,19 +122,20 @@ export function InventarioPage() {
 
     const handleCierreSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        if (!selectedTanque || !user?.estacion?.id) return;
+        const currentUser = user as AuthenticatedUser | null;
+        if (!selectedTanque || !currentUser?.estacion?.id) return;
         setSubmitting(true);
         try {
             const result = await inventarioService.cierreTurno({
                 ...cierreForm as CierreTurnoData,
                 tanqueId: selectedTanque.id,
-                estacionId: user.estacion.id,
+                estacionId: currentUser.estacion.id,
             });
             toast.success(`Cierre completado. Diferencia: ${result.diferencia.toFixed(2)} gal.`);
             setCierreModalOpen(false);
             fetchTanques();
-        } catch (err: any) {
-            toast.error(err.response?.data?.error || 'Error al realizar cierre');
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, 'Error al realizar cierre'));
         } finally {
             setSubmitting(false);
         }
@@ -331,7 +339,7 @@ export function InventarioPage() {
                         onChange={(e) => setTransaccionForm({ ...transaccionForm, tipoServicio: e.target.value as TipoServicio })}
                         options={tipoServicioOptions}
                     />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                         <InputField
                             label="Galones"
                             type="number"
@@ -339,13 +347,9 @@ export function InventarioPage() {
                             onChange={(e) => setTransaccionForm({ ...transaccionForm, galones: parseFloat(e.target.value) })}
                             required
                         />
-                        <InputField
-                            label="Precio Unitario"
-                            type="number"
-                            value={transaccionForm.precioUnitario}
-                            onChange={(e) => setTransaccionForm({ ...transaccionForm, precioUnitario: parseFloat(e.target.value) })}
-                            required
-                        />
+                    </div>
+                    <div className="rounded-brand border border-border-subtle bg-bg-elevated px-3 py-2 text-[12px] text-text-secondary">
+                        El precio y el subsidio se calculan automáticamente desde el backend según zona, combustible y tipo de servicio.
                     </div>
                     <InputField
                         label="Placa Vehículo (Opcional)"

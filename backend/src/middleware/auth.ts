@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { hasAnyPermission, normalizePermissions } from '../utils/permissions';
+import { getJwtSecret } from '../config/security';
 
 interface JwtPayload {
     userId: string;
@@ -25,7 +27,7 @@ export const auth = (req: Request, res: Response, next: NextFunction): void => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        res.status(401).json({ error: 'Token de autenticación requerido' });
+        res.status(401).json({ success: false, message: 'Token de autenticación requerido', error: 'Token de autenticación requerido' });
         return;
     }
 
@@ -34,13 +36,16 @@ export const auth = (req: Request, res: Response, next: NextFunction): void => {
     try {
         const decoded = jwt.verify(
             token,
-            process.env.JWT_SECRET || 'default-secret'
+            getJwtSecret()
         ) as JwtPayload;
 
-        req.user = decoded;
+        req.user = {
+            ...decoded,
+            permisos: normalizePermissions(decoded.rol, decoded.permisos),
+        };
         next();
     } catch {
-        res.status(401).json({ error: 'Token inválido o expirado' });
+        res.status(401).json({ success: false, message: 'Token inválido o expirado', error: 'Token inválido o expirado' });
     }
 };
 
@@ -51,7 +56,7 @@ export const auth = (req: Request, res: Response, next: NextFunction): void => {
 export const can = (...requiredPermisos: string[]) => {
     return (req: Request, res: Response, next: NextFunction): void => {
         if (!req.user) {
-            res.status(401).json({ error: 'No autenticado' });
+            res.status(401).json({ success: false, message: 'No autenticado', error: 'No autenticado' });
             return;
         }
 
@@ -61,10 +66,12 @@ export const can = (...requiredPermisos: string[]) => {
         }
 
         const userPermisos = req.user.permisos || [];
-        const hasAllPermisos = requiredPermisos.every(p => userPermisos.includes(p));
+        const allowed = hasAnyPermission(userPermisos, requiredPermisos);
 
-        if (!hasAllPermisos) {
+        if (!allowed) {
             res.status(403).json({
+                success: false,
+                message: 'No tienes los permisos necesarios para realizar esta acción',
                 error: 'No tienes los permisos necesarios para realizar esta acción',
             });
             return;

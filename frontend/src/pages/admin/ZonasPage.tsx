@@ -1,13 +1,14 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { useAuth } from '@/context/AuthContext';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { InputField, TextAreaField, SelectField } from '@/components/ui/FormFields';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@/components/ui/useToast';
 import { zonasService, type Zona } from '@/services/admin';
+import { useAccess } from '@/hooks/useAccess';
+import { getErrorMessage } from '@/lib/http';
 
 const tipoZonaOptions = [
     { value: 'INTERCONECTADA', label: 'Interconectada' },
@@ -16,42 +17,43 @@ const tipoZonaOptions = [
 
 export function ZonasPage() {
     const toast = useToast();
-    const { user } = useAuth();
+    const { hasAnyPermission } = useAccess();
     const [zonas, setZonas] = useState<Zona[]>([]);
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
     const [editing, setEditing] = useState<Zona | null>(null);
 
     // Lógica de permisos
-    const rolNombre = typeof user?.rol === 'object' ? user.rol.nombre : user?.rol;
-    const canWrite = rolNombre === 'admin';
+    const canWrite = hasAnyPermission('zonas:escribir');
 
     // Form state
     const [nombre, setNombre] = useState('');
     const [tipoZona, setTipoZona] = useState('INTERCONECTADA');
     const [departamentos, setDepartamentos] = useState('');
+    const [municipios, setMunicipios] = useState('');
     const [descripcion, setDescripcion] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
-    const fetchZonas = async () => {
+    const fetchZonas = useCallback(async () => {
         try {
             setLoading(true);
             const data = await zonasService.getAll();
             setZonas(data);
-        } catch (err: any) {
-            toast.error('Error al cargar zonas: ' + (err.response?.data?.error || err.message));
+        } catch (error: unknown) {
+            toast.error(`Error al cargar zonas: ${getErrorMessage(error)}`);
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast]);
 
-    useEffect(() => { fetchZonas(); }, []);
+    useEffect(() => { fetchZonas(); }, [fetchZonas]);
 
     const openCreate = () => {
         setEditing(null);
         setNombre('');
         setTipoZona('INTERCONECTADA');
         setDepartamentos('');
+        setMunicipios('');
         setDescripcion('');
         setModalOpen(true);
     };
@@ -61,6 +63,7 @@ export function ZonasPage() {
         setNombre(zona.nombre);
         setTipoZona(zona.tipoZona);
         setDepartamentos(zona.departamentos.join(', '));
+        setMunicipios(zona.municipios?.join(', ') || '');
         setDescripcion(zona.descripcion || '');
         setModalOpen(true);
     };
@@ -69,11 +72,23 @@ export function ZonasPage() {
         e.preventDefault();
         setSubmitting(true);
         try {
+            const departamentosList = departamentos.split(',').map(d => d.trim()).filter(Boolean);
+            const municipiosList = municipios.split(',').map(m => m.trim()).filter(Boolean);
+
+            if (!nombre.trim()) {
+                throw new Error('El nombre de la zona es obligatorio');
+            }
+
+            if (!departamentosList.length) {
+                throw new Error('Debes registrar al menos un departamento');
+            }
+
             const payload = {
-                nombre,
-                tipoZona: tipoZona as any,
-                departamentos: departamentos.split(',').map(d => d.trim()).filter(Boolean),
-                descripcion: descripcion || null,
+                nombre: nombre.trim(),
+                tipoZona: tipoZona as Zona['tipoZona'],
+                departamentos: departamentosList,
+                municipios: municipiosList,
+                descripcion: descripcion.trim() || null,
             };
 
             if (editing) {
@@ -86,8 +101,8 @@ export function ZonasPage() {
 
             setModalOpen(false);
             fetchZonas();
-        } catch (err: any) {
-            toast.error(err.response?.data?.error || 'Error al guardar zona');
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, 'Error al guardar zona'));
         } finally {
             setSubmitting(false);
         }
@@ -188,7 +203,14 @@ export function ZonasPage() {
                         id="zona-deptos"
                         value={departamentos}
                         onChange={(e) => setDepartamentos(e.target.value)}
-                        placeholder="Cundinamarca, Boyacá, Meta (separados por coma)"
+                        placeholder="Cundinamarca, Meta (separados por coma)"
+                    />
+                    <InputField
+                        label="Municipios (Influencia CREG)"
+                        id="zona-munis"
+                        value={municipios}
+                        onChange={(e) => setMunicipios(e.target.value)}
+                        placeholder="Cajicá, Chía, Sopó (separados por coma)"
                     />
                     <TextAreaField
                         label="Descripción"

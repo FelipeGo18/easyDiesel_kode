@@ -1,19 +1,19 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { InputField, SelectField } from '@/components/ui/FormFields';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@/components/ui/useToast';
 import { tanquesService } from '@/services/inventario';
 import { estacionesService } from '@/services/actores';
 import { type Tanque, type EstacionServicio, type TipoCombustible } from '@/types';
+import { getErrorMessage } from '@/lib/http';
 
 const tipoCombustibleOptions = [
     { value: 'ACPM', label: 'ACPM' },
     { value: 'GASOLINA_CORRIENTE', label: 'Gasolina Corriente' },
-    { value: 'GASOLINA_EXTRA', label: 'Gasolina Extra' },
 ];
 
 export function TanquesPage() {
@@ -34,7 +34,7 @@ export function TanquesPage() {
         estacionId: '',
     });
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             const [tanquesData, estacionesData] = await Promise.all([
@@ -43,14 +43,14 @@ export function TanquesPage() {
             ]);
             setTanques(Array.isArray(tanquesData) ? tanquesData : []);
             setEstaciones(Array.isArray(estacionesData) ? estacionesData : []);
-        } catch (err: any) {
-            toast.error('Error al cargar datos: ' + (err.response?.data?.error || err.message));
+        } catch (error: unknown) {
+            toast.error(`Error al cargar datos: ${getErrorMessage(error)}`);
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast]);
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => { fetchData(); }, [fetchData]);
 
     const openCreate = () => {
         setEditing(null);
@@ -83,8 +83,8 @@ export function TanquesPage() {
             }
             setModalOpen(false);
             fetchData();
-        } catch (err: any) {
-            toast.error(err.response?.data?.error || 'Error al guardar tanque');
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, 'Error al guardar tanque'));
         } finally {
             setSubmitting(false);
         }

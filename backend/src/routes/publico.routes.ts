@@ -3,10 +3,14 @@ import {
     getPreciosHandler,
     getEstacionesHandler,
     getZonasHandler,
-    getDecretosHandler
+    getDecretosHandler,
+    getEstacionesCercanasHandler,
 } from '../controllers/publico.controller';
+import { publicReadRateLimiter } from '../middleware/rate-limit';
 
 const publicoRouter = Router();
+
+publicoRouter.use(publicReadRateLimiter);
 
 /**
  * @swagger
@@ -25,6 +29,15 @@ publicoRouter.get('/precios', getPreciosHandler);
  *     tags: [Público]
  */
 publicoRouter.get('/estaciones', getEstacionesHandler);
+
+/**
+ * @swagger
+ * /api/publico/estaciones-cercanas:
+ *   get:
+ *     summary: Busca gasolineras cercanas usando Google Places
+ *     tags: [Público]
+ */
+publicoRouter.get('/estaciones-cercanas', getEstacionesCercanasHandler);
 
 /**
  * @swagger

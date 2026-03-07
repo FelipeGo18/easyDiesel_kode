@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { DataTable, type Column } from '@/components/ui/DataTable';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@/components/ui/useToast';
 import api from '@/services/api';
+import type { ApiResponse } from '@/types';
+import { getErrorMessage } from '@/lib/http';
 
 interface ReporteRegistro {
     id: string;
@@ -39,19 +41,19 @@ export function ReportesPage() {
     const [fechaInicio, setFechaInicio] = useState(new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0]);
     const [fechaFin, setFechaFin] = useState(new Date().toISOString().split('T')[0]);
 
-    const fetchReportes = async () => {
+    const fetchReportes = useCallback(async () => {
         try {
             setLoading(true);
-            const response = await api.get('/reportes');
-            setReportes(response.data.data);
-        } catch (err: any) {
-            toast.error('Error al cargar historial: ' + (err.response?.data?.message || err.message));
+            const response = await api.get<ApiResponse<ReporteRegistro[]>>('/reportes');
+            setReportes(response.data.data ?? []);
+        } catch (error: unknown) {
+            toast.error(`Error al cargar historial: ${getErrorMessage(error)}`);
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast]);
 
-    useEffect(() => { fetchReportes(); }, []);
+    useEffect(() => { fetchReportes(); }, [fetchReportes]);
 
     const handleGenerar = async () => {
         try {
@@ -80,8 +82,8 @@ export function ReportesPage() {
 
             toast.success('Reporte generado y descargado correctamente');
             fetchReportes(); // Actualizar historial
-        } catch (err: any) {
-            toast.error('Error al generar reporte: ' + (err.response?.data?.message || err.message));
+        } catch (error: unknown) {
+            toast.error(`Error al generar reporte: ${getErrorMessage(error)}`);
         } finally {
             setGenerating(null);
         }

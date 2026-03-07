@@ -1,4 +1,5 @@
 import api from './api';
+import type { ApiResponse } from '@/types';
 
 /* ── Types ── */
 export interface Zona {
@@ -6,6 +7,7 @@ export interface Zona {
     nombre: string;
     tipoZona: 'INTERCONECTADA' | 'NO_INTERCONECTADA';
     departamentos: string[];
+    municipios?: string[];
     descripcion: string | null;
     _count?: { estaciones: number; precios: number };
 }
@@ -54,42 +56,43 @@ export interface Rol {
     id: string;
     nombre: string;
     descripcion: string | null;
+    permisos?: string[];
 }
 
 /* ── Zonas ── */
 export const zonasService = {
-    getAll: () => api.get<any>('/zonas').then(r => r.data.data as Zona[]),
-    getById: (id: string) => api.get<any>(`/zonas/${id}`).then(r => r.data.data as Zona),
-    create: (data: Partial<Zona>) => api.post<any>('/zonas', data).then(r => r.data.data as Zona),
-    update: (id: string, data: Partial<Zona>) => api.put<any>(`/zonas/${id}`, data).then(r => r.data.data as Zona),
+    getAll: () => api.get<ApiResponse<Zona[]>>('/zonas').then(r => r.data.data ?? []),
+    getById: (id: string) => api.get<ApiResponse<Zona>>(`/zonas/${id}`).then(r => r.data.data as Zona),
+    create: (data: Partial<Zona>) => api.post<ApiResponse<Zona>>('/zonas', data).then(r => r.data.data as Zona),
+    update: (id: string, data: Partial<Zona>) => api.put<ApiResponse<Zona>>(`/zonas/${id}`, data).then(r => r.data.data as Zona),
 };
 
 /* ── Decretos ── */
 export const decretosService = {
-    getAll: () => api.get<any>('/decretos').then(r => r.data.data as Decreto[]),
-    getById: (id: string) => api.get<any>(`/decretos/${id}`).then(r => r.data.data as Decreto),
-    create: (data: Partial<Decreto>) => api.post<any>('/decretos', data).then(r => r.data.data as Decreto),
-    update: (id: string, data: Partial<Decreto>) => api.put<any>(`/decretos/${id}`, data).then(r => r.data.data as Decreto),
+    getAll: () => api.get<ApiResponse<Decreto[]>>('/decretos').then(r => r.data.data ?? []),
+    getById: (id: string) => api.get<ApiResponse<Decreto>>(`/decretos/${id}`).then(r => r.data.data as Decreto),
+    create: (data: Partial<Decreto>) => api.post<ApiResponse<Decreto>>('/decretos', data).then(r => r.data.data as Decreto),
+    update: (id: string, data: Partial<Decreto>) => api.put<ApiResponse<Decreto>>(`/decretos/${id}`, data).then(r => r.data.data as Decreto),
 };
 
 /* ── Precios ── */
 export const preciosService = {
-    getAll: (params?: Record<string, string>) => api.get<any>('/precios', { params }).then(r => r.data.data as Precio[]),
-    getById: (id: string) => api.get<any>(`/precios/${id}`).then(r => r.data.data as Precio),
-    create: (data: Partial<Precio>) => api.post<any>('/precios', data).then(r => r.data.data as Precio),
-    update: (id: string, data: Partial<Precio>) => api.put<any>(`/precios/${id}`, data).then(r => r.data.data as Precio),
+    getAll: (params?: Record<string, string>) => api.get<ApiResponse<Precio[]>>('/precios', { params }).then(r => r.data.data ?? []),
+    getById: (id: string) => api.get<ApiResponse<Precio>>(`/precios/${id}`).then(r => r.data.data as Precio),
+    create: (data: Partial<Precio>) => api.post<ApiResponse<Precio>>('/precios', data).then(r => r.data.data as Precio),
+    update: (id: string, data: Partial<Precio>) => api.put<ApiResponse<Precio>>(`/precios/${id}`, data).then(r => r.data.data as Precio),
 };
 
 /* ── Usuarios ── */
 export const usuariosService = {
-    getAll: () => api.get<any>('/usuarios').then(r => r.data.data as Usuario[]),
-    getById: (id: string) => api.get<any>(`/usuarios/${id}`).then(r => r.data.data as Usuario),
-    create: (data: Record<string, any>) => api.post<any>('/usuarios', data).then(r => r.data.data as Usuario),
-    update: (id: string, data: Record<string, any>) => api.put<any>(`/usuarios/${id}`, data).then(r => r.data.data as Usuario),
-    deactivate: (id: string) => api.delete<any>(`/usuarios/${id}`).then(r => r.data.data),
+    getAll: () => api.get<ApiResponse<Usuario[]>>('/usuarios').then(r => r.data.data ?? []),
+    getById: (id: string) => api.get<ApiResponse<Usuario>>(`/usuarios/${id}`).then(r => r.data.data as Usuario),
+    create: (data: Record<string, unknown>) => api.post<ApiResponse<Usuario>>('/usuarios', data).then(r => r.data.data as Usuario),
+    update: (id: string, data: Record<string, unknown>) => api.put<ApiResponse<Usuario>>(`/usuarios/${id}`, data).then(r => r.data.data as Usuario),
+    deactivate: (id: string) => api.delete<ApiResponse<boolean>>(`/usuarios/${id}`).then(r => r.data.data),
 };
 
 /* ── Roles (para selectores) ── */
 export const rolesService = {
-    getAll: () => api.get<any>('/usuarios/roles').then(r => r.data.data as Rol[]),
+    getAll: () => api.get<ApiResponse<Rol[]>>('/usuarios/roles').then(r => r.data.data ?? []),
 };

@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { Navigate, Link } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/useAuth';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
+import { getErrorMessage } from '@/lib/http';
 
 export function LoginPage() {
     const { isAuthenticated, isLoading, login, loginWithGoogle } = useAuth();
@@ -40,8 +41,8 @@ export function LoginPage() {
         try {
             setError('');
             await loginWithGoogle();
-        } catch (err: any) {
-            setError('Error al conectar con Google: ' + (err.message || 'Intenta de nuevo.'));
+        } catch (error: unknown) {
+            setError(`Error al conectar con Google: ${getErrorMessage(error, 'Intenta de nuevo.')}`);
         }
     };
 

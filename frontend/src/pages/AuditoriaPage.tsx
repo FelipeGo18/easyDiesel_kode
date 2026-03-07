@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@/components/ui/useToast';
 import api from '@/services/api';
+import type { ApiResponse } from '@/types';
+import { getErrorMessage } from '@/lib/http';
 
 interface AuditoriaLog {
     id: string;
@@ -14,8 +16,8 @@ interface AuditoriaLog {
     accion: string;
     entidad: string;
     entidadId?: string;
-    datosAntes?: any;
-    datosDespues?: any;
+    datosAntes?: Record<string, unknown> | null;
+    datosDespues?: Record<string, unknown> | null;
     ip?: string;
     userAgent?: string;
     createdAt: string;
@@ -32,19 +34,19 @@ export function AuditoriaPage() {
     const [selectedLog, setSelectedLog] = useState<AuditoriaLog | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
 
-    const fetchLogs = async () => {
+    const fetchLogs = useCallback(async () => {
         try {
             setLoading(true);
-            const response = await api.get('/auditoria');
-            setLogs(response.data.data);
-        } catch (err: any) {
-            toast.error('Error al cargar logs: ' + (err.response?.data?.message || err.message));
+            const response = await api.get<ApiResponse<AuditoriaLog[]>>('/auditoria');
+            setLogs(response.data.data ?? []);
+        } catch (error: unknown) {
+            toast.error(`Error al cargar logs: ${getErrorMessage(error)}`);
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast]);
 
-    useEffect(() => { fetchLogs(); }, []);
+    useEffect(() => { fetchLogs(); }, [fetchLogs]);
 
     const handleViewDetail = (log: AuditoriaLog) => {
         setSelectedLog(log);

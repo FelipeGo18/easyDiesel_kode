@@ -1,120 +1,46 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/context/useAuth';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Icon } from '@/components/ui/Icon';
+import {
+    ArrowRight,
+    Activity,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { dashboardService, type DashboardSummary } from '@/services/dashboard';
-import { useToast } from '@/components/ui/Toast';
-
-const modules = [
-    {
-        id: 'M1',
-        label: 'Actores',
-        description: 'Estaciones y distribuidores',
-        icon: 'station',
-        path: '/actores',
-        color: 'text-blue-500',
-    },
-    {
-        id: 'M2',
-        label: 'Tanques',
-        description: 'Gestión física de tanques',
-        icon: 'tank',
-        path: '/tanques',
-        color: 'text-amber-500',
-    },
-    {
-        id: 'M3',
-        label: 'Inventario',
-        description: 'Entradas, salidas y cierres',
-        icon: 'clipboard-check',
-        path: '/estacion',
-        color: 'text-orange-500',
-    },
-    {
-        id: 'M4',
-        label: 'Precios',
-        description: 'Precios vigentes por zona',
-        icon: 'map',
-        path: '/precios',
-        color: 'text-indigo-500',
-    },
-    {
-        id: 'M5',
-        label: 'Normativa',
-        description: 'Decretos y reglamentación',
-        icon: 'normativa',
-        path: '/normativa',
-        color: 'text-yellow-500',
-    },
-    {
-        id: 'M6',
-        label: 'Reportes',
-        description: 'Informes para el Ministerio',
-        icon: 'bar-chart',
-        path: '/reportes',
-        color: 'text-green-500',
-    },
-    {
-        id: 'M7',
-        label: 'Auditoría',
-        description: 'Registro de operaciones',
-        icon: 'shield',
-        path: '/auditoria',
-        color: 'text-red-500',
-    },
-    {
-        id: 'M8',
-        label: 'Usuarios',
-        description: 'Accesos y roles',
-        icon: 'users',
-        path: '/usuarios',
-        color: 'text-purple-500',
-    },
-];
+import { dashboardService, type DashboardSummary, type DashboardAlert, type DashboardRecentOperation } from '@/services/dashboard';
+import { useToast } from '@/components/ui/useToast';
+import { navigationRoutes } from '@/features/routing/appRoutes';
+import { useAccess } from '@/hooks/useAccess';
+import { getErrorMessage } from '@/lib/http';
 
 export function DashboardPage() {
-    const { user } = useAuth() as any;
+    const { user } = useAuth();
+    const { hasAnyPermission } = useAccess();
     const navigate = useNavigate();
     const toast = useToast();
     const [summary, setSummary] = useState<DashboardSummary | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             const data = await dashboardService.getSummary();
             setSummary(data);
-        } catch (err: any) {
-            toast.error('Error al cargar resumen: ' + (err.response?.data?.error || err.message));
+        } catch (error: unknown) {
+            toast.error(`Error al cargar resumen: ${getErrorMessage(error)}`);
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast]);
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [fetchData]);
 
     // Lógica de visualización condicional basada en roles
-    const rolNombre = typeof user?.rol === 'object' ? user.rol.nombre : user?.rol;
-    const isParticular = rolNombre === 'particular';
-
-    // Filtrar módulos según permisos (simplificado por ahora)
-    const availableModules = modules.filter(m => {
-        if (isParticular) return false; // El particular no debería estar aquí, pero por seguridad
-        if (rolNombre === 'admin') return true;
-
-        // Reglas específicas por rol
-        if (rolNombre === 'estacion') return ['M3', 'M6'].includes(m.id);
-        if (rolNombre === 'distribuidor') return ['M3', 'M6'].includes(m.id);
-        if (rolNombre === 'regulador') return ['M4', 'M5', 'M6', 'M7'].includes(m.id);
-        if (rolNombre === 'auditor') return ['M6', 'M7'].includes(m.id);
-
-        return false;
-    });
+    const availableModules = navigationRoutes.filter((route) => route.path !== '/dashboard' && hasAnyPermission(...(route.requiredPermissions || [])));
 
     const greeting = () => {
         const hour = new Date().getHours();
@@ -149,7 +75,7 @@ export function DashboardPage() {
                 </div>
 
                 <Badge variant="green">
-                    <Icon name="activity" size={10} className="mr-1" />
+                    <Activity size={10} className="mr-1" />
                     Sistema en línea
                 </Badge>
             </div>
@@ -159,28 +85,28 @@ export function DashboardPage() {
                 <KpiCard
                     label="Ventas totales"
                     value={summary?.operaciones.transacciones.toLocaleString() || '0'}
-                    icon={<Icon name="bar-chart" size={18} className="text-blue-500" />}
+                    icon={<img src="/icons/activity.svg" alt="Ventas" className="w-[18px] h-[18px]" />}
                     trend={{ direction: 'up', text: 'Transacciones registradas' }}
                     delay={0}
                 />
                 <KpiCard
                     label="Abastecimientos"
                     value={summary?.operaciones.entregas.toLocaleString() || '0'}
-                    icon={<Icon name="truck" size={18} className="text-green-500" />}
+                    icon={<img src="/icons/truck.svg" alt="Entradas" className="w-[18px] h-[18px]" />}
                     trend={{ direction: 'up', text: 'Entradas de combustible' }}
                     delay={50}
                 />
                 <KpiCard
                     label="Estaciones"
                     value={summary?.estaciones.toLocaleString() || '0'}
-                    icon={<Icon name="station" size={18} className="text-amber-500" />}
+                    icon={<img src="/icons/station.svg" alt="Estaciones" className="w-[18px] h-[18px]" />}
                     trend={{ direction: 'neutral', text: 'Puntos de servicio' }}
                     delay={100}
                 />
                 <KpiCard
                     label="Alertas Stock"
                     value={summary?.inventario.tanquesEnAlerta.toLocaleString() || '0'}
-                    icon={<Icon name="alert" size={18} className={summary?.inventario.tanquesEnAlerta ? 'text-red-500' : 'text-text-muted'} />}
+                    icon={<img src="/icons/alert.svg" alt="Alerta" className="w-[18px] h-[18px] opacity-80" />}
                     trend={{ direction: summary?.inventario.tanquesEnAlerta ? 'down' : 'neutral', text: 'Tanques bajo mínimo' }}
                     delay={150}
                     className={summary?.inventario.tanquesEnAlerta ? 'border-red-500/50' : ''}
@@ -192,7 +118,7 @@ export function DashboardPage() {
                 {/* Modules grid */}
                 <div className="lg:col-span-2">
                     <div className="flex items-center gap-2 mb-4">
-                        <Icon name="dashboard" size={16} className="text-amber-500" />
+                        <img src="/icons/dashboard.svg" alt="Módulos" className="w-5 h-5" />
                         <h2 className="text-h2 text-text-primary">Módulos</h2>
                     </div>
 
@@ -200,7 +126,7 @@ export function DashboardPage() {
                         {availableModules.map((mod, i) => {
                             return (
                                 <Card
-                                    key={mod.id}
+                                    key={mod.path}
                                     variant="interactive"
                                     className="animate-enter group rounded-brand"
                                     style={{ animationDelay: `${(i + 1) * 60}ms` }}
@@ -214,7 +140,7 @@ export function DashboardPage() {
                                             </h3>
                                         </div>
                                         <span className="text-[9px] font-mono text-text-muted tracking-wider">
-                                            {mod.id}
+                                            {mod.moduleId}
                                         </span>
                                     </div>
                                     <p className="text-[12px] text-text-secondary leading-relaxed mb-3">
@@ -223,7 +149,7 @@ export function DashboardPage() {
 
                                     <div className="flex items-center text-[10px] font-mono text-text-muted group-hover:text-amber-500 transition-colors uppercase tracking-wider">
                                         Abrir módulo
-                                        <Icon name="arrow-right" size={10} className="ml-1 transition-transform group-hover:translate-x-0.5" />
+                                        <ArrowRight size={10} className="ml-1 transition-transform group-hover:translate-x-0.5" />
                                     </div>
                                 </Card>
                             );
@@ -234,7 +160,7 @@ export function DashboardPage() {
                 {/* Recent activity */}
                 <div>
                     <div className="flex items-center gap-2 mb-4">
-                        <Icon name="clock" size={16} className="text-amber-500" />
+                        <img src="/icons/history.svg" alt="Reciente" className="w-5 h-5" />
                         <h2 className="text-h2 text-text-primary">Actividad reciente</h2>
                     </div>
 
@@ -245,7 +171,7 @@ export function DashboardPage() {
                                     No hay transacciones recientes
                                 </div>
                             )}
-                            {summary?.operaciones?.recientes?.map((item: any, i: number) => (
+                            {summary?.operaciones?.recientes?.map((item: DashboardRecentOperation, i: number) => (
                                 <div
                                     key={item.id}
                                     className="px-4 py-3.5 hover:bg-bg-hover interactive animate-enter"
@@ -275,11 +201,11 @@ export function DashboardPage() {
                     {summary?.inventario?.alertas && summary.inventario.alertas.length > 0 && (
                         <div className="mt-4">
                             <div className="flex items-center gap-2 mb-3">
-                                <Icon name="alert" size={16} className="text-red-500" />
+                                <img src="/icons/alert.svg" alt="Alertas" className="w-[16px] h-[16px]" />
                                 <h2 className="text-h2 text-text-primary text-[14px]">Alertas de Inventario</h2>
                             </div>
                             <div className="space-y-2">
-                                {summary.inventario.alertas.map((alerta: any) => (
+                                {summary.inventario.alertas.map((alerta: DashboardAlert) => (
                                     <Card key={alerta.id} className="p-3 bg-red-500/5 border-red-500/20">
                                         <div className="flex justify-between items-start">
                                             <div>

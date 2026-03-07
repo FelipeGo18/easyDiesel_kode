@@ -1,16 +1,16 @@
 import api from './api';
-import type { Tanque, EntregaDistribuidor, TransaccionCombustible, CierreTurnoResult, TipoCombustible, TipoServicio } from '@/types';
+import type { ApiResponse, Tanque, EntregaDistribuidor, TransaccionCombustible, CierreTurnoResult, TipoCombustible, TipoServicio } from '@/types';
 
 /* ── Tanques ── */
 export const tanquesService = {
     getAll: (estacionId?: string) => 
-        api.get<any>('/tanques', { params: { estacionId } }).then(r => (r.data.data || []) as Tanque[]),
+        api.get<ApiResponse<Tanque[]>>('/tanques', { params: { estacionId } }).then(r => r.data.data || []),
     getById: (id: string) => 
-        api.get<any>(`/tanques/${id}`).then(r => r.data.data as Tanque),
+        api.get<ApiResponse<Tanque>>(`/tanques/${id}`).then(r => r.data.data as Tanque),
     create: (data: Partial<Tanque>) => 
-        api.post<any>('/tanques', data).then(r => r.data.data as Tanque),
+        api.post<ApiResponse<Tanque>>('/tanques', data).then(r => r.data.data as Tanque),
     update: (id: string, data: Partial<Tanque>) => 
-        api.put<any>(`/tanques/${id}`, data).then(r => r.data.data as Tanque),
+        api.put<ApiResponse<Tanque>>(`/tanques/${id}`, data).then(r => r.data.data as Tanque),
 };
 
 /* ── Inventario Operaciones ── */
@@ -32,7 +32,7 @@ export interface RegistrarTransaccionData {
     tipoCombustible: TipoCombustible;
     tipoServicio: TipoServicio;
     galones: number;
-    precioUnitario: number;
+    precioUnitario?: number;
     placaVehiculo?: string;
     decretoAplicado?: string;
     subsidioAplicado?: boolean;
@@ -47,11 +47,11 @@ export interface CierreTurnoData {
 
 export const inventarioService = {
     registrarEntrega: (data: RegistrarEntregaData) => 
-        api.post<any>('/inventario/entregas', data).then(r => r.data.data as EntregaDistribuidor),
+        api.post<ApiResponse<EntregaDistribuidor>>('/inventario/entregas', data).then(r => r.data.data as EntregaDistribuidor),
     
     registrarTransaccion: (data: RegistrarTransaccionData) => 
-        api.post<any>('/inventario/transacciones', data).then(r => r.data.data as TransaccionCombustible),
+        api.post<ApiResponse<TransaccionCombustible>>('/inventario/transacciones', data).then(r => r.data.data as TransaccionCombustible),
     
     cierreTurno: (data: CierreTurnoData) => 
-        api.post<any>('/inventario/cierre-turno', data).then(r => r.data.data as CierreTurnoResult),
+        api.post<ApiResponse<CierreTurnoResult>>('/inventario/cierre-turno', data).then(r => r.data.data as CierreTurnoResult),
 };

@@ -1,15 +1,28 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { InputField, SelectField } from '@/components/ui/FormFields';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@/components/ui/useToast';
 import { estacionesService, distribuidoresService } from '@/services/actores';
 import { zonasService, usuariosService, type Zona, type Usuario } from '@/services/admin';
 import { type EstacionServicio, type Distribuidor } from '@/types';
 import { cn } from '@/lib/utils';
+import { getErrorMessage } from '@/lib/http';
+
+type ActorFormData = {
+    nombre: string;
+    nit: string;
+    direccion: string;
+    ciudad: string;
+    departamento: string;
+    usuarioId: string;
+    codigoSicom?: string;
+    zonaId?: string;
+    tipo?: 'MAYORISTA' | 'REGULADO';
+};
 
 export function ActoresPage() {
     const toast = useToast();
@@ -24,11 +37,13 @@ export function ActoresPage() {
     const [usuarios, setUsuarios] = useState<Usuario[]>([]);
 
     // Form state
-    const [editing, setEditing] = useState<any | null>(null);
-    const [formData, setFormData] = useState<any>({});
+    const [editing, setEditing] = useState<EstacionServicio | Distribuidor | null>(null);
+    const [formData, setFormData] = useState<ActorFormData>({
+        nombre: '', nit: '', direccion: '', ciudad: '', departamento: '', usuarioId: ''
+    });
     const [submitting, setSubmitting] = useState(false);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             const [estData, distData, zonData, usrData] = await Promise.all([
@@ -41,14 +56,14 @@ export function ActoresPage() {
             setDistribuidores(distData);
             setZonas(zonData);
             setUsuarios(usrData);
-        } catch (err: any) {
-            toast.error('Error al cargar datos: ' + (err.response?.data?.error || err.message));
+        } catch (error: unknown) {
+            toast.error(`Error al cargar datos: ${getErrorMessage(error)}`);
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast]);
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => { fetchData(); }, [fetchData]);
 
     const openCreate = () => {
         setEditing(null);
@@ -60,9 +75,19 @@ export function ActoresPage() {
         setModalOpen(true);
     };
 
-    const openEdit = (actor: any) => {
+    const openEdit = (actor: EstacionServicio | Distribuidor) => {
         setEditing(actor);
-        setFormData({ ...actor });
+        setFormData({
+            nombre: actor.nombre,
+            nit: actor.nit,
+            direccion: actor.direccion,
+            ciudad: actor.ciudad,
+            departamento: actor.departamento,
+            usuarioId: actor.usuarioId || '',
+            codigoSicom: 'codigoSicom' in actor ? actor.codigoSicom : '',
+            zonaId: 'zonaId' in actor ? actor.zonaId : '',
+            tipo: 'tipo' in actor ? actor.tipo : undefined,
+        });
         setModalOpen(true);
     };
 
@@ -89,8 +114,8 @@ export function ActoresPage() {
             }
             setModalOpen(false);
             fetchData();
-        } catch (err: any) {
-            toast.error(err.response?.data?.error || 'Error al guardar');
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, 'Error al guardar'));
         } finally {
             setSubmitting(false);
         }
@@ -258,7 +283,7 @@ export function ActoresPage() {
                         <SelectField
                             label="Tipo de Distribuidor"
                             value={formData.tipo}
-                            onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                            onChange={(e) => setFormData({ ...formData, tipo: e.target.value as ActorFormData['tipo'] })}
                             options={[
                                 { value: 'MAYORISTA', label: 'Mayorista' },
                                 { value: 'REGULADO', label: 'Regulado' },

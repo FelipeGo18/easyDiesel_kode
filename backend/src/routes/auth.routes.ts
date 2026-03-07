@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { registerHandler, loginHandler, meHandler, googleCallbackHandler, supabaseLoginHandler } from '../controllers/auth.controller';
+import { registerHandler, loginHandler, meHandler, googleCallbackHandler, supabaseLoginHandler, refreshHandler, logoutHandler } from '../controllers/auth.controller';
 import { auth } from '../middleware/auth';
+import { authRateLimiter } from '../middleware/rate-limit';
 
 const authRouter = Router();
 
@@ -32,7 +33,7 @@ const authRouter = Router();
  *       400:
  *         description: Error de validación o email ya existe
  */
-authRouter.post('/register', registerHandler);
+authRouter.post('/register', authRateLimiter, registerHandler);
 
 /**
  * @swagger
@@ -44,7 +45,7 @@ authRouter.post('/register', registerHandler);
  *       302:
  *         description: Redirige a Google
  */
-authRouter.get('/google', (req, res) => {
+authRouter.get('/google', authRateLimiter, (req, res) => {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const redirectUri = process.env.GOOGLE_REDIRECT_URI;
     const scope = 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
@@ -68,7 +69,7 @@ authRouter.get('/google', (req, res) => {
  *       200:
  *         description: Autenticación exitosa, retorna JWT
  */
-authRouter.get('/google/callback', async (req, res, next) => {
+authRouter.get('/google/callback', authRateLimiter, async (req, res, next) => {
     const { code } = req.query;
     if (!code) {
         res.status(400).json({ success: false, error: 'Código de Google no proporcionado' });
@@ -102,7 +103,7 @@ authRouter.get('/google/callback', async (req, res, next) => {
  *       400:
  *         description: Credenciales inválidas
  */
-authRouter.post('/login', loginHandler);
+authRouter.post('/login', authRateLimiter, loginHandler);
 
 /**
  * @swagger
@@ -124,7 +125,9 @@ authRouter.post('/login', loginHandler);
  *       200:
  *         description: Login exitoso
  */
-authRouter.post('/supabase-login', supabaseLoginHandler);
+authRouter.post('/supabase-login', authRateLimiter, supabaseLoginHandler);
+authRouter.post('/refresh', authRateLimiter, refreshHandler);
+authRouter.post('/logout', authRateLimiter, logoutHandler);
 
 // ── Rutas protegidas ───────────────────────────────────
 
