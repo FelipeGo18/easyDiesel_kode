@@ -1,17 +1,18 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { InputField, SelectField } from '@/components/ui/FormFields';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@/components/ui/useToast';
 import { preciosService, zonasService, decretosService, type Precio, type Zona, type Decreto } from '@/services/admin';
+import { useAccess } from '@/hooks/useAccess';
+import { getErrorMessage } from '@/lib/http';
 
 const combustibleOptions = [
     { value: 'ACPM', label: 'ACPM (Diésel)' },
     { value: 'GASOLINA_CORRIENTE', label: 'Gasolina Corriente' },
-    { value: 'GASOLINA_EXTRA', label: 'Gasolina Extra' },
 ];
 
 const servicioOptions = [
@@ -26,6 +27,7 @@ const formatCOP = (n: number) => new Intl.NumberFormat('es-CO', { style: 'curren
 
 export function PreciosPage() {
     const toast = useToast();
+    const { hasAnyPermission } = useAccess();
     const [precios, setPrecios] = useState<Precio[]>([]);
     const [zonas, setZonas] = useState<Zona[]>([]);
     const [decretos, setDecretos] = useState<Decreto[]>([]);
@@ -44,7 +46,7 @@ export function PreciosPage() {
     const [vigenciaHasta, setVigenciaHasta] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             const [preciosData, zonasData, decretosData] = await Promise.all([
@@ -55,14 +57,14 @@ export function PreciosPage() {
             setPrecios(preciosData);
             setZonas(zonasData);
             setDecretos(decretosData.filter(d => d.activo));
-        } catch (err: any) {
-            toast.error('Error al cargar datos: ' + (err.response?.data?.error || err.message));
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, 'Error al cargar datos'));
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast]);
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => { fetchData(); }, [fetchData]);
 
     const openCreate = () => {
         setEditing(null);
@@ -90,6 +92,14 @@ export function PreciosPage() {
         e.preventDefault();
         setSubmitting(true);
         try {
+            if (!zonaId || !decretoId) {
+                throw new Error('Selecciona una zona y un decreto vigentes');
+            }
+
+            if (Number(precioGalon) <= 0) {
+                throw new Error('El precio por galón debe ser mayor a 0');
+            }
+
             const payload = {
                 tipoCombustible,
                 tipoServicio,
@@ -97,8 +107,8 @@ export function PreciosPage() {
                 precioGalon: parseFloat(precioGalon),
                 subsidioGalon: parseFloat(subsidioGalon || '0'),
                 decretoId,
-                vigenciaDesde,
-                vigenciaHasta: vigenciaHasta || null,
+                vigenciaDesde: vigenciaDesde ? `${vigenciaDesde}T00:00:00Z` : '',
+                vigenciaHasta: vigenciaHasta ? `${vigenciaHasta}T23:59:59Z` : null,
             };
 
             if (editing) {
@@ -111,8 +121,8 @@ export function PreciosPage() {
 
             setModalOpen(false);
             fetchData();
-        } catch (err: any) {
-            toast.error(err.response?.data?.error || 'Error al guardar precio');
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, 'Error al guardar precio'));
         } finally {
             setSubmitting(false);
         }
@@ -175,7 +185,7 @@ export function PreciosPage() {
                         Al crear un precio nuevo, el anterior se desactiva automáticamente.
                     </p>
                 </div>
-                <Button onClick={openCreate} disabled={zonas.length === 0 || decretos.length === 0}>
+                <Button onClick={openCreate} disabled={zonas.length === 0 || decretos.length === 0 || !hasAnyPermission('precios:escribir')}>
                     <Icon name="plus" size={14} className="mr-2" />
                     Nuevo precio
                 </Button>
@@ -196,13 +206,15 @@ export function PreciosPage() {
                 searchPlaceholder="Buscar por combustible, zona..."
                 emptyMessage="No hay precios registrados."
                 actions={(p) => (
-                    <button
-                        onClick={(e) => { e.stopPropagation(); openEdit(p); }}
-                        className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-amber-500"
-                        title="Editar"
-                    >
-                        <Icon name="pencil" size={14} />
-                    </button>
+                    hasAnyPermission('precios:escribir') ? (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); openEdit(p); }}
+                            className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-amber-500"
+                            title="Editar"
+                        >
+                            <Icon name="pencil" size={14} />
+                        </button>
+                    ) : null
                 )}
             />
 

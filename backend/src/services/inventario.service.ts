@@ -7,7 +7,7 @@ export class InventarioService {
      * Realiza un cierre de turno comparando el nivel teórico vs el físico reportado.
      * Ajusta el inventario al nivel físico y retorna la diferencia.
      */
-    async cierreTurno(data: CierreTurnoInput) {
+    async cierreTurno(data: CierreTurnoInput, options?: { usuarioId?: string; ip?: string; userAgent?: string }) {
         const tanque = await prisma.tanque.findUnique({ where: { id: data.tanqueId } });
         if (!tanque) throw new Error('Tanque no encontrado');
 
@@ -59,7 +59,7 @@ export class InventarioService {
     /**
      * Registra una entrega mayorista o distribuidor regulado, sumando el volumen al tanque.
      */
-    async registrarEntrega(data: RegistrarEntregaInput) {
+    async registrarEntrega(data: RegistrarEntregaInput, options?: { usuarioId?: string; ip?: string; userAgent?: string }) {
         const tanque = await prisma.tanque.findUnique({ where: { id: data.tanqueId } });
         if (!tanque) throw new Error('Tanque no encontrado');
 
@@ -129,7 +129,7 @@ export class InventarioService {
     /**
      * Registra una venta reduciendo el nivel de combustible del tanque.
      */
-    async registrarTransaccion(data: RegistrarTransaccionInput) {
+    async registrarTransaccion(data: RegistrarTransaccionInput, options?: { usuarioId?: string; ip?: string; userAgent?: string }) {
         const tanque = await prisma.tanque.findUnique({ where: { id: data.tanqueId } });
         if (!tanque) throw new Error('Tanque no encontrado');
 
@@ -152,7 +152,8 @@ export class InventarioService {
         // Advertencia si cae debajo del mínimo operativo
         const alertaMinimo = nuevoNivel <= nivelMinimo;
 
-        const precioTotal = Number((data.galones * data.precioUnitario).toFixed(2));
+        const precioUnitario = data.precioUnitario ?? 0;
+        const precioTotal = Number((data.galones * precioUnitario).toFixed(2));
 
         // Transacción atómica
         const transaccion = await prisma.$transaction(async (tx: any) => {
@@ -171,7 +172,7 @@ export class InventarioService {
                     tipoCombustible: data.tipoCombustible,
                     tipoServicio: data.tipoServicio,
                     galones: data.galones,
-                    precioUnitario: data.precioUnitario,
+                    precioUnitario: precioUnitario,
                     precioTotal: precioTotal,
                     placaVehiculo: data.placaVehiculo,
                     decretoAplicado: data.decretoAplicado,

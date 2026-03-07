@@ -1,13 +1,15 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import { router } from './routes';
 import { errorHandler } from './middleware/errorHandler';
+import { applySecurityRuntimeConfig } from './config/security';
+import { globalApiRateLimiter } from './middleware/rate-limit';
 
 import type { Express } from 'express';
 
 const app: Express = express();
+applySecurityRuntimeConfig(app);
 
 // ── Security ───────────────────────────────────────────
 app.use(helmet());
@@ -19,14 +21,7 @@ app.use(
 );
 
 // ── Rate limiting ──────────────────────────────────────
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { error: 'Demasiadas solicitudes, intenta de nuevo más tarde.' },
-});
-app.use(limiter);
+app.use(globalApiRateLimiter);
 
 // ── Body parsing ───────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));

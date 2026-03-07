@@ -17,7 +17,7 @@ export const registrarTransaccionSchema = z.object({
     tipoCombustible: z.enum(['ACPM', 'GASOLINA_CORRIENTE', 'GASOLINA_EXTRA']),
     tipoServicio: z.enum(['PARTICULAR', 'PUBLICO', 'DIPLOMATICO', 'OFICIAL', 'CARGA']),
     galones: z.number().positive('La cantidad de galones debe ser mayor a 0'),
-    precioUnitario: z.number().positive('El precio unitario debe ser mayor a 0'),
+    precioUnitario: z.number().positive('El precio unitario debe ser mayor a 0').optional(),
     placaVehiculo: z.string().optional().nullable(),
     decretoAplicado: z.string().optional().nullable(),
     subsidioAplicado: z.boolean().default(false)

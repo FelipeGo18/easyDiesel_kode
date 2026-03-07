@@ -1,22 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/useAuth';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Icon } from '@/components/ui/Icon';
+import { publicoService, type PublicPrecio, type PublicStation, type PublicZona } from '@/services/publico';
+import { StationsMap } from '@/features/public-map/StationsMap';
+import { calculateDistance, cn } from '@/lib/utils';
 
-/* ── Mock data: precios vigentes ── */
-const zonas = [
-    { id: '1', nombre: 'Zona Centro' },
-    { id: '2', nombre: 'Zona Norte' },
-    { id: '3', nombre: 'Zona Sur' },
-    { id: '4', nombre: 'Zona Occidente' },
-];
+/* ── Mock data: tipos de combustibles ── */
 
 const tiposCombustible = [
     { id: 'ACPM', label: 'ACPM (Diésel)' },
     { id: 'GASOLINA_CORRIENTE', label: 'Gasolina Corriente' },
-    { id: 'GASOLINA_EXTRA', label: 'Gasolina Extra' },
 ];
 
 const tiposServicio = [
@@ -26,35 +22,7 @@ const tiposServicio = [
     { id: 'DIPLOMATICO', label: 'Diplomático' },
 ];
 
-/* ── Mock: tabla de precios por zona ── */
-const preciosMock: Record<string, Record<string, { precio: number; subsidio: number; decreto: string }>> = {
-    'ACPM': {
-        'PARTICULAR': { precio: 9876, subsidio: 2350, decreto: 'Dec. 1428/2025' },
-        'PUBLICO': { precio: 7526, subsidio: 4700, decreto: 'Dec. 1428/2025' },
-        'OFICIAL': { precio: 9876, subsidio: 2350, decreto: 'Dec. 763/2024' },
-        'DIPLOMATICO': { precio: 9876, subsidio: 0, decreto: 'Dec. 763/2024' },
-    },
-    'GASOLINA_CORRIENTE': {
-        'PARTICULAR': { precio: 14538, subsidio: 0, decreto: 'Dec. 1428/2025' },
-        'PUBLICO': { precio: 12188, subsidio: 2350, decreto: 'Dec. 1428/2025' },
-        'OFICIAL': { precio: 14538, subsidio: 0, decreto: 'Dec. 763/2024' },
-        'DIPLOMATICO': { precio: 14538, subsidio: 0, decreto: 'Dec. 763/2024' },
-    },
-    'GASOLINA_EXTRA': {
-        'PARTICULAR': { precio: 17250, subsidio: 0, decreto: 'Dec. 1428/2025' },
-        'PUBLICO': { precio: 17250, subsidio: 0, decreto: 'Dec. 1428/2025' },
-        'OFICIAL': { precio: 17250, subsidio: 0, decreto: 'Dec. 763/2024' },
-        'DIPLOMATICO': { precio: 17250, subsidio: 0, decreto: 'Dec. 763/2024' },
-    },
-};
-
-/* ── Mock: estaciones cercanas ── */
-const estacionesMock = [
-    { nombre: 'EDS Terpel Autopista', ciudad: 'Bogotá', combustible: 'ACPM · Corriente · Extra', activa: true },
-    { nombre: 'EDS Primax Centro', ciudad: 'Bogotá', combustible: 'ACPM · Corriente', activa: true },
-    { nombre: 'EDS Biomax Norte', ciudad: 'Bogotá', combustible: 'Corriente · Extra', activa: true },
-    { nombre: 'EDS Petrobras Suba', ciudad: 'Bogotá', combustible: 'ACPM · Corriente · Extra', activa: false },
-];
+// Se ha eliminado preciosMock para usar datos reales del servidor
 
 /* ── Mock: noticias ── */
 const noticiasMock = [
@@ -72,27 +40,84 @@ const noticiasMock = [
         fecha: '28 Feb 2026',
         tag: 'Subsidios',
     },
-    {
-        id: '3',
-        titulo: 'Gasolina Extra: sin cambios para el mes de marzo',
-        resumen: 'El precio de la gasolina extra se mantiene estable según la resolución vigente del Ministerio.',
-        fecha: '25 Feb 2026',
-        tag: 'Precios',
-    },
 ];
+
+type StationWithDistance = PublicStation & { distancia?: number };
+
+function hasCoordinates(station: PublicStation): station is PublicStation & { latitud: number; longitud: number } {
+    return typeof station.latitud === 'number' && typeof station.longitud === 'number';
+}
 
 export function HomePage() {
     const navigate = useNavigate();
     const { isAuthenticated, user, logout } = useAuth();
-    const [zonaSeleccionada, setZonaSeleccionada] = useState('1');
+    const [zonas, setZonas] = useState<PublicZona[]>([]);
+    const [zonaSeleccionada, setZonaSeleccionada] = useState('');
     const [combustibleSeleccionado, setCombustibleSeleccionado] = useState('ACPM');
     const [servicioSeleccionado, setServicioSeleccionado] = useState('PARTICULAR');
     const [showProfileMenu, setShowProfileMenu] = useState(false);
+    const [precios, setPrecios] = useState<PublicPrecio[]>([]);
+    const [nearbyMapStations, setNearbyMapStations] = useState<PublicStation[]>([]);
+    const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+    const [highlightedStationId, setHighlightedStationId] = useState<string | null>(null);
 
-    const precioActual = preciosMock[combustibleSeleccionado]?.[servicioSeleccionado];
+    useEffect(() => {
+        // Obtener ubicación del usuario solo para centrar el mapa inicialmente
+        if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setUserLocation([position.coords.longitude, position.coords.latitude]);
+                },
+                (error) => console.error('Error obteniendo ubicación:', error)
+            );
+        }
+
+        const fetchData = async () => {
+            try {
+                const [zonasData, preciosData] = await Promise.all([
+                    publicoService.getZonas(),
+                    publicoService.getPrecios(),
+                ]);
+
+                setZonas(zonasData);
+                setPrecios(preciosData);
+
+                // Seleccionar la primera zona por defecto si existe
+                if (zonasData.length > 0) {
+                    setZonaSeleccionada(zonasData[0].id);
+                }
+            } catch (error) {
+                console.error('Error cargando datos públicos:', error);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    const estacionesFiltradas = useMemo(() => {
+        return nearbyMapStations
+            .map<StationWithDistance>((estacion) => {
+                if (userLocation && hasCoordinates(estacion)) {
+                    return {
+                        ...estacion,
+                        distancia: calculateDistance(userLocation[1], userLocation[0], estacion.latitud, estacion.longitud),
+                    };
+                }
+
+                return { ...estacion };
+            })
+            .sort((a, b) => (a.distancia || 0) - (b.distancia || 0));
+    }, [nearbyMapStations, userLocation]);
+
+    // Buscar precio correspondiente a la combinación actual
+    const precioActual = precios.find(p => {
+        return p.zonaId === zonaSeleccionada && p.tipoCombustible === combustibleSeleccionado && p.tipoServicio === servicioSeleccionado;
+    });
 
     const formatCOP = (n: number) =>
         new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(n);
+
+    const combustiblesDisponibles = [...new Set(estacionesFiltradas.flatMap((estacion) => estacion.combustibles))];
 
     return (
         <div className="min-h-screen bg-bg-base">
@@ -339,14 +364,14 @@ export function HomePage() {
                                             {zonas.find(z => z.id === zonaSeleccionada)?.nombre} · {tiposCombustible.find(t => t.id === combustibleSeleccionado)?.label}
                                         </p>
                                     </div>
-                                    <Badge variant={precioActual?.subsidio > 0 ? 'green' : 'amber'}>
-                                        {precioActual?.subsidio > 0 ? 'Con subsidio' : 'Sin subsidio'}
+                                    <Badge variant={Number(precioActual?.subsidioGalon) > 0 ? 'green' : 'amber'}>
+                                        {Number(precioActual?.subsidioGalon) > 0 ? 'Con subsidio' : 'Sin subsidio'}
                                     </Badge>
                                 </div>
 
                                 <div className="kpi-value mb-4">
                                     <span className="font-display text-[64px] md:text-[80px] leading-none text-amber-500 tracking-wide">
-                                        {precioActual ? formatCOP(precioActual.precio) : '—'}
+                                        {precioActual ? formatCOP(Number(precioActual.precioGalon)) : '—'}
                                     </span>
                                     <span className="block text-[13px] text-text-muted font-sans mt-2">por galón · COP</span>
                                 </div>
@@ -357,13 +382,13 @@ export function HomePage() {
                                         <div className="bg-bg-elevated rounded-brand p-3">
                                             <span className="text-label text-text-muted block mb-1">Subsidio</span>
                                             <span className="font-mono text-[14px] text-green-500 font-semibold">
-                                                {precioActual.subsidio > 0 ? formatCOP(precioActual.subsidio) : 'No aplica'}
+                                                {Number(precioActual.subsidioGalon) > 0 ? formatCOP(Number(precioActual.subsidioGalon)) : 'No aplica'}
                                             </span>
                                             <span className="block text-[9px] font-mono text-text-muted mt-0.5">/galón</span>
                                         </div>
                                         <div className="bg-bg-elevated rounded-brand p-3">
                                             <span className="text-label text-text-muted block mb-1">Decreto</span>
-                                            <span className="font-mono text-[13px] text-text-primary">{precioActual.decreto}</span>
+                                            <span className="font-mono text-[13px] text-text-primary">{precioActual.decreto?.numero || 'N/A'}</span>
                                             <span className="block text-[9px] font-mono text-text-muted mt-0.5">vigente</span>
                                         </div>
                                         <div className="bg-bg-elevated rounded-brand p-3">
@@ -378,9 +403,9 @@ export function HomePage() {
                             </div>
 
                             {/* Price comparison row */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {tiposCombustible.map((tc, i) => {
-                                    const p = preciosMock[tc.id]?.[servicioSeleccionado];
+                                    const p = precios.find(p => p.zonaId === zonaSeleccionada && p.tipoCombustible === tc.id && p.tipoServicio === servicioSeleccionado);
                                     const isActive = tc.id === combustibleSeleccionado;
                                     return (
                                         <button
@@ -392,16 +417,16 @@ export function HomePage() {
                                         >
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-[11px] font-mono text-text-muted uppercase tracking-wider">
-                                                    {tc.id === 'ACPM' ? 'ACPM' : tc.id === 'GASOLINA_CORRIENTE' ? 'Corriente' : 'Extra'}
+                                                    {tc.id === 'ACPM' ? 'ACPM' : 'Corriente'}
                                                 </span>
-                                                {p && p.subsidio > 0 ? (
+                                                {p && Number(p.subsidioGalon) > 0 ? (
                                                     <Icon name="trending-down" size={12} className="text-green-500" />
                                                 ) : (
                                                     <Icon name="trending-up" size={12} className="text-text-muted" />
                                                 )}
                                             </div>
                                             <span className={`font-display text-[28px] leading-none ${isActive ? 'text-amber-500' : 'text-text-primary'}`}>
-                                                {p ? formatCOP(p.precio) : '—'}
+                                                {p ? formatCOP(Number(p.precioGalon)) : '—'}
                                             </span>
                                         </button>
                                     );
@@ -424,20 +449,50 @@ export function HomePage() {
                                 <h2 className="text-h1 text-text-primary">Estaciones cercanas</h2>
                             </div>
                             <p className="text-small text-text-secondary">
-                                Estaciones de servicio activas en {zonas.find(z => z.id === zonaSeleccionada)?.nombre}
+                                Resultados cercanos a tu ubicación usando Google Maps Places
                             </p>
                         </div>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => navigate('/atlas-estaciones')}>
                             <Icon name="navigation" size={14} />
                             Ver en mapa
                         </Button>
                     </div>
 
+                    <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-4 mb-4">
+                        <div id="stations-map">
+                            <StationsMap 
+                                prices={precios}
+                                selectedFuel={combustibleSeleccionado}
+                                selectedService={servicioSeleccionado}
+                                onStationsFound={setNearbyMapStations}
+                                highlightedStationId={highlightedStationId}
+                            />
+                        </div>
+
+                        <div className="rounded-brand border border-border-subtle bg-bg-elevated p-4">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-label text-text-muted">Resumen de cobertura</span>
+                                <Badge variant="amber">{estacionesFiltradas.length} estaciones</Badge>
+                            </div>
+                            <div className="space-y-2 text-[12px] text-text-secondary">
+                                <p>Zona seleccionada: <span className="text-text-primary">Búsqueda por proximidad</span></p>
+                                <p>Con coordenadas: <span className="text-text-primary">{estacionesFiltradas.filter(hasCoordinates).length}</span></p>
+                                <p>Combustibles: <span className="text-text-primary">{combustiblesDisponibles.join(' · ') || 'Sin datos'}</span></p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {estacionesMock.map((est, i) => (
+                        {estacionesFiltradas.length > 0 ? estacionesFiltradas.map((est, i) => (
                             <div
-                                key={est.nombre}
-                                className="bg-bg-elevated border border-border-subtle rounded-brand p-4 hover:border-border-strong interactive animate-enter"
+                                key={est.id}
+                                onClick={() => setHighlightedStationId(est.id)}
+                                className={cn(
+                                    "bg-bg-elevated border rounded-brand p-4 interactive animate-enter cursor-pointer transition-all",
+                                    highlightedStationId === est.id 
+                                        ? "border-amber-500/50 bg-amber-500/[0.02] shadow-[0_8px_20px_rgba(245,166,35,0.08)]" 
+                                        : "border-border-subtle hover:border-border-strong"
+                                )}
                                 style={{ animationDelay: `${i * 60}ms` }}
                             >
                                 <div className="flex items-start justify-between mb-2">
@@ -445,21 +500,34 @@ export function HomePage() {
                                         <Icon name="tank" size={16} className="text-amber-500 shrink-0" />
                                         <h3 className="text-[14px] font-sans font-medium text-text-primary">{est.nombre}</h3>
                                     </div>
-                                    <Badge variant={est.activa ? 'green' : 'red'}>
-                                        {est.activa ? 'Activa' : 'Cerrada'}
-                                    </Badge>
+                                    <div className="flex flex-col items-end gap-1">
+                                        <Badge variant="green">Activa</Badge>
+                                        {est.distancia !== undefined && (
+                                            <span className="text-[10px] font-mono text-amber-500 font-bold">
+                                                a {est.distancia.toFixed(1)} km
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="ml-6 space-y-1">
                                     <p className="text-[12px] font-sans text-text-secondary flex items-center gap-1.5">
                                         <Icon name="map" size={11} className="text-text-muted" />
-                                        {est.ciudad}
+                                        {est.ciudad}, {est.departamento}
                                     </p>
                                     <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider">
-                                        {est.combustible}
+                                        {est.combustibles.join(' · ') || 'Sin tanques activos'}
                                     </p>
+                                    <p className="text-[10px] text-text-muted font-sans">{est.direccion}</p>
                                 </div>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="col-span-full py-12 text-center bg-bg-elevated rounded-brand border border-dashed border-border-subtle">
+                                <Icon name="info" size={24} className="text-text-muted mx-auto mb-3" />
+                                <p className="text-text-secondary text-sm">
+                                    No encontramos gasolineras cercanas con Google Maps para tu ubicación actual.
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </section>

@@ -1,12 +1,13 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { InputField, TextAreaField, CheckboxField } from '@/components/ui/FormFields';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@/components/ui/useToast';
 import { decretosService, type Decreto } from '@/services/admin';
+import { getErrorMessage } from '@/lib/http';
 
 export function DecretosPage() {
     const toast = useToast();
@@ -26,19 +27,19 @@ export function DecretosPage() {
     const [documentoUrl, setDocumentoUrl] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
-    const fetchDecretos = async () => {
+    const fetchDecretos = useCallback(async () => {
         try {
             setLoading(true);
             const data = await decretosService.getAll();
             setDecretos(data);
-        } catch (err: any) {
-            toast.error('Error al cargar decretos: ' + (err.response?.data?.error || err.message));
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, 'Error al cargar decretos'));
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast]);
 
-    useEffect(() => { fetchDecretos(); }, []);
+    useEffect(() => { fetchDecretos(); }, [fetchDecretos]);
 
     const openCreate = () => {
         setEditing(null);
@@ -70,8 +71,8 @@ export function DecretosPage() {
                 titulo,
                 descripcion: descripcion || null,
                 entidad: entidad || null,
-                fechaExpedicion,
-                fechaVigencia,
+                fechaExpedicion: fechaExpedicion ? `${fechaExpedicion}T00:00:00Z` : '',
+                fechaVigencia: fechaVigencia ? `${fechaVigencia}T00:00:00Z` : '',
                 activo,
                 documentoUrl: documentoUrl || null,
             };
@@ -86,8 +87,8 @@ export function DecretosPage() {
 
             setModalOpen(false);
             fetchDecretos();
-        } catch (err: any) {
-            toast.error(err.response?.data?.error || 'Error al guardar decreto');
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, 'Error al guardar decreto'));
         } finally {
             setSubmitting(false);
         }

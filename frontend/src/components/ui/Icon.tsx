@@ -7,7 +7,7 @@ export interface IconProps extends React.ImgHTMLAttributes<HTMLImageElement> {
     strokeWidth?: number | string;
 }
 
-export function Icon({ name, size = 24, strokeWidth, className, ...props }: IconProps) {
+export function Icon({ name, size = 24, className, ...props }: IconProps) {
     return (
         <img
             src={`/icons/${name}.svg`}

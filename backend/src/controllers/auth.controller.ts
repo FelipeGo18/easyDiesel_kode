@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from '../services/auth.service';
-import { registerSchema, loginSchema } from '../validators/auth.validator';
+import { registerSchema, loginSchema, logoutSchema, refreshTokenSchema } from '../validators/auth.validator';
 import { ZodError } from 'zod';
 
 // ──────────────────────────────────────────
@@ -12,6 +12,13 @@ function formatZodErrors(error: ZodError) {
         campo: issue.path.join('.'),
         mensaje: issue.message,
     }));
+}
+
+function buildSessionMetadata(req: Request) {
+    return {
+        ip: req.ip,
+        userAgent: typeof req.get === 'function' ? req.get('user-agent') || undefined : undefined,
+    };
 }
 
 // ──────────────────────────────────────────
@@ -28,7 +35,7 @@ export const registerHandler = async (
 ): Promise<void> => {
     try {
         const data = registerSchema.parse(req.body);
-        const result = await authService.register(data);
+        const result = await authService.register(data, buildSessionMetadata(req));
 
         res.status(201).json({
             success: true,
@@ -73,7 +80,7 @@ export const googleCallbackHandler = async (
             fotoUrl: 'https://lh3.googleusercontent.com/a/...'
         };
 
-        const result = await authService.loginWithGoogle(googleUser);
+        const result = await authService.loginWithGoogle(googleUser, buildSessionMetadata(req));
 
         res.status(200).json({
             success: true,
@@ -95,7 +102,7 @@ export const loginHandler = async (
 ): Promise<void> => {
     try {
         const data = loginSchema.parse(req.body);
-        const result = await authService.login(data);
+        const result = await authService.login(data, buildSessionMetadata(req));
 
         res.status(200).json({
             success: true,
@@ -131,7 +138,7 @@ export const supabaseLoginHandler = async (
             return;
         }
 
-        const result = await authService.loginWithSupabaseToken(access_token);
+        const result = await authService.loginWithSupabaseToken(access_token, buildSessionMetadata(req));
 
         res.status(200).json({
             success: true,
@@ -164,6 +171,67 @@ export const meHandler = async (
             data: profile,
         });
     } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * POST /api/auth/refresh
+ */
+export const refreshHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const data = refreshTokenSchema.parse(req.body);
+        const result = await authService.refreshSession(data.refresh_token, buildSessionMetadata(req));
+
+        res.status(200).json({
+            success: true,
+            message: 'Sesión renovada exitosamente',
+            data: result,
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            res.status(400).json({
+                success: false,
+                error: 'Refresh token inválido',
+                details: formatZodErrors(error),
+            });
+            return;
+        }
+
+        next(error);
+    }
+};
+
+/**
+ * POST /api/auth/logout
+ */
+export const logoutHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const data = logoutSchema.parse(req.body);
+        await authService.logout(data.refresh_token);
+
+        res.status(200).json({
+            success: true,
+            message: 'Sesión cerrada correctamente',
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            res.status(400).json({
+                success: false,
+                error: 'Refresh token inválido',
+                details: formatZodErrors(error),
+            });
+            return;
+        }
+
         next(error);
     }
 };

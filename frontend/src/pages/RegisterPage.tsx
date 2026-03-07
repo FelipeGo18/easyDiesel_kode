@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { Navigate, Link } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/useAuth';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
+import { getErrorMessage } from '@/lib/http';
 
 export function RegisterPage() {
     const { isAuthenticated, isLoading, registerWithEmail, loginWithGoogle } = useAuth();
@@ -34,8 +35,8 @@ export function RegisterPage() {
         try {
             await registerWithEmail(email, password, nombre);
             setSuccess(true);
-        } catch (err: any) {
-            setError(err.message || 'Error al registrar usuario. Intenta de nuevo.');
+        } catch (error: unknown) {
+            setError(getErrorMessage(error, 'Error al registrar usuario. Intenta de nuevo.'));
         } finally {
             setSubmitting(false);
         }
@@ -45,8 +46,8 @@ export function RegisterPage() {
         try {
             setError('');
             await loginWithGoogle();
-        } catch (err: any) {
-            setError('Error al conectar con Google: ' + (err.message || 'Intenta de nuevo.'));
+        } catch (error: unknown) {
+            setError(`Error al conectar con Google: ${getErrorMessage(error, 'Intenta de nuevo.')}`);
         }
     };
 

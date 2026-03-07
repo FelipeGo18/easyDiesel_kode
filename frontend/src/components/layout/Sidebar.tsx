@@ -1,33 +1,17 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/useAuth';
 import { Icon } from '@/components/ui/Icon';
-
-interface NavItem {
-    label: string;
-    path: string;
-    icon: string;
-    moduleId: string;
-}
-
-const navItems: NavItem[] = [
-    { label: 'Dashboard', path: '/dashboard', icon: 'dashboard', moduleId: 'M8' },
-    { label: 'Zonas', path: '/zonas', icon: 'map', moduleId: 'M4' },
-    { label: 'Actores', path: '/actores', icon: 'station', moduleId: 'M1' },
-    { label: 'Tanques', path: '/tanques', icon: 'tank', moduleId: 'M2' },
-    { label: 'Precios', path: '/precios', icon: 'prices', moduleId: 'M4' },
-    { label: 'Normativa', path: '/normativa', icon: 'normativa', moduleId: 'M5' },
-    { label: 'Usuarios', path: '/usuarios', icon: 'users', moduleId: 'M2' },
-    { label: 'Inventario', path: '/estacion', icon: 'station', moduleId: 'M3' },
-    { label: 'Reportes', path: '/reportes', icon: 'reports', moduleId: 'M6' },
-    { label: 'Auditoría', path: '/auditoria', icon: 'audit', moduleId: 'M7' },
-];
+import { navigationRoutes } from '@/features/routing/appRoutes';
+import { useAccess } from '@/hooks/useAccess';
 
 export function Sidebar() {
     const [collapsed, setCollapsed] = useState(false);
     const { user, logout } = useAuth();
+    const { hasAnyPermission } = useAccess();
     const location = useLocation();
+    const navItems = navigationRoutes.filter((route) => hasAnyPermission(...(route.requiredPermissions || [])));
 
     return (
         <aside
@@ -89,7 +73,7 @@ export function Sidebar() {
                                 key={item.path}
                                 to={item.path}
                                 className={cn(
-                                    'relative flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-brand)]',
+                                    'relative flex items-center gap-3 px-3 py-2.5 rounded-brand',
                                     'interactive group',
                                     isActive
                                         ? 'bg-bg-hover text-text-primary'
@@ -102,7 +86,7 @@ export function Sidebar() {
                                 )}
 
                                 <Icon
-                                    name={item.icon}
+                                    name={item.icon || 'dashboard'}
                                     size={16}
                                     className={cn(
                                         'shrink-0',
@@ -155,7 +139,7 @@ export function Sidebar() {
                 {/* User info */}
                 {user && !collapsed && (
                     <div className="flex items-center gap-2.5 px-2 py-1.5">
-                        <div className="w-7 h-7 rounded-[var(--radius-brand)] bg-amber-dim border border-amber-500/20 flex items-center justify-center shrink-0">
+                        <div className="w-7 h-7 rounded-brand bg-amber-dim border border-amber-500/20 flex items-center justify-center shrink-0">
                             <span className="text-amber-500 text-[10px] font-mono font-semibold uppercase">
                                 {user.nombre?.charAt(0) || 'U'}
                             </span>
@@ -171,7 +155,7 @@ export function Sidebar() {
                 <button
                     onClick={logout}
                     className={cn(
-                        'flex items-center gap-3 w-full px-3 py-2 rounded-[var(--radius-brand)]',
+                        'flex items-center gap-3 w-full px-3 py-2 rounded-brand',
                         'text-text-muted hover:text-red-500 hover:bg-red-dim interactive',
                         collapsed && 'justify-center'
                     )}

@@ -21,7 +21,34 @@ interface DataTableProps<T> {
     loading?: boolean;
 }
 
-export function DataTable<T extends Record<string, any>>({
+function getCellValue<T extends object>(row: T, key: string): unknown {
+    return (row as Record<string, unknown>)[key];
+}
+
+function formatCellValue(value: unknown): ReactNode {
+    if (value == null || value === '') {
+        return '—';
+    }
+
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+        return String(value);
+    }
+
+    return JSON.stringify(value);
+}
+
+function getRowKey<T extends object>(row: T, fallback: number) {
+    if ('id' in row) {
+        const rowId = row.id;
+        if (typeof rowId === 'string' || typeof rowId === 'number') {
+            return rowId;
+        }
+    }
+
+    return fallback;
+}
+
+export function DataTable<T extends object>({
     columns,
     data = [], // Garantizar que data siempre sea un array
     searchable = true,
@@ -37,14 +64,14 @@ export function DataTable<T extends Record<string, any>>({
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
     const [page, setPage] = useState(0);
 
-    const safeData = Array.isArray(data) ? data : [];
+    const safeData = useMemo(() => (Array.isArray(data) ? data : []), [data]);
 
     const filtered = useMemo(() => {
         if (!search.trim()) return safeData;
         const q = search.toLowerCase();
         return safeData.filter((row) =>
             columns.some((col) => {
-                const val = row[col.key];
+                const val = getCellValue(row, col.key);
                 return val != null && String(val).toLowerCase().includes(q);
             })
         );
@@ -54,8 +81,8 @@ export function DataTable<T extends Record<string, any>>({
         if (!sortKey) return filtered;
         if (!Array.isArray(filtered)) return []; // Asegurarse de que filtered es un array
         return [...filtered].sort((a, b) => {
-            const av = a[sortKey] ?? '';
-            const bv = b[sortKey] ?? '';
+            const av = getCellValue(a, sortKey) ?? '';
+            const bv = getCellValue(b, sortKey) ?? '';
             const cmp = String(av).localeCompare(String(bv), 'es', { numeric: true });
             return sortDir === 'asc' ? cmp : -cmp;
         });
@@ -140,13 +167,13 @@ export function DataTable<T extends Record<string, any>>({
                             ) : (
                                 paged.map((row, i) => (
                                     <tr
-                                        key={(row as any).id ?? i}
+                                        key={getRowKey(row, i)}
                                         onClick={() => onRowClick?.(row)}
                                         className={`border-b border-border-subtle last:border-0 transition-colors ${onRowClick ? 'cursor-pointer hover:bg-bg-elevated/50' : ''}`}
                                     >
                                         {columns.map((col) => (
                                             <td key={col.key} className="px-4 py-3 text-[13px] text-text-primary font-sans">
-                                                {col.render ? col.render(row) : (row[col.key] ?? '—')}
+                                                {col.render ? col.render(row) : formatCellValue(getCellValue(row, col.key))}
                                             </td>
                                         ))}
                                         {actions && (

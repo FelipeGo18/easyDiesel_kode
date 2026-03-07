@@ -33,8 +33,18 @@ export const loginSchema = z.object({
         .min(1, 'La contraseña es obligatoria'),
 });
 
+export const refreshTokenSchema = z.object({
+    refresh_token: z.string().min(20, 'Refresh token inválido'),
+});
+
+export const logoutSchema = z.object({
+    refresh_token: z.string().min(20, 'Refresh token inválido'),
+});
+
 // ──────────────────────────────────────────
 // Tipos inferidos
 // ──────────────────────────────────────────
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
+export type LogoutInput = z.infer<typeof logoutSchema>;
