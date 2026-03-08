@@ -5,7 +5,7 @@ export interface PublicZona {
     nombre: string;
     tipoZona: 'INTERCONECTADA' | 'NO_INTERCONECTADA';
     departamentos: string[];
-    municipios: string[];
+    municipios?: string[];
 }
 
 export interface PublicPrecio {
@@ -15,6 +15,7 @@ export interface PublicPrecio {
     tipoServicio: string;
     precioGalon: number;
     subsidioGalon: number;
+    zona?: { nombre: string; tipoZona: 'INTERCONECTADA' | 'NO_INTERCONECTADA' };
     decreto?: { numero: string; titulo: string };
 }
 
