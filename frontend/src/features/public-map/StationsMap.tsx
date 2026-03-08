@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { publicoService, type PublicStation, type PublicPrecio } from '@/services/publico';
+import { calculateDistance } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 const DEFAULT_CENTER: [number, number] = [-74.0721, 4.711];
@@ -217,6 +218,19 @@ function dedupeStations(stations: PublicStation[]) {
     return Array.from(uniqueStations.values());
 }
 
+function rankFallbackStations(stations: PublicStation[], coords: [number, number]) {
+    const stationsWithDistance = stations
+        .filter(hasCoordinates)
+        .map((station) => ({
+            station,
+            distanceKm: calculateDistance(coords[1], coords[0], station.latitud, station.longitud),
+        }))
+        .sort((left, right) => left.distanceKm - right.distanceKm);
+
+    const nearby = stationsWithDistance.filter((item) => item.distanceKm <= 35).slice(0, 20);
+    return (nearby.length > 0 ? nearby : stationsWithDistance.slice(0, 20)).map((item) => item.station);
+}
+
 interface StationsMapProps {
     prices?: PublicPrecio[];
     selectedFuel?: string;
@@ -255,6 +269,7 @@ export function StationsMap({
     const [nearbyStations, setNearbyStations] = useState<PublicStation[]>([]);
     const [loadingNearbyStations, setLoadingNearbyStations] = useState(false);
     const [nearbyError, setNearbyError] = useState<string | null>(null);
+    const [usingFallbackStations, setUsingFallbackStations] = useState(false);
     const [routeSummary, setRouteSummary] = useState<RouteSummary | null>(null);
     const [mapReady, setMapReady] = useState(false);
     const [styleLoadVersion, setStyleLoadVersion] = useState(0);
@@ -313,6 +328,7 @@ export function StationsMap({
     const fetchNearbyStations = async (coords: [number, number]) => {
         setLoadingNearbyStations(true);
         setNearbyError(null);
+        setUsingFallbackStations(false);
 
         try {
             const stations = await publicoService.getEstacionesCercanas({
@@ -326,6 +342,16 @@ export function StationsMap({
             setNearbyStations(mapped);
 
             if (!mapped.length) {
+                const catalogStations = await publicoService.getEstaciones({ soloConCoordenadas: true });
+                const fallbackStations = rankFallbackStations(dedupeStations(catalogStations), coords);
+
+                if (fallbackStations.length > 0) {
+                    setNearbyStations(fallbackStations);
+                    setUsingFallbackStations(true);
+                    setNearbyError('Google Maps no devolvió resultados. Mostrando estaciones registradas cercanas.');
+                    return;
+                }
+
                 setNearbyError('Google Maps no devolvió gasolineras cercanas para tu ubicación actual.');
                 return;
             }
@@ -333,8 +359,23 @@ export function StationsMap({
             setNearbyError(null);
         } catch (err) {
             console.error('Error al buscar estaciones cercanas:', err);
+
+            try {
+                const catalogStations = await publicoService.getEstaciones({ soloConCoordenadas: true });
+                const fallbackStations = rankFallbackStations(dedupeStations(catalogStations), coords);
+
+                if (fallbackStations.length > 0) {
+                    setNearbyStations(fallbackStations);
+                    setUsingFallbackStations(true);
+                    setNearbyError('Google Maps no respondió. Mostrando estaciones registradas en el sistema.');
+                    return;
+                }
+            } catch (fallbackError) {
+                console.error('Error al cargar estaciones internas:', fallbackError);
+            }
+
             setNearbyStations([]);
-            setNearbyError('No fue posible consultar gasolineras cercanas en Google Maps.');
+            setNearbyError('No fue posible consultar gasolineras cercanas ni cargar el catálogo interno.');
         } finally {
             setLoadingNearbyStations(false);
         }
@@ -897,6 +938,9 @@ export function StationsMap({
             ) : null}
             {showStatusText && nearbyError ? (
                 <p className="text-xs text-amber-500">{nearbyError}</p>
+            ) : null}
+            {showStatusText && usingFallbackStations && !loadingNearbyStations ? (
+                <p className="text-xs text-text-muted">La vista usa el catálogo interno de estaciones mientras Google Places no esté disponible.</p>
             ) : null}
         </div>
     );
