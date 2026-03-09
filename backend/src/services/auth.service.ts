@@ -319,7 +319,7 @@ export class AuthService {
             where: { id: userId },
             include: {
                 rol: { select: { id: true, nombre: true, descripcion: true, permisos: true } },
-                estacionGestionada: { select: { id: true, nombre: true, codigoSicom: true } },
+                estacionGestionada: { select: { id: true, nombre: true, codigoSicom: true, zonaId: true } },
                 distribuidorGestionado: { select: { id: true, nombre: true, nit: true } },
             },
         });

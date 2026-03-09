@@ -26,6 +26,7 @@ export interface ManagedStationSummary {
     id: string;
     nombre: string;
     codigoSicom?: string;
+    zonaId?: string;
 }
 
 export interface ManagedDistributorSummary {
@@ -43,7 +44,7 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
     };
 }
 
-export type TipoCombustible = 'ACPM' | 'GASOLINA_CORRIENTE';
+export type TipoCombustible = 'ACPM' | 'GASOLINA_CORRIENTE' | 'GASOLINA_EXTRA';
 
 export type TipoServicio =
     | 'PARTICULAR'
@@ -100,6 +101,8 @@ export interface EntregaDistribuidor {
     numeroRemision: string;
     fechaEntrega: string;
     confirmada: boolean;
+    distribuidor?: { id: string; nombre: string; tipo?: string };
+    tanque?: { id: string; nombre: string; tipoCombustible: TipoCombustible };
 }
 
 export interface TransaccionCombustible {

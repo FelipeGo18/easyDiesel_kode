@@ -11,6 +11,13 @@ export const registrarEntregaSchema = z.object({
     fechaEntrega: z.string().datetime({ message: 'Fecha de entrega inválida (ISO 8601)' })
 });
 
+export const confirmarEntregaSchema = z.object({
+    entregaId: z.string().uuid('ID de entrega inválido'),
+    estacionId: z.string().uuid('ID de estación inválido'),
+    tanqueId: z.string().uuid('ID de tanque inválido'),
+    galonesRecibidos: z.number().positive('La cantidad de galones recibidos debe ser mayor a 0'),
+});
+
 export const registrarTransaccionSchema = z.object({
     estacionId: z.string().uuid('ID de estación inválido'),
     tanqueId: z.string().uuid('ID de tanque inválido'),
@@ -31,5 +38,6 @@ export const cierreTurnoSchema = z.object({
 });
 
 export type RegistrarEntregaInput = z.infer<typeof registrarEntregaSchema>;
+export type ConfirmarEntregaInput = z.infer<typeof confirmarEntregaSchema>;
 export type RegistrarTransaccionInput = z.infer<typeof registrarTransaccionSchema>;
 export type CierreTurnoInput = z.infer<typeof cierreTurnoSchema>;
