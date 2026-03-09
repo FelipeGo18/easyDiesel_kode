@@ -1,7 +1,9 @@
 import { useAuth } from '@/context/useAuth';
+import { useAccess } from '@/hooks/useAccess';
 
 export function Topbar() {
     const { user } = useAuth();
+    const { roleName } = useAccess();
 
     const now = new Date();
     const formatted = now.toLocaleDateString('es-CO', {
@@ -16,11 +18,13 @@ export function Topbar() {
         hour12: false,
     });
 
+    const pageTitle = roleName === 'estacion' ? 'Panel de estación' : 'Dashboard';
+
     return (
         <header className="h-14 flex items-center justify-between px-6 border-b border-border-subtle bg-bg-surface shrink-0">
             {/* Left — Page title can be passed via context later */}
             <div className="flex items-center gap-3">
-                <h1 className="text-h2 text-text-primary">Dashboard</h1>
+                <h1 className="text-h2 text-text-primary">{pageTitle}</h1>
             </div>
 
             {/* Right */}

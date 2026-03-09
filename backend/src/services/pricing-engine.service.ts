@@ -2,7 +2,7 @@ import { prisma } from '../utils/prisma';
 
 interface ResolveFuelPriceInput {
     estacionId: string;
-    tipoCombustible: 'ACPM' | 'GASOLINA_CORRIENTE';
+    tipoCombustible: 'ACPM' | 'GASOLINA_CORRIENTE' | 'GASOLINA_EXTRA';
     tipoServicio: 'PARTICULAR' | 'PUBLICO' | 'DIPLOMATICO' | 'OFICIAL' | 'CARGA';
     fecha?: Date;
 }

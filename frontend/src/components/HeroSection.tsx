@@ -83,32 +83,57 @@ export function HeroSection({ onIntroStateChange, startAtEnd }: HeroSectionProps
     gsap.ticker.lagSmoothing(0);
 
     /* ═══ GSAP Context for proper React cleanup ═══ */
-    const ctx = gsap.context((self) => {
+    const ctx = gsap.context(() => {
       const q = gsap.utils.selector(section);
 
       /* ═══ SVG stroke-draw prep ═══ */
       const hexStroke = hexStrokeRef.current;
+
+      /* ═══ Everything starts VISIBLE — no black screen ═══ */
+      gsap.set(q('.hero-grid'), { opacity: 1 });
+      gsap.set(q('.hero-glow'), { opacity: 1, scale: 1, force3D: true });
+      gsap.set(q('.hero-hex-fill'), { opacity: 1, force3D: true });
+      gsap.set(q('.hero-tick'), { scaleX: 1, transformOrigin: 'center', force3D: true });
+      gsap.set(q('.hero-drop'), { opacity: 1, force3D: true });
+      gsap.set(q('.hero-text-easy'), { opacity: 1, force3D: true });
+      gsap.set(q('.hero-text-diesel'), { opacity: 1, force3D: true });
+      gsap.set(q('.hero-tagline'), { opacity: 1, force3D: true });
+      gsap.set(q('.hero-cta'), { opacity: 1, force3D: true });
+      gsap.set(q('.hero-particle'), { opacity: 0.35, scale: 1, force3D: true });
+      gsap.set(q('.hero-line-deco'), { scaleY: 1, transformOrigin: 'top', force3D: true });
+      gsap.set(q('.hero-sep'), { scaleX: 1, transformOrigin: 'center', force3D: true });
+      if (hexStroke) {
+        gsap.set(hexStroke, { strokeDasharray: 'none', strokeDashoffset: 0 });
+      }
+
+      /* ═══ Entrance tween — plays once on mount (no scroll needed) ═══ */
+      const intro = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+      /* subtle pulse: glow breathes in */
+      intro.from(q('.hero-glow'), { scale: 0.7, opacity: 0, duration: 1.2 }, 0);
+      intro.from(q('.hero-grid'), { opacity: 0, duration: 0.8 }, 0);
+      /* logo assembles */
+      intro.from(q('.hero-hex-fill'), { opacity: 0, scale: 0.5, duration: 0.9, ease: 'back.out(1.4)' }, 0.15);
       if (hexStroke) {
         const len = hexStroke.getTotalLength();
         gsap.set(hexStroke, { strokeDasharray: len, strokeDashoffset: len });
+        intro.to(hexStroke, { strokeDashoffset: 0, duration: 1.0, ease: 'power2.inOut' }, 0.2);
       }
+      intro.from(q('.hero-tick'), { scaleX: 0, stagger: 0.06, duration: 0.4, ease: 'back.out(3)' }, 0.5);
+      intro.from(q('.hero-drop'), { opacity: 0, y: -40, scale: 0.3, duration: 0.8, ease: 'back.out(1.7)' }, 0.55);
+      /* brand text flies in */
+      intro.from(q('.hero-text-easy'), { opacity: 0, y: 20, letterSpacing: '0.5em', duration: 0.7 }, 0.7);
+      intro.from(q('.hero-text-diesel'), { opacity: 0, scale: 1.6, y: 30, duration: 0.8, ease: 'expo.out' }, 0.8);
+      /* tagline and rest */
+      intro.from(q('.hero-tagline'), { opacity: 0, y: 30, duration: 0.6 }, 1.1);
+      intro.from(q('.hero-cta'), { opacity: 0, y: 20, duration: 0.5 }, 1.3);
+      intro.from(q('.hero-particle'), { opacity: 0, scale: 0, stagger: 0.04, duration: 0.5 }, 0.9);
+      intro.from(q('.hero-line-deco'), { scaleY: 0, stagger: 0.08, duration: 0.6 }, 1.0);
+      intro.from(q('.hero-sep'), { scaleX: 0, duration: 0.5 }, 1.3);
+      /* ambient scan line sweeps once */
+      intro.fromTo(q('.hero-scan'), { y: '-10vh' }, { y: '110vh', duration: 2.0, ease: 'none' }, 0);
 
-      /* ═══ Initial invisible states (GPU-layer promoted) ═══ */
-      gsap.set(q('.hero-grid'), { opacity: 0 });
-      gsap.set(q('.hero-glow'), { opacity: 0, scale: 0.4, force3D: true });
-      gsap.set(q('.hero-scan'), { y: 0, force3D: true });
-      gsap.set(q('.hero-hex-fill'), { opacity: 0, force3D: true });
-      gsap.set(q('.hero-tick'), { scaleX: 0, transformOrigin: 'center', force3D: true });
-      gsap.set(q('.hero-drop'), { opacity: 0, y: -30, scale: 0.6, force3D: true });
-      gsap.set(q('.hero-text-easy'), { opacity: 0, x: -40, force3D: true });
-      gsap.set(q('.hero-text-diesel'), { opacity: 0, scale: 1.4, y: 15, force3D: true });
-      gsap.set(q('.hero-tagline'), { opacity: 0, y: 30, force3D: true });
-      gsap.set(q('.hero-cta'), { opacity: 0, y: 20, force3D: true });
-      gsap.set(q('.hero-particle'), { opacity: 0, scale: 0, force3D: true });
-      gsap.set(q('.hero-line-deco'), { scaleY: 0, transformOrigin: 'top', force3D: true });
-      gsap.set(q('.hero-sep'), { scaleX: 0, transformOrigin: 'center', force3D: true });
-
-      /* ═══ Master scroll-scrubbed timeline ═══ */
+      /* ═══ Scroll-scrubbed EXIT timeline ═══ */
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
@@ -118,70 +143,61 @@ export function HeroSection({ onIntroStateChange, startAtEnd }: HeroSectionProps
           scrub: CONFIG.scrub,
           anticipatePin: 1,
           onUpdate: (self) => {
-            if (self.progress >= 0.999) {
-              updateIntroState(true);
-            }
+            if (self.progress >= 0.999) updateIntroState(true);
           },
           onLeave: () => updateIntroState(true),
         },
       });
 
-      /* Phase 0 — ambient (0.00 → 0.10) */
-      tl.to(q('.hero-grid'), { opacity: 1, duration: 0.08 }, 0);
-      tl.to(q('.hero-glow'), { opacity: 1, scale: 1, duration: 0.12, ease: 'power2.out' }, 0);
-      tl.to(q('.hero-scan'), { y: '100vh', duration: 0.30, ease: 'none' }, 0);
+      /* Phase 1 — particles & decorations fly out first (0.00 → 0.25) */
+      tl.to(q('.hero-particle'), {
+        opacity: 0, scale: 2.5, stagger: 0.01, duration: 0.20, ease: 'power2.in',
+      }, 0);
+      tl.to(q('.hero-line-deco'), {
+        scaleY: 0, opacity: 0, stagger: 0.02, duration: 0.15, transformOrigin: 'bottom',
+      }, 0.05);
+      tl.to(q('.hero-sep'), { scaleX: 0, opacity: 0, duration: 0.10 }, 0.05);
 
-      /* Phase 1 — hexagon stroke draws (0.08 → 0.30) */
-      if (hexStroke) {
-        tl.to(hexStroke, { strokeDashoffset: 0, duration: 0.22, ease: 'power1.inOut' }, 0.08);
-      }
-      tl.to(q('.hero-hex-fill'), { opacity: 1, duration: 0.10 }, 0.20);
+      /* Phase 2 — CTA + tagline slide down & fade (0.10 → 0.35) */
+      tl.to(q('.hero-cta'), { opacity: 0, y: 50, duration: 0.15, ease: 'power2.in' }, 0.10);
+      tl.to(q('.hero-tagline'), { opacity: 0, y: 40, duration: 0.15, ease: 'power2.in' }, 0.15);
 
-      /* Phase 1b — gauge ticks pop in (0.18 → 0.28) */
-      tl.to(q('.hero-tick'), {
-        scaleX: 1, stagger: 0.015, duration: 0.06, ease: 'back.out(2)',
-      }, 0.18);
-
-      /* Phase 2 — fuel drop (0.28 → 0.42) */
-      tl.to(q('.hero-drop'), {
-        opacity: 1, y: 0, scale: 1, duration: 0.14, ease: 'back.out(1.7)',
+      /* Phase 3 — brand text spectacularly splits (0.25 → 0.50) */
+      tl.to(q('.hero-text-easy'), {
+        opacity: 0, x: -80, letterSpacing: '0.4em', duration: 0.20, ease: 'power3.in',
+      }, 0.25);
+      tl.to(q('.hero-text-diesel'), {
+        opacity: 0, scale: 2.2, y: -20, duration: 0.22, ease: 'power3.in',
       }, 0.28);
 
-      /* Phase 3 — brand text (0.40 → 0.58) */
-      tl.to(q('.hero-text-easy'), {
-        opacity: 1, x: 0, duration: 0.12, ease: 'power3.out',
+      /* Phase 4 — logo disassembles (0.40 → 0.65) */
+      tl.to(q('.hero-drop'), {
+        opacity: 0, y: -60, scale: 0.2, duration: 0.18, ease: 'power2.in',
       }, 0.40);
-      tl.to(q('.hero-text-diesel'), {
-        opacity: 1, scale: 1, y: 0, duration: 0.14, ease: 'power3.out',
-      }, 0.44);
+      tl.to(q('.hero-tick'), {
+        scaleX: 0, stagger: 0.01, duration: 0.10, ease: 'power2.in',
+      }, 0.42);
+      if (hexStroke) {
+        const len = hexStroke.getTotalLength();
+        tl.to(hexStroke, { strokeDashoffset: len, duration: 0.20, ease: 'power2.inOut' }, 0.45);
+      }
+      tl.to(q('.hero-hex-fill'), { opacity: 0, scale: 0.6, duration: 0.15 }, 0.55);
 
-      /* Phase 4 — tagline + decorations (0.54 → 0.72) */
-      tl.to(q('.hero-tagline'), {
-        opacity: 1, y: 0, duration: 0.12, ease: 'power2.out',
-      }, 0.56);
-      tl.to(q('.hero-particle'), {
-        opacity: 0.35, scale: 1, stagger: 0.015, duration: 0.08, ease: 'power2.out',
-      }, 0.54);
-      tl.to(q('.hero-line-deco'), {
-        scaleY: 1, stagger: 0.02, duration: 0.10, ease: 'power2.out',
-      }, 0.56);
+      /* Phase 5 — ambient fade out (0.60 → 0.80) */
+      tl.to(q('.hero-glow'), {
+        opacity: 0, scale: 1.6, duration: 0.20, ease: 'power1.in',
+      }, 0.60);
+      tl.to(q('.hero-grid'), { opacity: 0, duration: 0.15 }, 0.65);
 
-      /* Phase 5 — CTA + separator (0.70 → 0.82) */
-      tl.to(q('.hero-cta'), {
-        opacity: 1, y: 0, duration: 0.10, ease: 'power2.out',
-      }, 0.70);
-      tl.to(q('.hero-sep'), { scaleX: 1, duration: 0.10 }, 0.72);
-
-      /* Phase 6 — exit transition (0.93 → 1.0) */
-      tl.to(content, { scale: 0.94, opacity: 0, duration: 0.07, ease: 'power2.in' }, 0.93);
-      tl.to(q('.hero-glow'), { opacity: 0, scale: 0.85, duration: 0.07 }, 0.93);
-      tl.to(q('.hero-grid'), { opacity: 0, duration: 0.05 }, 0.95);
+      /* Phase 6 — final content scale-away (0.80 → 1.00) */
+      tl.to(content, {
+        scale: 0.88, opacity: 0, duration: 0.20, ease: 'power2.in',
+      }, 0.80);
 
       /* ── If returning from below, jump instantly to the end ── */
       if (startAtEnd && tl.scrollTrigger) {
         gsap.delayedCall(0.05, () => {
           if (tl.scrollTrigger) {
-            // Subtract a few pixels so it doesn't instantly trigger the 'onLeave' event again
             const endPos = tl.scrollTrigger.end - 5;
             window.scrollTo({ top: endPos, left: 0, behavior: 'instant' });
           }

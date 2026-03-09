@@ -104,13 +104,21 @@ export function InventarioPage() {
                 throw new Error('La cantidad de galones debe ser mayor a 0');
             }
 
-            await inventarioService.registrarTransaccion({
+            const result = await inventarioService.registrarTransaccion({
                 ...transaccionForm as RegistrarTransaccionData,
                 tanqueId: selectedTanque.id,
                 estacionId: currentUser.estacion.id,
                 tipoCombustible: selectedTanque.tipoCombustible,
             });
-            toast.success('Transacción registrada correctamente');
+            const precioAplicado = result.pricing?.precioUnitario;
+            toast.success(
+                precioAplicado
+                    ? `Transacción registrada a ${Math.round(precioAplicado).toLocaleString('es-CO')} COP/galón`
+                    : 'Transacción registrada correctamente'
+            );
+            if (result.alerta) {
+                toast.error(result.alerta);
+            }
             setTransaccionModalOpen(false);
             fetchTanques();
         } catch (error: unknown) {

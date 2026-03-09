@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { HomePage } from '@/pages/HomePage';
 import { StationsAtlasPage } from '@/pages/StationsAtlasPage';
+import { EconomicRoutePage } from '@/pages/EconomicRoutePage';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { DashboardPage } from '@/pages/DashboardPage';
@@ -29,6 +30,7 @@ export interface AppRouteConfig {
 export const publicRoutes: AppRouteConfig[] = [
     { path: '/', element: <HomePage />, public: true },
     { path: '/atlas-estaciones', element: <StationsAtlasPage />, public: true },
+    { path: '/ruta-economica', element: <EconomicRoutePage />, public: true },
     { path: '/login', element: <LoginPage />, public: true },
     { path: '/register', element: <RegisterPage />, public: true },
 ];

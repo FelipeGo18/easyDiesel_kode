@@ -10,7 +10,8 @@
     ],
     "module": "ESNext",
     "types": [
-      "vite/client"
+      "vite/client",
+      "vitest/globals"
     ],
     "skipLibCheck": true,
     /* Bundler mode */
@@ -36,6 +37,7 @@
     }
   },
   "include": [
-    "src"
+    "src",
+    "tests"
   ]
 }

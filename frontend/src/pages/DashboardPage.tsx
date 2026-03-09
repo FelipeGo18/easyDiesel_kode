@@ -14,10 +14,11 @@ import { useToast } from '@/components/ui/useToast';
 import { navigationRoutes } from '@/features/routing/appRoutes';
 import { useAccess } from '@/hooks/useAccess';
 import { getErrorMessage } from '@/lib/http';
+import { StationOperationsPage } from '@/pages/DespachadorPanelPage';
 
 export function DashboardPage() {
     const { user } = useAuth();
-    const { hasAnyPermission } = useAccess();
+    const { hasAnyPermission, roleName } = useAccess();
     const navigate = useNavigate();
     const toast = useToast();
     const [summary, setSummary] = useState<DashboardSummary | null>(null);
@@ -38,6 +39,10 @@ export function DashboardPage() {
     useEffect(() => {
         fetchData();
     }, [fetchData]);
+
+    if (roleName === 'estacion') {
+        return <StationOperationsPage />;
+    }
 
     // Lógica de visualización condicional basada en roles
     const availableModules = navigationRoutes.filter((route) => route.path !== '/dashboard' && hasAnyPermission(...(route.requiredPermissions || [])));
@@ -134,7 +139,7 @@ export function DashboardPage() {
                                 >
                                     <div className="flex items-start justify-between mb-3">
                                         <div className="flex items-center gap-3">
-                                            <Icon name={mod.icon} size={20} className={mod.color} />
+                                            <Icon name={mod.icon || 'dashboard'} size={20} />
                                             <h3 className="text-[14px] font-heading font-bold text-text-primary tracking-tight">
                                                 {mod.label}
                                             </h3>

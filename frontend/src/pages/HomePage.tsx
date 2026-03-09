@@ -251,6 +251,12 @@ export function HomePage() {
 
                     {/* Nav links */}
                     <div className="hidden md:flex items-center gap-6">
+                        <button
+                            onClick={() => navigate('/ruta-economica')}
+                            className="text-[13px] text-amber-500 hover:text-amber-400 interactive font-sans font-medium cursor-pointer"
+                        >
+                            Ruta informativa
+                        </button>
                         <a
                             href={introCompleted ? '#precios' : undefined}
                             aria-disabled={!introCompleted}
@@ -363,6 +369,42 @@ export function HomePage() {
 
             {introCompleted ? (
                 <>
+                    {/* ══════════════════════════════════════════
+                  ECONOMIC ROUTE CTA
+              ══════════════════════════════════════════ */}
+                    <section className="relative z-10 py-12 px-6 bg-bg-base animate-enter">
+                        <div className="max-w-6xl mx-auto">
+                            <div
+                                onClick={() => navigate('/ruta-economica')}
+                                className="group relative overflow-hidden rounded-brand border border-amber-500/20 bg-gradient-to-r from-amber-500/5 via-bg-surface to-amber-500/5 p-6 cursor-pointer hover:border-amber-500/40 transition-all duration-300"
+                            >
+                                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-12 h-12 rounded-brand bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0 group-hover:bg-amber-500/15 transition-colors">
+                                            <Icon name="navigation" size={20} className="text-amber-500" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <h2 className="text-[18px] font-heading font-bold text-text-primary tracking-tight">
+                                                    Ruta con estaciones en el trayecto
+                                                </h2>
+                                                <Badge variant="amber" className="text-[8px]">NUEVO</Badge>
+                                            </div>
+                                            <p className="text-[13px] text-text-secondary font-sans max-w-lg">
+                                                Traza un recorrido entre origen y destino y visualiza estaciones cercanas distribuidas a lo largo del camino.
+                                                Es una vista informativa para ubicar referencias útiles durante el viaje.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <Button className="shrink-0 group-hover:translate-x-0.5 transition-transform">
+                                        Ver ruta
+                                        <Icon name="arrow-right" size={14} />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
                     {/* ══════════════════════════════════════════
                   PRICE LOOKUP — Flujo ciudadano (4.3)
               ══════════════════════════════════════════ */}
