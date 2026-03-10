@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { Navigate, Link } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/useAuth';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
+import { getErrorMessage } from '@/lib/http';
 
 export function LoginPage() {
     const { isAuthenticated, isLoading, login, loginWithGoogle } = useAuth();
@@ -10,17 +11,23 @@ export function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [isOauthProcessing, setIsOauthProcessing] = useState(false);
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-bg-base flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-            </div>
-        );
+    // Si ya estamos autenticados, redirigir inmediatamente
+    if (isAuthenticated) {
+        console.log('LoginPage: Usuario ya autenticado, redirigiendo a /');
+        return <Navigate to="/" replace />;
     }
 
-    if (isAuthenticated) {
-        return <Navigate to="/" replace />;
+    if (isLoading || isOauthProcessing) {
+        return (
+            <div className="min-h-screen bg-bg-base flex flex-col items-center justify-center gap-4">
+                <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                <p className="text-small text-text-muted animate-pulse">
+                    {isOauthProcessing ? 'Conectando con Google...' : 'Sincronizando sesión...'}
+                </p>
+            </div>
+        );
     }
 
     const handleSubmit = async (e: FormEvent) => {
@@ -39,9 +46,11 @@ export function LoginPage() {
     const handleGoogleLogin = async () => {
         try {
             setError('');
+            setIsOauthProcessing(true);
             await loginWithGoogle();
-        } catch (err: any) {
-            setError('Error al conectar con Google: ' + (err.message || 'Intenta de nuevo.'));
+        } catch (error: unknown) {
+            setIsOauthProcessing(false);
+            setError(`Error al conectar con Google: ${getErrorMessage(error, 'Intenta de nuevo.')}`);
         }
     };
 

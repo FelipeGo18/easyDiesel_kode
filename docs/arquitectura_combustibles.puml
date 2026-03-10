@@ -46,7 +46,7 @@ rectangle "**ACTORES**" as ACTORES #FEF9E7 {
   actor "Distribuidor\nMayorista"      as DISTRIB
   actor "Autoridad\nReguladora"        as REGULADOR
   actor "Usuario\nParticular"          as PARTICULAR
-  actor "Usuario\nSubsidiado"          as SUBSIDIADO
+  actor "Ciudadano /\nConsulta Publica" as CIUDADANO
 }
 
 rectangle "**INTEGRACIONES EXTERNAS**" as EXTERNAS #E8DAEF {
@@ -137,10 +137,10 @@ PARTICULAR -down-> M4
 PARTICULAR -down-> M5
 PARTICULAR -down-> M8
 
-SUBSIDIADO -down-> M1 : HTTPS
-SUBSIDIADO -down-> M4
-SUBSIDIADO -down-> M5
-SUBSIDIADO -down-> M8
+CIUDADANO -down-> M1 : HTTPS
+CIUDADANO -down-> M4
+CIUDADANO -down-> M5
+CIUDADANO -down-> M8
 
 ' ════════════════════════════════════════════════════════
 '  AUTH MIDDLEWARE protege endpoints privados
@@ -226,7 +226,7 @@ note as NOTA_PUB
   GET /publico/zonas
   GET /publico/decretos/vigentes
   Rate limiting: 60 req/min por IP
-  Usado por: Particular y Subsidiado
+  Usado por: Particular y consulta publica
 end note
 
 note as NOTA_GOOGLE

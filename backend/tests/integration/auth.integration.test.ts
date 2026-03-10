@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 
 describe('Auth Integration Tests', () => {
     let adminUser: any;
+    let refreshToken: string;
 
     beforeAll(async () => {
         // Crear un usuario administrador para las pruebas
@@ -42,6 +43,7 @@ describe('Auth Integration Tests', () => {
             expect(response.status).toBe(200);
             expect(response.body.success).toBe(true);
             expect(response.body.data.token).toBeDefined();
+            expect(response.body.data.refreshToken).toBeDefined();
         });
 
         it('debería retornar 401 con credenciales incorrectas', async () => {
@@ -69,6 +71,7 @@ describe('Auth Integration Tests', () => {
                     password: 'AdminPassword123!'
                 });
             token = response.body.data.token;
+            refreshToken = response.body.data.refreshToken;
         });
 
         it('debería retornar el perfil del usuario con un token válido', async () => {
@@ -87,6 +90,35 @@ describe('Auth Integration Tests', () => {
 
             expect(response.status).toBe(401);
             expect(response.body.error).toBe('Token de autenticación requerido');
+        });
+
+        it('debería renovar la sesión con un refresh token válido', async () => {
+            const response = await request(app)
+                .post('/api/auth/refresh')
+                .send({ refresh_token: refreshToken });
+
+            expect(response.status).toBe(200);
+            expect(response.body.success).toBe(true);
+            expect(response.body.data.token).toBeDefined();
+            expect(response.body.data.refreshToken).toBeDefined();
+            expect(response.body.data.refreshToken).not.toBe(refreshToken);
+
+            refreshToken = response.body.data.refreshToken;
+        });
+
+        it('debería revocar la sesión al hacer logout', async () => {
+            const logoutResponse = await request(app)
+                .post('/api/auth/logout')
+                .send({ refresh_token: refreshToken });
+
+            expect(logoutResponse.status).toBe(200);
+            expect(logoutResponse.body.success).toBe(true);
+
+            const refreshResponse = await request(app)
+                .post('/api/auth/refresh')
+                .send({ refresh_token: refreshToken });
+
+            expect(refreshResponse.status).toBe(401);
         });
     });
 });

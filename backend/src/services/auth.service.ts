@@ -1,8 +1,11 @@
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { createClient } from '@supabase/supabase-js';
 import { prisma } from '../utils/prisma';
 import type { RegisterInput, LoginInput } from '../validators/auth.validator';
+import { normalizePermissions } from '../utils/permissions';
+import { getJwtSecret } from '../config/security';
 
 // ──────────────────────────────────────────
 // Supabase Client (Backend)
@@ -10,18 +13,64 @@ import type { RegisterInput, LoginInput } from '../validators/auth.validator';
 
 const supabaseUrl = process.env.SUPABASE_URL || 'https://gfuctahftqgxvoxhdxkb.supabase.co';
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 // ──────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────
 
 const SALT_ROUNDS = 12;
+const DEFAULT_REFRESH_EXPIRES_IN_DAYS = 14;
+
+interface SessionMetadata {
+    ip?: string;
+    userAgent?: string;
+}
+
+function buildAuthPayload(usuario: {
+    id: string;
+    email: string;
+    nombre: string;
+    fotoUrl?: string | null;
+    rol: { nombre: string; permisos?: unknown };
+}) {
+    const permisos = normalizePermissions(usuario.rol.nombre, usuario.rol.permisos);
+
+    return {
+        tokenPayload: {
+            userId: usuario.id,
+            email: usuario.email,
+            rol: usuario.rol.nombre,
+            permisos,
+        },
+        usuario: {
+            id: usuario.id,
+            email: usuario.email,
+            nombre: usuario.nombre,
+            rol: usuario.rol.nombre,
+            fotoUrl: usuario.fotoUrl,
+            permisos,
+        },
+    };
+}
 
 function signToken(payload: { userId: string; email: string; rol: string; permisos?: string[] }): string {
-    const secret = process.env.JWT_SECRET || 'default-secret';
+    const secret = getJwtSecret();
     const expiresIn = process.env.JWT_EXPIRES_IN || '8h';
     return jwt.sign(payload, secret, { expiresIn } as jwt.SignOptions);
+}
+
+function hashRefreshToken(token: string) {
+    return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+function generateRefreshToken() {
+    return crypto.randomBytes(48).toString('hex');
+}
+
+function getRefreshTokenExpiration() {
+    const configuredDays = Number(process.env.JWT_REFRESH_EXPIRES_IN_DAYS || DEFAULT_REFRESH_EXPIRES_IN_DAYS);
+    return new Date(Date.now() + configuredDays * 24 * 60 * 60 * 1000);
 }
 
 // ──────────────────────────────────────────
@@ -29,11 +78,42 @@ function signToken(payload: { userId: string; email: string; rol: string; permis
 // ──────────────────────────────────────────
 
 export class AuthService {
+    private async issueSession(
+        usuario: {
+            id: string;
+            email: string;
+            nombre: string;
+            fotoUrl?: string | null;
+            rol: { nombre: string; permisos?: unknown };
+        },
+        metadata?: SessionMetadata
+    ) {
+        const session = buildAuthPayload(usuario);
+        const token = signToken(session.tokenPayload);
+        const refreshToken = generateRefreshToken();
+
+        await (prisma as any).sessionToken.create({
+            data: {
+                usuarioId: usuario.id,
+                tokenHash: hashRefreshToken(refreshToken),
+                expiresAt: getRefreshTokenExpiration(),
+                ip: metadata?.ip,
+                userAgent: metadata?.userAgent,
+            },
+        });
+
+        return {
+            token,
+            refreshToken,
+            usuario: session.usuario,
+        };
+    }
+
     /**
      * Registra un nuevo usuario.
      * Si no se proporciona rolId, se asigna el rol "particular" por defecto.
      */
-    async register(data: RegisterInput) {
+    async register(data: RegisterInput, metadata?: SessionMetadata) {
         // Verificar email duplicado
         const existing = await prisma.usuario.findUnique({
             where: { email: data.email },
@@ -75,29 +155,13 @@ export class AuthService {
         });
 
         // Generar token
-        const token = signToken({
-            userId: usuario.id,
-            email: usuario.email,
-            rol: usuario.rol.nombre,
-            permisos: (usuario.rol.permisos as any) || [],
-        });
-
-        return {
-            token,
-            usuario: {
-                id: usuario.id,
-                email: usuario.email,
-                nombre: usuario.nombre,
-                rol: usuario.rol.nombre,
-                permisos: (usuario.rol.permisos as any) || [],
-            },
-        };
+        return this.issueSession(usuario, metadata);
     }
 
     /**
      * Autentica un usuario con email y contraseña.
      */
-    async login(data: LoginInput) {
+    async login(data: LoginInput, metadata?: SessionMetadata) {
         // Buscar usuario
         const usuario = await prisma.usuario.findUnique({
             where: { email: data.email },
@@ -123,29 +187,13 @@ export class AuthService {
         }
 
         // Generar token
-        const token = signToken({
-            userId: usuario.id,
-            email: usuario.email,
-            rol: usuario.rol.nombre,
-            permisos: (usuario.rol.permisos as any) || [],
-        });
-
-        return {
-            token,
-            usuario: {
-                id: usuario.id,
-                email: usuario.email,
-                nombre: usuario.nombre,
-                rol: usuario.rol.nombre,
-                permisos: (usuario.rol.permisos as any) || [],
-            },
-        };
+        return this.issueSession(usuario, metadata);
     }
 
     /**
      * Autentica o registra un usuario mediante Google.
      */
-    async loginWithGoogle(data: { email: string; nombre: string; googleId: string; fotoUrl?: string }) {
+    async loginWithGoogle(data: { email: string; nombre: string; googleId: string; fotoUrl?: string }, metadata?: SessionMetadata) {
         let usuario = await prisma.usuario.findUnique({
             where: { email: data.email },
             include: { rol: true },
@@ -191,30 +239,17 @@ export class AuthService {
         }
 
         // Generar token
-        const token = signToken({
-            userId: usuario.id,
-            email: usuario.email,
-            rol: usuario.rol.nombre,
-            permisos: (usuario.rol.permisos as any) || [],
-        });
-
-        return {
-            token,
-            usuario: {
-                id: usuario.id,
-                email: usuario.email,
-                nombre: usuario.nombre,
-                rol: usuario.rol.nombre,
-                fotoUrl: usuario.fotoUrl,
-                permisos: (usuario.rol.permisos as any) || [],
-            },
-        };
+        return this.issueSession(usuario, metadata);
     }
 
     /**
      * Autentica o registra un usuario mediante un access_token de Supabase.
      */
-    async loginWithSupabaseToken(accessToken: string) {
+    async loginWithSupabaseToken(accessToken: string, metadata?: SessionMetadata) {
+        if (!supabase) {
+            throw Object.assign(new Error('La integración con Supabase no está configurada en el backend'), { statusCode: 500 });
+        }
+
         // 1. Verificar el token con Supabase
         const { data: { user: supabaseUser }, error } = await supabase.auth.getUser(accessToken);
 
@@ -233,6 +268,46 @@ export class AuthService {
             nombre,
             googleId,
             fotoUrl
+        }, metadata);
+    }
+
+    async refreshSession(refreshToken: string, metadata?: SessionMetadata) {
+        const tokenHash = hashRefreshToken(refreshToken);
+        const storedSession = await (prisma as any).sessionToken.findUnique({
+            where: { tokenHash },
+            include: {
+                usuario: {
+                    include: { rol: true },
+                },
+            },
+        });
+
+        if (!storedSession || storedSession.revokedAt || storedSession.expiresAt <= new Date()) {
+            throw Object.assign(new Error('Refresh token inválido o expirado'), { statusCode: 401 });
+        }
+
+        if (!storedSession.usuario.activo) {
+            throw Object.assign(new Error('Cuenta desactivada. Contacta al administrador.'), { statusCode: 403 });
+        }
+
+        await (prisma as any).sessionToken.update({
+            where: { id: storedSession.id },
+            data: { revokedAt: new Date() },
+        });
+
+        return this.issueSession(storedSession.usuario, metadata);
+    }
+
+    async logout(refreshToken: string) {
+        const tokenHash = hashRefreshToken(refreshToken);
+        await (prisma as any).sessionToken.updateMany({
+            where: {
+                tokenHash,
+                revokedAt: null,
+            },
+            data: {
+                revokedAt: new Date(),
+            },
         });
     }
 
@@ -244,7 +319,7 @@ export class AuthService {
             where: { id: userId },
             include: {
                 rol: { select: { id: true, nombre: true, descripcion: true, permisos: true } },
-                estacionGestionada: { select: { id: true, nombre: true, codigoSicom: true } },
+                estacionGestionada: { select: { id: true, nombre: true, codigoSicom: true, zonaId: true } },
                 distribuidorGestionado: { select: { id: true, nombre: true, nit: true } },
             },
         });
@@ -253,12 +328,17 @@ export class AuthService {
             throw Object.assign(new Error('Usuario no encontrado'), { statusCode: 404 });
         }
 
+        const permisos = normalizePermissions(usuario.rol.nombre, usuario.rol.permisos);
+
         return {
             id: usuario.id,
             email: usuario.email,
             nombre: usuario.nombre,
             activo: usuario.activo,
-            rol: usuario.rol,
+            rol: {
+                ...usuario.rol,
+                permisos,
+            },
             estacion: usuario.estacionGestionada,
             distribuidor: usuario.distribuidorGestionado,
             createdAt: usuario.createdAt,

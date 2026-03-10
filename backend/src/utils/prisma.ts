@@ -1,4 +1,8 @@
+import path from 'node:path';
+import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
+
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 // Singleton de Prisma Client para evitar múltiples instancias en desarrollo
 const globalForPrisma = globalThis as unknown as {

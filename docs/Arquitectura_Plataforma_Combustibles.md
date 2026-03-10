@@ -69,16 +69,16 @@ PostgreSQL (Puerto 5432) + Prisma ORM
 
 ✅ = Acceso completo | 👁 = Solo lectura | ❌ = Sin acceso
 
-| **Módulo / Rol** | **Admin** | **Estación** | **Distribuidor** | **Regulador** | **Particular** | **Subsidiado** | **Auditor** | **Dist. Reg.** |
-|---|---|---|---|---|---|---|---|---|
-| **M1 – Auth** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **M2 – Usuarios** | ✅ | ❌ | ❌ | 👁 | ❌ | ❌ | 👁 | ❌ |
-| **M3 – Gestión de Estación** | ✅ | ✅ | ✅ | 👁 | ❌ | ❌ | 👁 | ✅ |
-| **M4 – Precios/Zonas** | ✅ | 👁 | 👁 | 👁 | 👁 | 👁 | 👁 | 👁 |
-| **M5 – Normativa** | ✅ | 👁 | 👁 | ✅ | 👁 | 👁 | 👁 | ✅ |
-| **M6 – Reportes** | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| **M7 – Auditoría** | ✅ | 👁 | 👁 | 👁 | ❌ | ❌ | ✅ | 👁 |
-| **M8 – Dashboard** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Módulo / Rol** | **Admin** | **Estación** | **Distribuidor** | **Regulador** | **Particular / Consulta pública** | **Auditor** | **Dist. Reg.** |
+|---|---|---|---|---|---|---|---|
+| **M1 – Auth** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **M2 – Usuarios** | ✅ | ❌ | ❌ | 👁 | ❌ | 👁 | ❌ |
+| **M3 – Gestión de Estación** | ✅ | ✅ | ✅ | 👁 | ❌ | 👁 | ✅ |
+| **M4 – Precios/Zonas** | ✅ | 👁 | 👁 | 👁 | 👁 | 👁 | 👁 |
+| **M5 – Normativa** | ✅ | 👁 | 👁 | ✅ | 👁 | 👁 | ✅ |
+| **M6 – Reportes** | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
+| **M7 – Auditoría** | ✅ | 👁 | 👁 | 👁 | ❌ | ✅ | 👁 |
+| **M8 – Dashboard** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ---
 
@@ -459,21 +459,21 @@ Autenticación: Bearer Token (JWT) en header `Authorization` para todos los endp
 
 | **Método** | **Endpoint** | **Rol mínimo** | **Descripción / Body** |
 |---|---|---|---|
-| **GET** | /dashboard/resumen | Todos (según rol) | KPIs generales según rol. Admin/Operadores: inventario, transacciones, alertas. Particular/Subsidiado: precio vigente en su zona, estaciones cercanas, subsidio aplicable |
+| **GET** | /dashboard/resumen | Todos (según rol) | KPIs generales según rol. Admin/Operadores: inventario, transacciones, alertas. Consulta pública: precio vigente en su zona, estaciones cercanas y explicación del subsidio aplicable |
 | **GET** | /dashboard/inventario-live | Estacion/Admin | Niveles actuales de todos los tanques de la estación |
 | **GET** | /dashboard/alertas | Estacion/Admin | Tanques bajo nivel mínimo + cambios de precios recientes |
 | **GET** | /dashboard/grafico-ventas | Admin/Estacion | Datos para gráfico de ventas por tipo de combustible y período |
 
 ### 3.12 Vista Ciudadana `/publico`
 
-Endpoints de consulta pública para los roles Particular y Subsidiado. No requieren JWT. Permiten al ciudadano consultar precios vigentes, estaciones activas y decretos normativos sin necesidad de un token de sesión. Estos endpoints son de solo lectura y no exponen datos operacionales del sistema.
+Endpoints de consulta pública para ciudadanos y usuarios particulares. No requieren JWT. Permiten consultar precios vigentes, estaciones activas y decretos normativos sin necesidad de un token de sesión. Estos endpoints son de solo lectura y no exponen datos operacionales del sistema.
 
 | **Método** | **Endpoint** | **Rol** | **Descripción / Body** |
 |---|---|---|---|
-| **GET** | /publico/precios | Particular / Subsidiado | Precios vigentes por zona y tipo combustible. Query: `?zona_id=&tipo_combustible=&tipo_servicio=`. No requiere JWT. Devuelve `precio_galon`, `subsidio`, decreto vigente y `vigencia_hasta` |
-| **GET** | /publico/estaciones | Particular / Subsidiado | Lista estaciones activas con nombre, ciudad, zona y coordenadas (latitud/longitud). Query: `?ciudad=&zona_id=`. No requiere JWT. Base para mostrar bombas en mapa futuro |
-| **GET** | /publico/decretos/vigentes | Particular / Subsidiado | Lista los decretos activos en lenguaje claro: número, descripción, fecha_vigencia. No requiere JWT. Permite al ciudadano entender por qué se aplica cada precio |
-| **GET** | /publico/zonas | Particular / Subsidiado | Lista todas las zonas de distribución con nombre y tipo_zona. Útil para que el usuario identifique su zona antes de consultar precios |
+| **GET** | /publico/precios | Consulta pública | Precios vigentes por zona y tipo combustible. Query: `?zona_id=&tipo_combustible=&tipo_servicio=`. No requiere JWT. Devuelve `precio_galon`, `subsidio`, decreto vigente y `vigencia_hasta` |
+| **GET** | /publico/estaciones | Consulta pública | Lista estaciones activas con nombre, ciudad, zona y coordenadas (latitud/longitud). Query: `?ciudad=&zona_id=`. No requiere JWT. Base para mostrar bombas en mapa futuro |
+| **GET** | /publico/decretos/vigentes | Consulta pública | Lista los decretos activos en lenguaje claro: número, descripción, fecha_vigencia. No requiere JWT. Permite al ciudadano entender por qué se aplica cada precio |
+| **GET** | /publico/zonas | Consulta pública | Lista todas las zonas de distribución con nombre y tipo_zona. Útil para que el usuario identifique su zona antes de consultar precios |
 
 > *Nota: los endpoints `/publico/*` no pasan por el middleware de autenticación JWT. Sin embargo sí tienen rate limiting (max 60 req/min por IP) para prevenir abuso. En el futuro el endpoint `/publico/estaciones` podrá combinarse con una API de mapas (Leaflet / Google Maps) para el módulo M9 Vista Ciudadana con mapa.*
 
@@ -578,7 +578,7 @@ El distribuidor registra la entrega ANTES de que el camión llegue a la estació
 
 ### 4.3 Flujo del Ciudadano — Consulta de Precios (Sin login)
 
-El usuario Particular o Subsidiado NO requiere inicio de sesión. Accede directamente a la vista pública.
+El ciudadano o usuario particular NO requiere inicio de sesión. Accede directamente a la vista pública.
 
 1. Usuario abre la aplicación. Ve directamente la vista pública sin pantalla de login.
 2. Selecciona su zona de distribución (o el sistema la detecta por geolocalización del navegador si el usuario lo permite).

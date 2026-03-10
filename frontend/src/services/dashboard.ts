@@ -1,4 +1,23 @@
 import api from './api';
+import type { ApiResponse } from '@/types';
+
+export interface DashboardAlert {
+    id: string;
+    nombre: string;
+    estacion_nombre: string;
+    nivel_actual: number | string;
+    capacidad_galones: number | string;
+    nivel_minimo: number | string;
+}
+
+export interface DashboardRecentOperation {
+    id: string;
+    tipo: 'ENTRADA' | 'SALIDA';
+    galones: number | string;
+    createdAt: string;
+    estacion?: { nombre: string };
+    tanque?: { tipoCombustible: string };
+}
 
 export interface DashboardSummary {
     usuarios: { total: number; activos: number };
@@ -7,12 +26,12 @@ export interface DashboardSummary {
     inventario: {
         tanques: number;
         tanquesEnAlerta: number;
-        alertas: any[];
+        alertas: DashboardAlert[];
     };
     operaciones: {
         transacciones: number;
         entregas: number;
-        recientes: any[];
+        recientes: DashboardRecentOperation[];
     };
     normativa: {
         zonas: number;
@@ -23,6 +42,6 @@ export interface DashboardSummary {
 }
 
 export const dashboardService = {
-    getSummary: () => 
-        api.get<any>('/dashboard/resumen').then(r => r.data.data as DashboardSummary),
+    getSummary: () =>
+    api.get<ApiResponse<DashboardSummary>>('/dashboard').then(r => r.data.data as DashboardSummary),
 };

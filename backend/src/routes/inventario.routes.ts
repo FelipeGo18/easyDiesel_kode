@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { registrarEntregaHandler, registrarTransaccionHandler, cierreTurnoHandler } from '../controllers/inventario.controller';
+import { obtenerEntregasPendientesHandler, registrarEntregaHandler, confirmarEntregaHandler, registrarTransaccionHandler, cierreTurnoHandler } from '../controllers/inventario.controller';
 
 const router = Router();
 
@@ -31,6 +31,8 @@ const router = Router();
  */
 router.post('/cierre-turno', cierreTurnoHandler);
 
+router.get('/entregas/pendientes', obtenerEntregasPendientesHandler);
+
 /**
  * @swagger
  * /api/inventario/entregas:
@@ -57,9 +59,34 @@ router.post('/cierre-turno', cierreTurnoHandler);
  *               fechaEntrega: { type: string, format: date-time }
  *     responses:
  *       201:
- *         description: Entrega registrada correctamente, suma al tanque
+ *         description: Entrega registrada como pendiente de confirmación
  */
 router.post('/entregas', registrarEntregaHandler); // Registro de abastecimiento (Distribuidor -> Estación/Tanque)
+
+/**
+ * @swagger
+ * /api/inventario/entregas/{id}/confirmar:
+ *   post:
+ *     summary: Confirma la recepción real de una entrega pendiente
+ *     tags: [Inventario]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [estacionId, tanqueId, galonesRecibidos]
+ *             properties:
+ *               estacionId: { type: string }
+ *               tanqueId: { type: string }
+ *               galonesRecibidos: { type: number }
+ *     responses:
+ *       200:
+ *         description: Entrega confirmada y tanque actualizado
+ */
+router.post('/entregas/:id/confirmar', confirmarEntregaHandler);
 
 /**
  * @swagger

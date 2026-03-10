@@ -1,25 +1,16 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { AuthProvider } from '@/context/AuthContext';
 import { ToastProvider } from '@/components/ui/Toast';
+import { useAuth } from '@/context/useAuth';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { HomePage } from '@/pages/HomePage';
-import { LoginPage } from '@/pages/LoginPage';
-import { RegisterPage } from '@/pages/RegisterPage';
-import { ReportesPage } from '@/pages/ReportesPage';
-import { AuditoriaPage } from '@/pages/AuditoriaPage';
-import { DashboardPage } from '@/pages/DashboardPage';
-import { ZonasPage } from '@/pages/admin/ZonasPage';
-import { DecretosPage } from '@/pages/admin/DecretosPage';
-import { PreciosPage } from '@/pages/admin/PreciosPage';
-import { UsuariosPage } from '@/pages/admin/UsuariosPage';
-import { InventarioPage } from '@/pages/admin/InventarioPage';
-import { ActoresPage } from '@/pages/admin/ActoresPage';
-import { TanquesPage } from '@/pages/admin/TanquesPage';
 import type { ReactNode } from 'react';
+import { protectedRoutes, publicRoutes } from '@/features/routing/appRoutes';
+import { useAccess } from '@/hooks/useAccess';
 
 /* ── Protected route wrapper ── */
-function ProtectedRoute({ children }: { children: ReactNode }) {
+function ProtectedRoute({ children, requiredPermissions = [] }: { children: ReactNode; requiredPermissions?: string[] }) {
   const { isAuthenticated, isLoading } = useAuth();
+  const { hasAnyPermission } = useAccess();
 
   if (isLoading) {
     return (
@@ -55,16 +46,19 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
+  if (requiredPermissions.length && !hasAnyPermission(...requiredPermissions)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return <>{children}</>;
 }
 
 function AppRoutes() {
   return (
     <Routes>
-      {/* ── Public routes ── */}
-      <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      {publicRoutes.map((route) => (
+        <Route key={route.path} path={route.path} element={route.element} />
+      ))}
 
       {/* ── Protected routes — inside AppLayout ── */}
       <Route
@@ -74,16 +68,13 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/zonas" element={<ZonasPage />} />
-        <Route path="/precios" element={<PreciosPage />} />
-        <Route path="/actores" element={<ActoresPage />} />
-        <Route path="/tanques" element={<TanquesPage />} />
-        <Route path="/normativa" element={<DecretosPage />} />
-        <Route path="/usuarios" element={<UsuariosPage />} />
-        <Route path="/estacion" element={<InventarioPage />} />
-        <Route path="/reportes" element={<ReportesPage />} />
-        <Route path="/auditoria" element={<AuditoriaPage />} />
+        {protectedRoutes.map((route) => (
+          <Route
+            key={route.path}
+            path={route.path}
+            element={<ProtectedRoute requiredPermissions={route.requiredPermissions}>{route.element}</ProtectedRoute>}
+          />
+        ))}
       </Route>
 
       {/* Fallback */}
@@ -91,8 +82,6 @@ function AppRoutes() {
     </Routes>
   );
 }
-
-
 
 function App() {
   return (

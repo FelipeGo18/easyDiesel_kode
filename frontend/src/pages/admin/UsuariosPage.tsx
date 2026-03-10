@@ -1,12 +1,13 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { InputField, SelectField } from '@/components/ui/FormFields';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { useToast } from '@/components/ui/Toast';
+import { useToast } from '@/components/ui/useToast';
 import { usuariosService, type Usuario, type Rol } from '@/services/admin';
+import { getErrorMessage } from '@/lib/http';
 
 export function UsuariosPage() {
     const toast = useToast();
@@ -23,7 +24,7 @@ export function UsuariosPage() {
     const [rolId, setRolId] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             const usersData = await usuariosService.getAll();
@@ -35,14 +36,14 @@ export function UsuariosPage() {
                 if (u.rol?.id) uniqueRoles.set(u.rol.id, u.rol as Rol);
             });
             setRoles(Array.from(uniqueRoles.values()));
-        } catch (err: any) {
-            toast.error('Error al cargar usuarios: ' + (err.response?.data?.error || err.message));
+        } catch (error: unknown) {
+            toast.error(`Error al cargar usuarios: ${getErrorMessage(error)}`);
         } finally {
             setLoading(false);
         }
-    };
+    }, [toast]);
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => { fetchData(); }, [fetchData]);
 
     const openCreate = () => {
         setEditing(null);
@@ -66,8 +67,8 @@ export function UsuariosPage() {
             await usuariosService.deactivate(u.id);
             toast.success('Usuario desactivado');
             fetchData();
-        } catch (err: any) {
-            toast.error(err.response?.data?.error || 'Error al desactivar usuario');
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, 'Error al desactivar usuario'));
         }
     };
 
@@ -76,7 +77,7 @@ export function UsuariosPage() {
         setSubmitting(true);
         try {
             if (editing) {
-                const payload: Record<string, any> = { nombre, email };
+                const payload: Record<string, unknown> = { nombre, email };
                 if (password) payload.password = password;
                 if (rolId) payload.rolId = rolId;
                 await usuariosService.update(editing.id, payload);
@@ -87,8 +88,8 @@ export function UsuariosPage() {
             }
             setModalOpen(false);
             fetchData();
-        } catch (err: any) {
-            toast.error(err.response?.data?.error || 'Error al guardar usuario');
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, 'Error al guardar usuario'));
         } finally {
             setSubmitting(false);
         }

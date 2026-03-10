@@ -9,6 +9,32 @@ export interface ApiResponse<T = unknown> {
     message?: string;
 }
 
+export interface SessionPayload {
+    token: string;
+    refreshToken: string;
+    usuario: AuthenticatedUser;
+}
+
+export interface AuthenticatedRole {
+    id: string;
+    nombre: RolUsuario;
+    descripcion?: string;
+    permisos?: string[];
+}
+
+export interface ManagedStationSummary {
+    id: string;
+    nombre: string;
+    codigoSicom?: string;
+    zonaId?: string;
+}
+
+export interface ManagedDistributorSummary {
+    id: string;
+    nombre: string;
+    nit?: string;
+}
+
 export interface PaginatedResponse<T> extends ApiResponse<T[]> {
     pagination: {
         page: number;
@@ -42,7 +68,13 @@ export interface Usuario {
     nombre: string;
     fotoUrl?: string;
     activo: boolean;
-    rol: RolUsuario;
+    rol: RolUsuario | AuthenticatedRole;
+}
+
+export interface AuthenticatedUser extends Usuario {
+    estacion?: ManagedStationSummary | null;
+    distribuidor?: ManagedDistributorSummary | null;
+    createdAt?: string;
 }
 
 /* ── Inventario ── */
@@ -69,6 +101,8 @@ export interface EntregaDistribuidor {
     numeroRemision: string;
     fechaEntrega: string;
     confirmada: boolean;
+    distribuidor?: { id: string; nombre: string; tipo?: string };
+    tanque?: { id: string; nombre: string; tipoCombustible: TipoCombustible };
 }
 
 export interface TransaccionCombustible {
@@ -110,7 +144,7 @@ export interface EstacionServicio {
     latitud?: number;
     longitud?: number;
     zonaId: string;
-    usuarioId: string;
+    usuarioId?: string | null;
     zona?: { id: string; nombre: string };
     usuario?: { id: string; nombre: string; email: string };
     createdAt: string;
@@ -124,7 +158,7 @@ export interface Distribuidor {
     direccion: string;
     ciudad: string;
     departamento: string;
-    usuarioId: string;
+    usuarioId?: string | null;
     usuario?: { id: string; nombre: string; email: string };
     createdAt: string;
 }
