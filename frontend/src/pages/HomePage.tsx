@@ -506,33 +506,28 @@ export function HomePage() {
                                             <span className="block text-[13px] text-text-muted font-sans mt-2">por galón · COP</span>
                                         </div>
 
-                                        {!loadingPublicData && !precioActual ? (
-                                            <p className="mb-4 text-[12px] text-amber-300">
-                                                No hay un precio vigente para la combinación seleccionada o la carga pública no respondió completa.
-                                            </p>
-                                        ) : null}
-
-                                        {precioActual && (
-                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-border-subtle">
-                                                <div className="bg-bg-elevated rounded-brand p-3">
-                                                    <span className="text-label text-text-muted block mb-1">Subsidio</span>
-                                                    <span className="font-mono text-[14px] text-green-500 font-semibold">
-                                                        {Number(precioActual.subsidioGalon) > 0 ? formatCOP(Number(precioActual.subsidioGalon)) : 'No aplica'}
-                                                    </span>
-                                                    <span className="block text-[9px] font-mono text-text-muted mt-0.5">/galón</span>
-                                                </div>
-                                                <div className="bg-bg-elevated rounded-brand p-3">
-                                                    <span className="text-label text-text-muted block mb-1">Decreto</span>
-                                                    <span className="font-mono text-[13px] text-text-primary">{precioActual.decreto?.numero || 'N/A'}</span>
-                                                    <span className="block text-[9px] font-mono text-text-muted mt-0.5">vigente</span>
-                                                </div>
-                                                <div className="bg-bg-elevated rounded-brand p-3">
-                                                    <span className="text-label text-text-muted block mb-1">Servicio</span>
-                                                    <span className="font-mono text-[13px] text-text-primary">
-                                                        {tiposServicio.find(t => t.id === servicioSeleccionado)?.label}
-                                                    </span>
-                                                    <span className="block text-[9px] font-mono text-text-muted mt-0.5">categoría</span>
-                                                </div>
+                            {/* Price comparison row */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                {tiposCombustible.map((tc, i) => {
+                                    const p = preciosMock[tc.id]?.[servicioSeleccionado];
+                                    const isActive = tc.id === combustibleSeleccionado;
+                                    return (
+                                        <button
+                                            key={tc.id}
+                                            onClick={() => setCombustibleSeleccionado(tc.id)}
+                                            className={`text-left bg-bg-surface border rounded-brand p-4 interactive animate-enter cursor-pointer ${isActive ? 'border-amber-500/40' : 'border-border-subtle hover:border-border-strong'
+                                                }`}
+                                            style={{ animationDelay: `${i * 60}ms` }}
+                                        >
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-[11px] font-mono text-text-muted uppercase tracking-wider">
+                                                    {tc.id === 'ACPM' ? 'ACPM' : tc.id === 'GASOLINA_CORRIENTE' ? 'Corriente' : 'Extra'}
+                                                </span>
+                                                {p && p.subsidio > 0 ? (
+                                                    <Icon name="trending-down" size={16} className="text-green-500" />
+                                                ) : (
+                                                    <Icon name="trending-up" size={16} className="text-text-muted" />
+                                                )}
                                             </div>
                                         )}
                                     </div>
