@@ -395,9 +395,9 @@ export function HomePage() {
                                                     {tc.id === 'ACPM' ? 'ACPM' : tc.id === 'GASOLINA_CORRIENTE' ? 'Corriente' : 'Extra'}
                                                 </span>
                                                 {p && p.subsidio > 0 ? (
-                                                    <Icon name="trending-down" size={12} className="text-green-500" />
+                                                    <Icon name="trending-down" size={16} className="text-green-500" />
                                                 ) : (
-                                                    <Icon name="trending-up" size={12} className="text-text-muted" />
+                                                    <Icon name="trending-up" size={16} className="text-text-muted" />
                                                 )}
                                             </div>
                                             <span className={`font-display text-[28px] leading-none ${isActive ? 'text-amber-500' : 'text-text-primary'}`}>
