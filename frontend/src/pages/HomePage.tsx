@@ -506,64 +506,38 @@ export function HomePage() {
                                             <span className="block text-[13px] text-text-muted font-sans mt-2">por galón · COP</span>
                                         </div>
 
-                            {/* Price comparison row */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                {tiposCombustible.map((tc, i) => {
-                                    const p = preciosMock[tc.id]?.[servicioSeleccionado];
-                                    const isActive = tc.id === combustibleSeleccionado;
-                                    return (
-                                        <button
-                                            key={tc.id}
-                                            onClick={() => setCombustibleSeleccionado(tc.id)}
-                                            className={`text-left bg-bg-surface border rounded-brand p-4 interactive animate-enter cursor-pointer ${isActive ? 'border-amber-500/40' : 'border-border-subtle hover:border-border-strong'
-                                                }`}
-                                            style={{ animationDelay: `${i * 60}ms` }}
-                                        >
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="text-[11px] font-mono text-text-muted uppercase tracking-wider">
-                                                    {tc.id === 'ACPM' ? 'ACPM' : tc.id === 'GASOLINA_CORRIENTE' ? 'Corriente' : 'Extra'}
-                                                </span>
-                                                {p && p.subsidio > 0 ? (
-                                                    <Icon name="trending-down" size={16} className="text-green-500" />
-                                                ) : (
-                                                    <Icon name="trending-up" size={16} className="text-text-muted" />
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        {tiposCombustible.map((tc, i) => {
-                                            const p = precios.find(p => p.zonaId === zonaSeleccionada && p.tipoCombustible === tc.id && p.tipoServicio === servicioSeleccionado);
-                                            const isActive = tc.id === combustibleSeleccionado;
-                                            return (
-                                                <button
-                                                    key={tc.id}
-                                                    onClick={() => setCombustibleSeleccionado(tc.id)}
-                                                    className={`text-left bg-bg-surface border rounded-brand p-4 interactive animate-enter cursor-pointer ${isActive ? 'border-amber-500/40' : 'border-border-subtle hover:border-border-strong'
-                                                        }`}
-                                                    style={{ animationDelay: `${i * 60}ms` }}
-                                                >
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <span className="text-[11px] font-mono text-text-muted uppercase tracking-wider">
-                                                            {tc.id === 'ACPM' ? 'ACPM' : 'Corriente'}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            {tiposCombustible.map((tc, i) => {
+                                                const p = precios.find(p => p.zonaId === zonaSeleccionada && p.tipoCombustible === tc.id && p.tipoServicio === servicioSeleccionado);
+                                                const isActive = tc.id === combustibleSeleccionado;
+                                                return (
+                                                    <button
+                                                        key={tc.id}
+                                                        onClick={() => setCombustibleSeleccionado(tc.id)}
+                                                        className={`text-left bg-bg-surface border rounded-brand p-4 interactive animate-enter cursor-pointer ${isActive ? 'border-amber-500/40' : 'border-border-subtle hover:border-border-strong'
+                                                            }`}
+                                                        style={{ animationDelay: `${i * 60}ms` }}
+                                                    >
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <span className="text-[11px] font-mono text-text-muted uppercase tracking-wider">
+                                                                {tc.id === 'ACPM' ? 'ACPM' : 'Corriente'}
+                                                            </span>
+                                                            {p && Number(p.subsidioGalon) > 0 ? (
+                                                                <Icon name="trending-down" size={12} className="text-green-500" />
+                                                            ) : (
+                                                                <Icon name="trending-up" size={12} className="text-text-muted" />
+                                                            )}
+                                                        </div>
+                                                        <span className={`font-display text-[28px] leading-none ${isActive ? 'text-amber-500' : 'text-text-primary'}`}>
+                                                            {p ? formatCOP(Number(p.precioGalon)) : '—'}
                                                         </span>
-                                                        {p && Number(p.subsidioGalon) > 0 ? (
-                                                            <Icon name="trending-down" size={12} className="text-green-500" />
-                                                        ) : (
-                                                            <Icon name="trending-up" size={12} className="text-text-muted" />
-                                                        )}
-                                                    </div>
-                                                    <span className={`font-display text-[28px] leading-none ${isActive ? 'text-amber-500' : 'text-text-primary'}`}>
-                                                        {p ? formatCOP(Number(p.precioGalon)) : '—'}
-                                                    </span>
-                                                </button>
-                                            );
-                                        })}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
                     </section>
 
                     {/* ══════════════════════════════════════════
