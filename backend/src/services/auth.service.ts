@@ -12,8 +12,8 @@ import { getJwtSecret } from '../config/security';
 // ──────────────────────────────────────────
 
 const supabaseUrl = process.env.SUPABASE_URL || 'https://gfuctahftqgxvoxhdxkb.supabase.co';
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
-const supabase = supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdWN0YWhmdHFneHZveGhkeGtiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2ODA3OTYsImV4cCI6MjA4ODI1Njc5Nn0.S8JADPRmPmCm8aKN1xd6bqL_212AuP8NDXZrki0y_fw';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // ──────────────────────────────────────────
 // Helpers

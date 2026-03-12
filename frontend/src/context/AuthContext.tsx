@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.getItem('token')
     );
     const [isLoading, setIsLoading] = useState(true);
+    const [oauthError, setOauthError] = useState<string | null>(null);
 
     useEffect(() => {
         let isSyncing = false;
@@ -45,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (isSyncing) return;
             isSyncing = true;
             setIsLoading(true);
+            setOauthError(null);
 
             try {
                 console.log('Sincronizando sesión OAuth con el backend...');
@@ -64,7 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 // Cerrar sesión en Supabase (ya tenemos nuestro propio JWT)
                 await supabase.auth.signOut();
             } catch (error) {
-                console.error('Error en la sincronización OAuth:', getErrorMessage(error));
+                const msg = getErrorMessage(error);
+                console.error('Error en la sincronización OAuth:', msg);
+                setOauthError(msg);
                 clearSession(setToken, setUser);
             } finally {
                 setIsLoading(false);
@@ -149,31 +153,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const registerWithEmail = async (email: string, password: string, nombre: string) => {
-        // 1. Registrar en Supabase
-        const { data, error } = await supabase.auth.signUp({
+        const response = await api.post<ApiResponse<{ token: string; refreshToken: string; usuario: AuthenticatedUser }>>('/auth/register', {
             email,
             password,
-            options: {
-                data: {
-                    full_name: nombre,
-                },
-                emailRedirectTo: window.location.origin + '/login',
-            },
+            nombre,
         });
-
-        if (error) throw error;
-
-        // Nota: El usuario debe confirmar su correo antes de poder sincronizar con el backend
-        // a menos que la confirmación de email esté desactivada en Supabase.
-        if (data.session?.access_token) {
-            const response = await api.post<ApiResponse<{ token: string; refreshToken: string; usuario: AuthenticatedUser }>>('/auth/supabase-login', {
-                access_token: data.session.access_token
-            });
-            const payload = requireResponseData(response.data.data, 'No se recibió la sesión del backend');
-            const { token: newToken, refreshToken, usuario: userData } = payload;
-            persistSession(newToken, refreshToken, userData, setToken, setUser);
-            await supabase.auth.signOut();
-        }
+        const payload = requireResponseData(response.data.data, 'No se pudo completar el registro');
+        const { token: newToken, refreshToken, usuario: userData } = payload;
+        persistSession(newToken, refreshToken, userData, setToken, setUser);
     };
 
     const loginWithGoogle = async () => {
@@ -210,6 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 token,
                 isAuthenticated: !!user,
                 isLoading,
+                oauthError,
                 login,
                 registerWithEmail,
                 loginWithGoogle,

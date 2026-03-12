@@ -6,13 +6,14 @@ import { Icon } from '@/components/ui/Icon';
 import { getErrorMessage } from '@/lib/http';
 
 export function RegisterPage() {
-    const { isAuthenticated, isLoading, registerWithEmail, loginWithGoogle } = useAuth();
+    const { isAuthenticated, isLoading, registerWithEmail, loginWithGoogle, oauthError } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [nombre, setNombre] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     if (isLoading) {
         return (
@@ -164,20 +165,29 @@ export function RegisterPage() {
                                 <div className="relative">
                                     <Icon name="lock" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
                                     <input
-                                        type="password"
+                                        type={showPassword ? 'text' : 'password'}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="••••••••"
                                         required
-                                        minLength={6}
-                                        className="w-full pl-10 pr-3.5 py-2.5 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive"
+                                        minLength={8}
+                                        className="w-full pl-10 pr-10 py-2.5 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive"
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword((v) => !v)}
+                                        tabIndex={-1}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary interactive"
+                                        aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                    >
+                                        <Icon name="eye" size={16} />
+                                    </button>
                                 </div>
                             </div>
 
-                            {error && (
+                            {(error || oauthError) && (
                                 <div className="px-3 py-2 bg-red-dim border border-red-500/30 rounded-brand">
-                                    <p className="text-[12px] font-mono text-red-500">{error}</p>
+                                    <p className="text-[12px] font-mono text-red-500">{error || oauthError}</p>
                                 </div>
                             )}
 
