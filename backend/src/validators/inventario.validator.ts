@@ -5,7 +5,7 @@ export const registrarEntregaSchema = z.object({
     estacionId: z.string().uuid('ID de estación inválido'),
     tanqueId: z.preprocess(
         (val) => (val === '' ? null : val),
-        z.string().uuid('ID de tanque inválido').nullable().optional()
+        z.string().min(1, 'ID de tanque requerido').nullable().optional()
     ),
     tipoCombustible: z.enum(['ACPM', 'GASOLINA_CORRIENTE', 'GASOLINA_EXTRA']),
     galones: z.number().positive('La cantidad de galones debe ser mayor a 0'),
@@ -17,13 +17,13 @@ export const registrarEntregaSchema = z.object({
 export const confirmarEntregaSchema = z.object({
     entregaId: z.string().uuid('ID de entrega inválido'),
     estacionId: z.string().uuid('ID de estación inválido'),
-    tanqueId: z.string().uuid('ID de tanque inválido'),
+    tanqueId: z.string().min(1, 'ID de tanque requerido'),
     galonesRecibidos: z.number().positive('La cantidad de galones recibidos debe ser mayor a 0'),
 });
 
 export const registrarTransaccionSchema = z.object({
     estacionId: z.string().uuid('ID de estación inválido'),
-    tanqueId: z.string().uuid('ID de tanque inválido'),
+    tanqueId: z.string().min(1, 'ID de tanque requerido'),
     tipoCombustible: z.enum(['ACPM', 'GASOLINA_CORRIENTE', 'GASOLINA_EXTRA']),
     tipoServicio: z.enum(['PARTICULAR', 'PUBLICO', 'DIPLOMATICO', 'OFICIAL', 'CARGA']),
     galones: z.number().positive('La cantidad de galones debe ser mayor a 0'),
@@ -36,7 +36,7 @@ export const registrarTransaccionSchema = z.object({
 
 export const cierreTurnoSchema = z.object({
     estacionId: z.string().uuid('ID de estación inválido'),
-    tanqueId: z.string().uuid('ID de tanque inválido'),
+    tanqueId: z.string().min(1, 'ID de tanque requerido'),
     nivelFisico: z.number().nonnegative('El nivel físico debe ser mayor o igual a 0'),
     observaciones: z.string().optional()
 });
@@ -48,7 +48,7 @@ export type CierreTurnoInput = z.infer<typeof cierreTurnoSchema>;
 
 export const entradaDirectaSchema = z.object({
     estacionId: z.string().uuid('ID de estación inválido'),
-    tanqueId: z.string().uuid('ID de tanque inválido'),
+    tanqueId: z.string().min(1, 'ID de tanque requerido'),
     tipoCombustible: z.enum(['ACPM', 'GASOLINA_CORRIENTE', 'GASOLINA_EXTRA']),
     galones: z.number().positive('La cantidad de galones debe ser mayor a 0'),
     precioUnitario: z.number().positive('El precio unitario debe ser mayor a 0'),
