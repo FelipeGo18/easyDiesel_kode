@@ -1,5 +1,5 @@
 import { prisma } from '../utils/prisma';
-import { RegistrarEntregaInput, ConfirmarEntregaInput, RegistrarTransaccionInput, CierreTurnoInput } from '../validators/inventario.validator';
+import { RegistrarEntregaInput, ConfirmarEntregaInput, RegistrarTransaccionInput, CierreTurnoInput, EntradaDirectaInput } from '../validators/inventario.validator';
 import { pricingEngineService } from './pricing-engine.service';
 
 export class InventarioService {
@@ -149,18 +149,50 @@ export class InventarioService {
         });
     }
 
-    async listarEntregasPendientes(estacionId: string) {
-        return prisma.entregaDistribuidor.findMany({
-            where: {
-                estacionId,
-                confirmada: false,
-            },
-            include: {
-                distribuidor: { select: { id: true, nombre: true, tipo: true } },
-                tanque: { select: { id: true, nombre: true, tipoCombustible: true } },
-            },
-            orderBy: { fechaEntrega: 'asc' },
-        });
+    async listarEntregasPendientes(estacionId: string, opts?: { page?: number; limit?: number }) {
+        const page = Math.max(1, opts?.page ?? 1);
+        const limit = Math.min(200, Math.max(1, opts?.limit ?? 50));
+        const skip = (page - 1) * limit;
+
+        const where = { estacionId, confirmada: false };
+        const [data, total] = await Promise.all([
+            prisma.entregaDistribuidor.findMany({
+                where,
+                include: {
+                    distribuidor: { select: { id: true, nombre: true, tipo: true } },
+                    tanque: { select: { id: true, nombre: true, tipoCombustible: true } },
+                },
+                orderBy: { fechaEntrega: 'asc' },
+                skip,
+                take: limit,
+            }),
+            prisma.entregaDistribuidor.count({ where }),
+        ]);
+
+        return { data, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
+    }
+
+    async listarEntregasPorDistribuidor(distribuidorId: string, opts?: { page?: number; limit?: number }) {
+        const page = Math.max(1, opts?.page ?? 1);
+        const limit = Math.min(200, Math.max(1, opts?.limit ?? 50));
+        const skip = (page - 1) * limit;
+
+        const where = { distribuidorId };
+        const [data, total] = await Promise.all([
+            prisma.entregaDistribuidor.findMany({
+                where,
+                include: {
+                    estacion: { select: { id: true, nombre: true, ciudad: true } },
+                    tanque: { select: { id: true, nombre: true, tipoCombustible: true } },
+                },
+                orderBy: { fechaEntrega: 'desc' },
+                skip,
+                take: limit,
+            }),
+            prisma.entregaDistribuidor.count({ where }),
+        ]);
+
+        return { data, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
     }
 
     async confirmarEntrega(data: ConfirmarEntregaInput, options?: { usuarioId?: string; ip?: string; userAgent?: string }) {
@@ -307,6 +339,7 @@ export class InventarioService {
             estacionId: data.estacionId,
             tipoCombustible: data.tipoCombustible,
             tipoServicio: data.tipoServicio,
+            esGranConsumidor: data.esGranConsumidor,
         });
 
         const precioUnitario = precioAplicado.precioUnitario;
@@ -375,6 +408,75 @@ export class InventarioService {
             _alertaNivelMinimo: alertaMinimo,
             _precioAplicado: precioAplicado,
         };
+    }
+
+    /**
+     * Registra una entrada directa de combustible sin distribuidor previo.
+     * Actualiza el nivel del tanque y crea una TransaccionCombustible de tipo ENTRADA.
+     */
+    async registrarEntradaDirecta(data: EntradaDirectaInput, options?: { usuarioId?: string; ip?: string; userAgent?: string }) {
+        const tanque = await prisma.tanque.findUnique({ where: { id: data.tanqueId } });
+        if (!tanque) throw new Error('Tanque no encontrado');
+        if (tanque.estacionId !== data.estacionId) throw new Error('El tanque no pertenece a la estación indicada');
+        if (tanque.tipoCombustible !== data.tipoCombustible) {
+            throw new Error(`El tipo de combustible no coincide con el tanque (${tanque.tipoCombustible})`);
+        }
+
+        const nivelActual = Number(tanque.nivelActual);
+        const capacidad = Number(tanque.capacidadGalones);
+        const nuevoNivel = nivelActual + data.galones;
+
+        if (nuevoNivel > capacidad) {
+            throw new Error(`La entrada supera la capacidad del tanque. Capacidad: ${capacidad} gal, Actual: ${nivelActual} gal, Ingreso solicitado: ${data.galones} gal`);
+        }
+
+        const precioTotal = Number((data.galones * data.precioUnitario).toFixed(2));
+
+        return prisma.$transaction(async (tx: any) => {
+            await tx.tanque.update({
+                where: { id: data.tanqueId },
+                data: { nivelActual: nuevoNivel },
+            });
+
+            const transaccion = await tx.transaccionCombustible.create({
+                data: {
+                    estacionId: data.estacionId,
+                    tanqueId: data.tanqueId,
+                    tipo: 'ENTRADA',
+                    tipoCombustible: data.tipoCombustible,
+                    tipoServicio: 'OFICIAL',
+                    galones: data.galones,
+                    precioUnitario: data.precioUnitario,
+                    precioTotal,
+                    estado: 'COMPLETADA',
+                },
+            });
+
+            if (options?.usuarioId) {
+                await tx.auditoriaLog.create({
+                    data: {
+                        usuarioId: options.usuarioId,
+                        modulo: 'inventario',
+                        accion: 'ENTRADA_DIRECTA',
+                        entidad: 'tanque',
+                        entidadId: data.tanqueId,
+                        datosAntes: { nivelActual },
+                        datosDespues: {
+                            nivelActual: nuevoNivel,
+                            galonesIngresados: data.galones,
+                            precioUnitario: data.precioUnitario,
+                            precioTotal,
+                            transaccionId: transaccion.id,
+                            observaciones: data.observaciones,
+                        },
+                        ip: options.ip,
+                        userAgent: options.userAgent,
+                    },
+                });
+            }
+
+            return { transaccion, nivelAnterior: nivelActual, nivelNuevo: nuevoNivel };
+        });
     }
 }
 

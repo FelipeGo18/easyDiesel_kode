@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { createClient } from '@supabase/supabase-js';
 import { prisma } from '../utils/prisma';
-import type { RegisterInput, LoginInput } from '../validators/auth.validator';
+import type { RegisterInput, LoginInput, UpdateProfileInput } from '../validators/auth.validator';
 import { normalizePermissions } from '../utils/permissions';
 import { getJwtSecret } from '../config/security';
 
@@ -339,6 +339,48 @@ export class AuthService {
                 ...usuario.rol,
                 permisos,
             },
+            estacion: usuario.estacionGestionada,
+            distribuidor: usuario.distribuidorGestionado,
+            createdAt: usuario.createdAt,
+        };
+    }
+
+    /**
+     * Actualiza nombre, email y/o contraseña del usuario autenticado.
+     */
+    async updateProfile(userId: string, data: UpdateProfileInput) {
+        if (data.email) {
+            const conflict = await prisma.usuario.findFirst({
+                where: { email: data.email, NOT: { id: userId } },
+            });
+            if (conflict) {
+                throw Object.assign(new Error('El email ya está en uso por otra cuenta'), { statusCode: 409 });
+            }
+        }
+
+        const updateData: Record<string, unknown> = {};
+        if (data.nombre) updateData.nombre = data.nombre;
+        if (data.email) updateData.email = data.email;
+        if (data.password) updateData.passwordHash = await bcrypt.hash(data.password, SALT_ROUNDS);
+
+        const usuario = await prisma.usuario.update({
+            where: { id: userId },
+            data: updateData,
+            include: {
+                rol: { select: { id: true, nombre: true, descripcion: true, permisos: true } },
+                estacionGestionada: { select: { id: true, nombre: true, codigoSicom: true, zonaId: true } },
+                distribuidorGestionado: { select: { id: true, nombre: true, nit: true } },
+            },
+        });
+
+        const permisos = normalizePermissions(usuario.rol.nombre, usuario.rol.permisos);
+
+        return {
+            id: usuario.id,
+            email: usuario.email,
+            nombre: usuario.nombre,
+            activo: usuario.activo,
+            rol: { ...usuario.rol, permisos },
             estacion: usuario.estacionGestionada,
             distribuidor: usuario.distribuidorGestionado,
             createdAt: usuario.createdAt,

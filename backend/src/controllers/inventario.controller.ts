@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { inventarioService } from '../services/inventario.service';
-import { registrarEntregaSchema, confirmarEntregaSchema, registrarTransaccionSchema, cierreTurnoSchema } from '../validators/inventario.validator';
+import { registrarEntregaSchema, confirmarEntregaSchema, registrarTransaccionSchema, cierreTurnoSchema, entradaDirectaSchema } from '../validators/inventario.validator';
 import { ZodError } from 'zod';
 
 export const obtenerEntregasPendientesHandler = async (req: Request, res: Response) => {
@@ -11,8 +11,26 @@ export const obtenerEntregasPendientesHandler = async (req: Request, res: Respon
             return;
         }
 
-        const entregas = await inventarioService.listarEntregasPendientes(estacionId);
-        res.json({ success: true, data: entregas });
+        const page = req.query.page ? Number(req.query.page) : undefined;
+        const limit = req.query.limit ? Number(req.query.limit) : undefined;
+        const result = await inventarioService.listarEntregasPendientes(estacionId, { page, limit });
+        res.json({ success: true, ...result });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const obtenerEntregasPorDistribuidorHandler = async (req: Request, res: Response) => {
+    try {
+        const distribuidorId = req.query.distribuidorId as string;
+        if (!distribuidorId) {
+            res.status(400).json({ success: false, message: 'Se requiere distribuidorId' });
+            return;
+        }
+        const page = req.query.page ? Number(req.query.page) : undefined;
+        const limit = req.query.limit ? Number(req.query.limit) : undefined;
+        const result = await inventarioService.listarEntregasPorDistribuidor(distribuidorId, { page, limit });
+        res.json({ success: true, ...result });
     } catch (error: any) {
         res.status(400).json({ success: false, message: error.message });
     }
@@ -77,6 +95,28 @@ export const confirmarEntregaHandler = async (req: Request, res: Response) => {
             success: true,
             message: 'Entrega confirmada e inventario actualizado con éxito',
             alerta: result.alerta,
+            data: result,
+        });
+    } catch (error: any) {
+        if (error instanceof ZodError) {
+            res.status(400).json({ success: false, errors: error.issues });
+            return;
+        }
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const registrarEntradaDirectaHandler = async (req: Request, res: Response) => {
+    try {
+        const validData = entradaDirectaSchema.parse(req.body);
+        const result = await inventarioService.registrarEntradaDirecta(validData, {
+            usuarioId: req.user?.userId,
+            ip: req.ip,
+            userAgent: typeof req.get === 'function' ? req.get('user-agent') || undefined : undefined,
+        });
+        res.status(201).json({
+            success: true,
+            message: `Entrada directa registrada: ${result.transaccion.galones} gal cargados`,
             data: result,
         });
     } catch (error: any) {

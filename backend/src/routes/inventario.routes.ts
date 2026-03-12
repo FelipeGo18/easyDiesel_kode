@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { obtenerEntregasPendientesHandler, registrarEntregaHandler, confirmarEntregaHandler, registrarTransaccionHandler, cierreTurnoHandler } from '../controllers/inventario.controller';
+import { obtenerEntregasPendientesHandler, obtenerEntregasPorDistribuidorHandler, registrarEntregaHandler, confirmarEntregaHandler, registrarTransaccionHandler, cierreTurnoHandler, registrarEntradaDirectaHandler } from '../controllers/inventario.controller';
 
 const router = Router();
 
@@ -32,6 +32,11 @@ const router = Router();
 router.post('/cierre-turno', cierreTurnoHandler);
 
 router.get('/entregas/pendientes', obtenerEntregasPendientesHandler);
+
+router.get('/entregas', obtenerEntregasPorDistribuidorHandler);
+
+/** POST /inventario/entregas/directa — Entrada directa sin distribuidor previo */
+router.post('/entregas/directa', registrarEntradaDirectaHandler);
 
 /**
  * @swagger

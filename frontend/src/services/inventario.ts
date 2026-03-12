@@ -41,6 +41,11 @@ export interface ConfirmarEntregaResult {
     alerta?: string;
 }
 
+export interface PaginatedResult<T> {
+    data: T[];
+    pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
 /* ── Tanques ── */
 export const tanquesService = {
     getAll: (estacionId?: string) => 
@@ -76,6 +81,7 @@ export interface RegistrarTransaccionData {
     placaVehiculo?: string;
     decretoAplicado?: string;
     subsidioAplicado?: boolean;
+    esGranConsumidor?: boolean;
 }
 
 export interface CierreTurnoData {
@@ -85,12 +91,32 @@ export interface CierreTurnoData {
     observaciones?: string;
 }
 
+export interface EntradaDirectaData {
+    estacionId: string;
+    tanqueId: string;
+    tipoCombustible: TipoCombustible;
+    galones: number;
+    precioUnitario: number;
+    observaciones?: string;
+}
+
+export interface EntradaDirectaResult {
+    transaccion: TransaccionCombustible;
+    nivelAnterior: number;
+    nivelNuevo: number;
+}
+
 export const inventarioService = {
     registrarEntrega: (data: RegistrarEntregaData) => 
         api.post<ApiResponse<EntregaDistribuidor>>('/inventario/entregas', data).then(r => r.data.data as EntregaDistribuidor),
 
-    listarEntregasPendientes: (estacionId: string) =>
-        api.get<ApiResponse<EntregaDistribuidor[]>>('/inventario/entregas/pendientes', { params: { estacionId } }).then(r => r.data.data || []),
+    listarEntregasPendientes: (estacionId: string, opts?: { page?: number; limit?: number }) =>
+        api.get<ApiResponse<EntregaDistribuidor[]> & { pagination?: PaginatedResult<EntregaDistribuidor>['pagination'] }>('/inventario/entregas/pendientes', { params: { estacionId, ...opts } })
+            .then(r => ({ data: (r.data as any).data as EntregaDistribuidor[], pagination: (r.data as any).pagination as PaginatedResult<EntregaDistribuidor>['pagination'] | undefined })),
+
+    listarEntregasPorDistribuidor: (distribuidorId: string, opts?: { page?: number; limit?: number }) =>
+        api.get<ApiResponse<EntregaDistribuidor[]>>('/inventario/entregas', { params: { distribuidorId, ...opts } })
+            .then(r => ({ data: (r.data as any).data as EntregaDistribuidor[], pagination: (r.data as any).pagination as PaginatedResult<EntregaDistribuidor>['pagination'] | undefined })),
 
     confirmarEntrega: (entregaId: string, data: ConfirmarEntregaData) =>
         api.post<ApiResponse<ConfirmarEntregaResult> & { alerta?: string }>(`/inventario/entregas/${entregaId}/confirmar`, data)
@@ -98,6 +124,10 @@ export const inventarioService = {
                 ...(r.data.data as ConfirmarEntregaResult),
                 alerta: r.data.alerta ?? r.data.data?.alerta,
             } as ConfirmarEntregaResult)),
+
+    registrarEntradaDirecta: (data: EntradaDirectaData) =>
+        api.post<ApiResponse<EntradaDirectaResult>>('/inventario/entregas/directa', data)
+            .then(r => r.data.data as EntradaDirectaResult),
     
     registrarTransaccion: (data: RegistrarTransaccionData) => 
         api.post<ApiResponse<TransaccionCombustible> & { alerta?: string; pricing?: ResolvedTransactionPricing }>('/inventario/transacciones', data)

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { registerHandler, loginHandler, meHandler, googleCallbackHandler, supabaseLoginHandler, refreshHandler, logoutHandler } from '../controllers/auth.controller';
+import { registerHandler, loginHandler, meHandler, updateProfileHandler, googleCallbackHandler, supabaseLoginHandler, refreshHandler, logoutHandler } from '../controllers/auth.controller';
 import { auth } from '../middleware/auth';
 import { authRateLimiter } from '../middleware/rate-limit';
 
@@ -146,5 +146,6 @@ authRouter.post('/logout', authRateLimiter, logoutHandler);
  *         description: No autenticado
  */
 authRouter.get('/me', auth, meHandler);
+authRouter.put('/me', auth, updateProfileHandler);
 
 export { authRouter };

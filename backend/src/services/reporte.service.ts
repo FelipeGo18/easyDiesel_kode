@@ -150,11 +150,54 @@ export class ReporteService {
     }
 
     private async datosNormativo() {
-        return prisma.decretoNormativo.findMany({
+        const decretos = await prisma.decretoNormativo.findMany({
             where: { activo: true },
-            include: { precios: { where: { activo: true } } },
-            orderBy: { fechaExpedicion: 'desc' }
+            include: {
+                precios: {
+                    where: { activo: true },
+                    include: { zona: { select: { nombre: true } } },
+                },
+            },
+            orderBy: { fechaExpedicion: 'desc' },
         });
+
+        // Aplanar: una fila por decreto × precio vigente, para que el generador PDF
+        // pueda construir una tabla legible sin manejar arrays anidados.
+        const rows: Record<string, string | number | null>[] = [];
+
+        for (const d of decretos) {
+            if (d.precios.length === 0) {
+                rows.push({
+                    decreto: d.numero,
+                    titulo: d.titulo,
+                    entidad: d.entidad ?? '—',
+                    expedicion: d.fechaExpedicion.toLocaleDateString('es-CO'),
+                    vigenciaDesde: d.fechaVigencia.toLocaleDateString('es-CO'),
+                    zona: '—',
+                    combustible: '—',
+                    tipoServicio: '—',
+                    precioGalon: null,
+                    subsidioGalon: null,
+                });
+            } else {
+                for (const p of d.precios) {
+                    rows.push({
+                        decreto: d.numero,
+                        titulo: d.titulo,
+                        entidad: d.entidad ?? '—',
+                        expedicion: d.fechaExpedicion.toLocaleDateString('es-CO'),
+                        vigenciaDesde: d.fechaVigencia.toLocaleDateString('es-CO'),
+                        zona: p.zona.nombre,
+                        combustible: p.tipoCombustible,
+                        tipoServicio: p.tipoServicio,
+                        precioGalon: Number(p.precioGalon),
+                        subsidioGalon: Number(p.subsidioGalon),
+                    });
+                }
+            }
+        }
+
+        return rows;
     }
 }
 

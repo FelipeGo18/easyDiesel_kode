@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/useAuth';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { Card } from '@/components/ui/Card';
@@ -15,6 +16,7 @@ import { navigationRoutes } from '@/features/routing/appRoutes';
 import { useAccess } from '@/hooks/useAccess';
 import { getErrorMessage } from '@/lib/http';
 import { StationOperationsPage } from '@/pages/DespachadorPanelPage';
+import { DistribuidorPanelPage } from '@/pages/DistribuidorPanelPage';
 
 export function DashboardPage() {
     const { user } = useAuth();
@@ -42,6 +44,15 @@ export function DashboardPage() {
 
     if (roleName === 'estacion') {
         return <StationOperationsPage />;
+    }
+
+    if (roleName === 'distribuidor' || roleName === 'distribuidor_regulado') {
+        return <DistribuidorPanelPage />;
+    }
+
+    // Usuarios particulares no tienen panel — redirigir a la homepage pública
+    if (roleName === 'particular') {
+        return <Navigate to="/" replace />;
     }
 
     // Lógica de visualización condicional basada en roles

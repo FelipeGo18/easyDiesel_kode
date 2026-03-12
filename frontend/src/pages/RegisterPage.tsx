@@ -104,17 +104,28 @@ export function RegisterPage() {
                     </p>
 
                     {success ? (
-                        <div className="bg-green-500/10 border border-green-500/30 rounded-brand p-6 text-center">
-                            <div className="w-12 h-12 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Icon name="mail" size={24} />
+                        <div className="space-y-6">
+                            <div className="bg-green-500/10 border border-green-500/30 rounded-brand p-6">
+                                <div className="w-12 h-12 bg-green-500/15 text-green-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Icon name="check" size={24} />
+                                </div>
+                                <h3 className="text-text-primary font-semibold text-center text-[16px] mb-1">¡Bienvenido, {nombre}!</h3>
+                                <p className="text-[13px] text-text-secondary text-center mb-4">
+                                    Tu cuenta ha sido creada con el rol <span className="text-amber-400 font-medium">Particular</span>.
+                                </p>
+                                <div className="rounded-[10px] border border-border-subtle bg-bg-elevated px-4 py-3 text-[12px] text-text-secondary leading-relaxed">
+                                    <p className="font-medium text-text-primary mb-1">¿Eres operador o distribuidor?</p>
+                                    Un administrador del sistema debe asignarte el rol de <strong>Estación</strong> o <strong>Distribuidor</strong> una vez ingreses. Mientras tanto, puedes consultar precios públicos y rutas económicas.
+                                </div>
                             </div>
-                            <h3 className="text-text-primary font-medium mb-2">¡Registro exitoso!</h3>
-                            <p className="text-[13px] text-text-secondary mb-6">
-                                Hemos enviado un correo de confirmación a <strong>{email}</strong>. Por favor verifica tu bandeja de entrada.
-                            </p>
-                            <Link to="/login">
-                                <Button className="w-full">Ir al inicio de sesión</Button>
-                            </Link>
+                            <div className="flex flex-col gap-3">
+                                <Link to="/login">
+                                    <Button className="w-full">Iniciar sesión</Button>
+                                </Link>
+                                <Link to="/">
+                                    <Button variant="ghost" className="w-full">Ver precios públicos</Button>
+                                </Link>
+                            </div>
                         </div>
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-5">

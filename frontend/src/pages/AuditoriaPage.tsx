@@ -10,6 +10,9 @@ import api from '@/services/api';
 import type { ApiResponse } from '@/types';
 import { getErrorMessage } from '@/lib/http';
 
+const MODULOS = ['auth', 'inventario', 'precios', 'decretos', 'zonas', 'usuarios', 'actores', 'tanques', 'reportes'];
+const PAGE_LIMIT = 50;
+
 interface AuditoriaLog {
     id: string;
     modulo: string;
@@ -27,26 +30,54 @@ interface AuditoriaLog {
     };
 }
 
+interface Pagination {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+}
+
 export function AuditoriaPage() {
     const toast = useToast();
     const [logs, setLogs] = useState<AuditoriaLog[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedLog, setSelectedLog] = useState<AuditoriaLog | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
+    const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: PAGE_LIMIT, total: 0, totalPages: 1 });
 
-    const fetchLogs = useCallback(async () => {
+    // Filtros
+    const [filterModulo, setFilterModulo] = useState('');
+    const [filterDesde, setFilterDesde] = useState('');
+    const [filterHasta, setFilterHasta] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const fetchLogs = useCallback(async (page = 1) => {
         try {
             setLoading(true);
-            const response = await api.get<ApiResponse<AuditoriaLog[]>>('/auditoria');
+            const params: Record<string, string | number> = { page, limit: PAGE_LIMIT };
+            if (filterModulo) params.modulo = filterModulo;
+            if (filterDesde) params.desde = filterDesde;
+            if (filterHasta) params.hasta = filterHasta;
+
+            const response = await api.get<ApiResponse<AuditoriaLog[]> & { pagination: Pagination }>('/auditoria', { params });
             setLogs(response.data.data ?? []);
+            if (response.data.pagination) setPagination(response.data.pagination);
         } catch (error: unknown) {
             toast.error(`Error al cargar logs: ${getErrorMessage(error)}`);
         } finally {
             setLoading(false);
         }
-    }, [toast]);
+    }, [toast, filterModulo, filterDesde, filterHasta]);
 
-    useEffect(() => { fetchLogs(); }, [fetchLogs]);
+    useEffect(() => {
+        setCurrentPage(1);
+        fetchLogs(1);
+    }, [fetchLogs]);
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        fetchLogs(page);
+    };
 
     const handleViewDetail = (log: AuditoriaLog) => {
         setSelectedLog(log);
@@ -124,11 +155,64 @@ export function AuditoriaPage() {
                     </h1>
                     <p className="text-small text-text-secondary">Monitoreo inmutable de todas las operaciones del sistema.</p>
                 </div>
-                <Button variant="ghost" size="sm" onClick={fetchLogs}>
+                <Button variant="ghost" size="sm" onClick={() => fetchLogs(currentPage)}>
                     <Icon name="refresh" size={14} className={loading ? 'animate-spin' : ''} />
                     Refrescar
                 </Button>
             </div>
+
+            {/* ── Filtros ── */}
+            <Card className="border-border-subtle p-4">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Módulo</label>
+                        <select
+                            value={filterModulo}
+                            onChange={(e) => setFilterModulo(e.target.value)}
+                            className="w-full px-3 py-2 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[13px] interactive"
+                        >
+                            <option value="">Todos los módulos</option>
+                            {MODULOS.map((m) => (
+                                <option key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Desde</label>
+                        <input
+                            type="date"
+                            value={filterDesde}
+                            onChange={(e) => setFilterDesde(e.target.value)}
+                            className="w-full px-3 py-2 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[13px] interactive"
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-mono uppercase tracking-wider text-text-muted">Hasta</label>
+                        <input
+                            type="date"
+                            value={filterHasta}
+                            onChange={(e) => setFilterHasta(e.target.value)}
+                            className="w-full px-3 py-2 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[13px] interactive"
+                        />
+                    </div>
+                    <div className="flex items-end">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => { setFilterModulo(''); setFilterDesde(''); setFilterHasta(''); }}
+                        >
+                            <Icon name="x" size={13} />
+                            Limpiar filtros
+                        </Button>
+                    </div>
+                </div>
+                {pagination.total > 0 && (
+                    <p className="mt-3 text-[11px] font-mono text-text-muted">
+                        {pagination.total.toLocaleString()} evento{pagination.total !== 1 ? 's' : ''} encontrado{pagination.total !== 1 ? 's' : ''} · página {currentPage} de {pagination.totalPages}
+                    </p>
+                )}
+            </Card>
 
             <Card className="overflow-hidden border-border-subtle">
                 <DataTable
@@ -140,6 +224,50 @@ export function AuditoriaPage() {
                     emptyMessage="No se han registrado eventos de auditoría."
                 />
             </Card>
+
+            {/* ── Paginación ── */}
+            {pagination.totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={currentPage <= 1}
+                        onClick={() => handlePageChange(currentPage - 1)}
+                    >
+                        <Icon name="arrow-left" size={14} />
+                        Anterior
+                    </Button>
+                    <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(pagination.totalPages, 7) }, (_, i) => {
+                            const page = i + 1;
+                            return (
+                                <button
+                                    key={page}
+                                    onClick={() => handlePageChange(page)}
+                                    className={[
+                                        'h-8 min-w-[2rem] rounded-[6px] px-2 text-[12px] font-mono transition-colors',
+                                        page === currentPage
+                                            ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                                            : 'text-text-muted hover:bg-bg-elevated hover:text-text-primary',
+                                    ].join(' ')}
+                                >
+                                    {page}
+                                </button>
+                            );
+                        })}
+                        {pagination.totalPages > 7 && <span className="text-text-muted text-[12px] px-1">···</span>}
+                    </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={currentPage >= pagination.totalPages}
+                        onClick={() => handlePageChange(currentPage + 1)}
+                    >
+                        Siguiente
+                        <Icon name="arrow-right" size={14} />
+                    </Button>
+                </div>
+            )}
 
             {/* Modal de Detalle */}
             <Modal

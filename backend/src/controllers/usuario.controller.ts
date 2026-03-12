@@ -56,6 +56,15 @@ export const actualizarUsuarioHandler = async (req: Request, res: Response) => {
     }
 };
 
+export const obtenerRolesHandler = async (_req: Request, res: Response) => {
+    try {
+        const roles = await usuarioService.obtenerRoles();
+        res.json({ success: true, data: roles });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: 'Error al obtener roles', error: error.message });
+    }
+};
+
 export const desactivarUsuarioHandler = async (req: Request, res: Response) => {
     try {
         const id = req.params.id as string;
