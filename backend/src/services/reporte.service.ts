@@ -107,15 +107,28 @@ export class ReporteService {
             if (params?.fechaHasta) where.createdAt.lte = new Date(params.fechaHasta);
         }
 
-        return prisma.transaccionCombustible.findMany({
+        const data = await prisma.transaccionCombustible.findMany({
             where,
             include: {
                 estacion: { select: { nombre: true } },
                 tanque: { select: { nombre: true } },
             },
             orderBy: { createdAt: 'desc' },
-            take: 500 // Limitar resultados
+            take: 500
         });
+
+        return data.map(t => ({
+            fecha: t.createdAt,
+            estacion: t.estacion?.nombre || '—',
+            tanque: t.tanque?.nombre || '—',
+            tipo: t.tipo,
+            combustible: t.tipoCombustible,
+            servicio: t.tipoServicio,
+            galones: Number(t.galones),
+            placa: t.placaVehiculo || '—',
+            precioUnit: Number(t.precioUnitario),
+            total: Number(t.precioTotal),
+        }));
     }
 
     private async datosPrecios(params?: any) {
