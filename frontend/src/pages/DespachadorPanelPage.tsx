@@ -135,6 +135,8 @@ export function StationOperationsPage() {
         }
     }, [stationId]);
 
+    useEffect(() => { fetchTanques(); }, [fetchTanques]);
+    useEffect(() => { fetchPendingDeliveries(); }, [fetchPendingDeliveries]);
     useEffect(() => { fetchVentas(); }, [fetchVentas]);
 
     const selectedTanque = useMemo(
