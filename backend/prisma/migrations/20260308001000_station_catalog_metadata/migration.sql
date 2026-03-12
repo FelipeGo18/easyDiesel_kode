@@ -1,0 +1,4 @@
+-- Station catalog metadata migration
+-- This migration was created during development but contains no schema changes.
+-- The station catalog metadata is handled via the existing estaciones_servicio table
+-- using the Google Places API integration in the publico service.

@@ -102,7 +102,18 @@ export function UsuariosPage() {
             render: (u) => (
                 <div className="flex items-center gap-2.5">
                     {u.fotoUrl ? (
-                        <img src={u.fotoUrl} alt="" className="w-7 h-7 rounded-full border border-border-default" />
+                        <div className="relative w-7 h-7 shrink-0">
+                            <img
+                                src={u.fotoUrl}
+                                alt=""
+                                referrerPolicy="no-referrer"
+                                className="w-7 h-7 rounded-full border border-border-default object-cover absolute inset-0"
+                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                            />
+                            <div className="w-7 h-7 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
+                                <Icon name="users" size={13} />
+                            </div>
+                        </div>
                     ) : (
                         <div className="w-7 h-7 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
                             <Icon name="users" size={13} />
