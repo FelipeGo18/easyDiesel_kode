@@ -6,12 +6,13 @@ import { Icon } from '@/components/ui/Icon';
 import { getErrorMessage } from '@/lib/http';
 
 export function LoginPage() {
-    const { isAuthenticated, isLoading, login, loginWithGoogle } = useAuth();
+    const { isAuthenticated, isLoading, login, loginWithGoogle, oauthError } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [isOauthProcessing, setIsOauthProcessing] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     // Si ya estamos autenticados, redirigir inmediatamente
     if (isAuthenticated) {
@@ -173,21 +174,32 @@ export function LoginPage() {
                         {/* Password */}
                         <div className="space-y-1.5">
                             <label htmlFor="login-password" className="text-label text-text-secondary">Contraseña</label>
-                            <input
-                                id="login-password"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="••••••••"
-                                required
-                                className="w-full px-3.5 py-2.5 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive"
-                            />
+                            <div className="relative">
+                                <input
+                                    id="login-password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    required
+                                    className="w-full px-3.5 py-2.5 pr-10 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((v) => !v)}
+                                    tabIndex={-1}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary interactive"
+                                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                >
+                                    <Icon name="eye" size={16} />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Error */}
-                        {error && (
+                        {(error || oauthError) && (
                             <div className="px-3 py-2 bg-red-dim border border-red-500/30 rounded-brand">
-                                <p className="text-[12px] font-mono text-red-500">{error}</p>
+                                <p className="text-[12px] font-mono text-red-500">{error || oauthError}</p>
                             </div>
                         )}
 

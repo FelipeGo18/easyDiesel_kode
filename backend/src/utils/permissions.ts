@@ -25,7 +25,7 @@ const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     distribuidor: ['actores:leer', 'inventario:leer', 'inventario:escribir', 'precios:leer', 'decretos:leer', 'auditoria:leer', 'reportes:leer', 'reportes:generar', 'dashboard:leer'],
     regulador: ['precios:leer', 'zonas:leer', 'decretos:leer', 'reportes:leer', 'dashboard:leer', 'auditoria:leer', 'actores:leer'],
     auditor: ['auditoria:leer', 'reportes:leer', 'reportes:generar', 'dashboard:leer'],
-    particular: ['precios:leer', 'dashboard:leer'],
+    particular: ['precios:leer', 'dashboard:leer', 'inventario:leer'],
     distribuidor_regulado: ['inventario:leer', 'inventario:escribir', 'precios:leer', 'decretos:leer', 'auditoria:leer', 'reportes:leer', 'reportes:generar', 'dashboard:leer'],
 };
 

@@ -12,6 +12,7 @@ export interface AuthContextType {
     token: string | null;
     isAuthenticated: boolean;
     isLoading: boolean;
+    oauthError: string | null;
     login: (email: string, password: string) => Promise<void>;
     registerWithEmail: (email: string, password: string, nombre: string) => Promise<void>;
     loginWithGoogle: () => Promise<void>;

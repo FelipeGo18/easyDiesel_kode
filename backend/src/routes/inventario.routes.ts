@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { obtenerEntregasPendientesHandler, obtenerEntregasPorDistribuidorHandler, registrarEntregaHandler, confirmarEntregaHandler, registrarTransaccionHandler, cierreTurnoHandler, registrarEntradaDirectaHandler, obtenerTransaccionesHandler, cancelarEntregaHandler } from '../controllers/inventario.controller';
+import { can } from '../middleware/auth';
 
 const router = Router();
 
@@ -29,14 +30,14 @@ const router = Router();
  *       200:
  *         description: Cierre de turno procesado, retorna diferencia
  */
-router.post('/cierre-turno', cierreTurnoHandler);
+router.post('/cierre-turno', can('inventario:escribir'), cierreTurnoHandler);
 
 router.get('/entregas/pendientes', obtenerEntregasPendientesHandler);
 
 router.get('/entregas', obtenerEntregasPorDistribuidorHandler);
 
 /** POST /inventario/entregas/directa — Entrada directa sin distribuidor previo */
-router.post('/entregas/directa', registrarEntradaDirectaHandler);
+router.post('/entregas/directa', can('inventario:escribir'), registrarEntradaDirectaHandler);
 
 /**
  * @swagger
@@ -66,7 +67,7 @@ router.post('/entregas/directa', registrarEntradaDirectaHandler);
  *       201:
  *         description: Entrega registrada como pendiente de confirmación
  */
-router.post('/entregas', registrarEntregaHandler); // Registro de abastecimiento (Distribuidor -> Estación/Tanque)
+router.post('/entregas', can('inventario:escribir'), registrarEntregaHandler); // Registro de abastecimiento (Distribuidor -> Estación/Tanque)
 
 /**
  * @swagger
@@ -91,10 +92,10 @@ router.post('/entregas', registrarEntregaHandler); // Registro de abastecimiento
  *       200:
  *         description: Entrega confirmada y tanque actualizado
  */
-router.post('/entregas/:id/confirmar', confirmarEntregaHandler);
+router.post('/entregas/:id/confirmar', can('inventario:escribir'), confirmarEntregaHandler);
 
 /** DELETE /inventario/entregas/:id — Cancela (elimina) una entrega pendiente */
-router.delete('/entregas/:id', cancelarEntregaHandler);
+router.delete('/entregas/:id', can('inventario:escribir'), cancelarEntregaHandler);
 
 /**
  * @swagger
@@ -147,6 +148,6 @@ router.get('/transacciones', obtenerTransaccionesHandler);
  *       201:
  *         description: Transacción registrada correctamente, resta del tanque
  */
-router.post('/transacciones', registrarTransaccionHandler); // Registro de ventas o salidas de combustible
+router.post('/transacciones', can('inventario:escribir'), registrarTransaccionHandler); // Registro de ventas o salidas de combustible
 
 export default router;
