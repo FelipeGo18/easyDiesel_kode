@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { authService } from '../services/auth.service';
-import { registerSchema, loginSchema, logoutSchema, refreshTokenSchema } from '../validators/auth.validator';
+import { registerSchema, loginSchema, logoutSchema, refreshTokenSchema, updateProfileSchema } from '../validators/auth.validator';
 import { ZodError } from 'zod';
 
 // ──────────────────────────────────────────
@@ -146,6 +146,41 @@ export const supabaseLoginHandler = async (
             data: result,
         });
     } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * PUT /api/auth/me
+ */
+export const updateProfileHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ success: false, error: 'No autenticado' });
+            return;
+        }
+
+        const data = updateProfileSchema.parse(req.body);
+        const profile = await authService.updateProfile(req.user.userId, data);
+
+        res.status(200).json({
+            success: true,
+            message: 'Perfil actualizado exitosamente',
+            data: profile,
+        });
+    } catch (error) {
+        if (error instanceof ZodError) {
+            res.status(400).json({
+                success: false,
+                error: 'Datos de perfil inválidos',
+                details: formatZodErrors(error),
+            });
+            return;
+        }
         next(error);
     }
 };

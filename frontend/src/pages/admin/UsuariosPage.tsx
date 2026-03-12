@@ -6,7 +6,7 @@ import { InputField, SelectField } from '@/components/ui/FormFields';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { useToast } from '@/components/ui/useToast';
-import { usuariosService, type Usuario, type Rol } from '@/services/admin';
+import { usuariosService, rolesService, type Usuario, type Rol } from '@/services/admin';
 import { getErrorMessage } from '@/lib/http';
 
 export function UsuariosPage() {
@@ -27,17 +27,14 @@ export function UsuariosPage() {
     const fetchData = useCallback(async () => {
         try {
             setLoading(true);
-            const usersData = await usuariosService.getAll();
+            const [usersData, rolesData] = await Promise.all([
+                usuariosService.getAll(),
+                rolesService.getAll(),
+            ]);
             setUsuarios(Array.isArray(usersData) ? usersData : []);
-
-            // Extract unique roles from users if no separate roles endpoint
-            const uniqueRoles = new Map<string, Rol>();
-            (Array.isArray(usersData) ? usersData : []).forEach((u: Usuario) => {
-                if (u.rol?.id) uniqueRoles.set(u.rol.id, u.rol as Rol);
-            });
-            setRoles(Array.from(uniqueRoles.values()));
+            setRoles(Array.isArray(rolesData) ? rolesData : []);
         } catch (error: unknown) {
-            toast.error(`Error al cargar usuarios: ${getErrorMessage(error)}`);
+            toast.error(`Error al cargar datos: ${getErrorMessage(error)}`);
         } finally {
             setLoading(false);
         }

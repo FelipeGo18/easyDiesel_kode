@@ -14,6 +14,7 @@ import { UsuariosPage } from '@/pages/admin/UsuariosPage';
 import { InventarioPage } from '@/pages/admin/InventarioPage';
 import { ActoresPage } from '@/pages/admin/ActoresPage';
 import { TanquesPage } from '@/pages/admin/TanquesPage';
+import { PerfilPage } from '@/pages/PerfilPage';
 
 export interface AppRouteConfig {
     path: string;
@@ -36,6 +37,13 @@ export const publicRoutes: AppRouteConfig[] = [
 ];
 
 export const protectedRoutes: AppRouteConfig[] = [
+    {
+        path: '/perfil',
+        element: <PerfilPage />,
+        label: 'Mi Perfil',
+        description: 'Editar información personal y contraseña',
+        showInNavigation: false,
+    },
     {
         path: '/dashboard',
         element: <DashboardPage />,
