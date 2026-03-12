@@ -93,7 +93,7 @@ export function Sidebar() {
 
                                 <Icon
                                     name={item.icon || 'dashboard'}
-                                    size={16}
+                                    size={20}
                                     className={cn(
                                         'shrink-0',
                                         isActive ? 'text-amber-500' : 'opacity-70 group-hover:opacity-100 group-hover:brightness-125'

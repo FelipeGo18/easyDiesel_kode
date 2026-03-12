@@ -96,6 +96,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         description: 'Tarifas vigentes por zona y tipo de servicio',
         requiredPermissions: ['precios:leer', 'precios:escribir'],
         showInNavigation: true,
+        excludeRoles: ['estacion', 'despachador'],
     },
     {
         path: '/normativa',
