@@ -5,6 +5,7 @@ import { supabase } from '../utils/supabase';
 import type { ApiResponse, AuthenticatedUser } from '@/types';
 import { getErrorMessage } from '@/lib/http';
 import { AuthContext } from '@/context/AuthContextContext';
+import type { UpdateProfileData } from '@/context/AuthContextContext';
 
 const REFRESH_TOKEN_KEY = 'refreshToken';
 
@@ -196,6 +197,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearSession(setToken, setUser);
     };
 
+    const updateProfile = async (data: UpdateProfileData) => {
+        const response = await api.put<ApiResponse<AuthenticatedUser>>('/auth/me', data);
+        const updated = requireResponseData(response.data.data, 'No se pudo actualizar el perfil');
+        setUser(updated);
+    };
+
     return (
         <AuthContext.Provider
             value={{
@@ -207,6 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 registerWithEmail,
                 loginWithGoogle,
                 logout,
+                updateProfile,
             }}
         >
             {children}

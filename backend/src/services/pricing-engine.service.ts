@@ -5,6 +5,12 @@ interface ResolveFuelPriceInput {
     tipoCombustible: 'ACPM' | 'GASOLINA_CORRIENTE' | 'GASOLINA_EXTRA';
     tipoServicio: 'PARTICULAR' | 'PUBLICO' | 'DIPLOMATICO' | 'OFICIAL' | 'CARGA';
     fecha?: Date;
+    /**
+     * Gran Consumidor (Decreto 763/2024): distribuidores REGULADO con consumo >20.000 gal/mes.
+     * Cuando es true y el combustible es ACPM, se aplica precio de paridad internacional
+     * (tipoServicio=PARTICULAR), excepto en zonas no interconectadas (ZNI).
+     */
+    esGranConsumidor?: boolean;
 }
 
 export class PricingEngineService {
@@ -25,11 +31,19 @@ export class PricingEngineService {
             throw Object.assign(new Error('Estación no encontrada para resolver el precio vigente'), { statusCode: 404 });
         }
 
+        // Decreto 763/2024: Gran Consumidor de ACPM en zona interconectada paga
+        // precio de paridad internacional (tipoServicio=PARTICULAR).
+        const esZonaNI = estacion.zona.tipoZona === 'NO_INTERCONECTADA';
+        const tipoServicioEfectivo =
+            input.esGranConsumidor && input.tipoCombustible === 'ACPM' && !esZonaNI
+                ? 'PARTICULAR'
+                : input.tipoServicio;
+
         const precio = await prisma.precioVigente.findFirst({
             where: {
                 zonaId: estacion.zonaId,
                 tipoCombustible: input.tipoCombustible,
-                tipoServicio: input.tipoServicio,
+                tipoServicio: tipoServicioEfectivo,
                 activo: true,
                 vigenciaDesde: { lte: fecha },
                 OR: [{ vigenciaHasta: null }, { vigenciaHasta: { gte: fecha } }],
@@ -47,6 +61,7 @@ export class PricingEngineService {
 
         const precioUnitario = Number(precio.precioGalon);
         const subsidioGalon = Number(precio.subsidioGalon);
+        const granConsumidorAplicado = !!(input.esGranConsumidor && input.tipoCombustible === 'ACPM' && !esZonaNI);
 
         return {
             precioId: precio.id,
@@ -55,8 +70,9 @@ export class PricingEngineService {
             precioUnitario,
             subsidioGalon,
             subsidioAplicado: subsidioGalon > 0,
-            decretoAplicado: precio.decreto.numero,
+            decretoAplicado: granConsumidorAplicado ? '763/2024' : precio.decreto.numero,
             decreto: precio.decreto,
+            granConsumidorAplicado,
             vigenciaDesde: precio.vigenciaDesde,
             vigenciaHasta: precio.vigenciaHasta,
         };

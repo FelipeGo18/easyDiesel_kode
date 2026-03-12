@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { BellRing, Fuel, MapPinned, ShieldCheck, TimerReset, Truck } from 'lucide-react';
+import { BellRing, Fuel, MapPinned, Plus, ShieldCheck, TimerReset, Truck } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -8,7 +8,7 @@ import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/useToast';
 import { useAuth } from '@/context/useAuth';
 import { getErrorMessage } from '@/lib/http';
-import { inventarioService, tanquesService, type RegistrarTransaccionData } from '@/services/inventario';
+import { inventarioService, tanquesService, type EntradaDirectaData, type RegistrarTransaccionData } from '@/services/inventario';
 import { preciosService, type PrecioActual } from '@/services/precios';
 import type { AuthenticatedUser, EntregaDistribuidor, Tanque, TipoServicio } from '@/types';
 
@@ -61,11 +61,19 @@ export function StationOperationsPage() {
         tanqueId: '',
         galonesRecibidos: '0',
     });
+    const [directEntryOpen, setDirectEntryOpen] = useState(false);
+    const [directEntryForm, setDirectEntryForm] = useState({
+        tanqueId: '',
+        galones: '0',
+        precioUnitario: '0',
+        observaciones: '',
+    });
     const [form, setForm] = useState({
         tanqueId: '',
         tipoServicio: 'PARTICULAR' as TipoServicio,
         galones: '0',
         placaVehiculo: '',
+        esGranConsumidor: false,
     });
 
     const fetchTanques = useCallback(async () => {
@@ -105,7 +113,7 @@ export function StationOperationsPage() {
         try {
             setPendingDeliveriesLoading(true);
             const response = await inventarioService.listarEntregasPendientes(stationId);
-            setPendingDeliveries(Array.isArray(response) ? response : []);
+            setPendingDeliveries(response.data ?? []);
         } catch (error: unknown) {
             toast.error(`Error al cargar entregas pendientes: ${getErrorMessage(error)}`);
         } finally {
@@ -196,6 +204,7 @@ export function StationOperationsPage() {
                 tipoServicio: form.tipoServicio,
                 galones: gallons,
                 placaVehiculo: normalizePlate(form.placaVehiculo) || undefined,
+                esGranConsumidor: form.esGranConsumidor || undefined,
             } satisfies RegistrarTransaccionData);
 
             const totalFacturado = Number(result.transaccion.precioTotal);
@@ -209,6 +218,7 @@ export function StationOperationsPage() {
                 ...current,
                 galones: '0',
                 placaVehiculo: '',
+                esGranConsumidor: false,
             }));
             await fetchTanques();
         } catch (error: unknown) {
@@ -268,8 +278,79 @@ export function StationOperationsPage() {
         }
     };
 
+    const handleDirectEntry = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        if (!stationId) {
+            toast.error('No hay una estación asociada al usuario.');
+            return;
+        }
+
+        const selectedTanqueForEntry = tanques.find(t => t.id === directEntryForm.tanqueId) ?? tanques[0];
+        if (!selectedTanqueForEntry) {
+            toast.error('Selecciona un tanque para recibir el combustible.');
+            return;
+        }
+
+        const galones = Number(directEntryForm.galones);
+        const precioUnitario = Number(directEntryForm.precioUnitario);
+
+        if (galones <= 0) {
+            toast.error('Ingresa una cantidad de galones mayor a 0.');
+            return;
+        }
+        if (precioUnitario <= 0) {
+            toast.error('Ingresa un precio unitario válido.');
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            const payload: EntradaDirectaData = {
+                estacionId: stationId,
+                tanqueId: selectedTanqueForEntry.id,
+                tipoCombustible: selectedTanqueForEntry.tipoCombustible,
+                galones,
+                precioUnitario,
+                observaciones: directEntryForm.observaciones || undefined,
+            };
+            const result = await inventarioService.registrarEntradaDirecta(payload);
+            toast.success(`Entrada directa registrada: ${formatGallons(galones)} gal cargados al tanque`);
+            setDirectEntryOpen(false);
+            setDirectEntryForm({ tanqueId: '', galones: '0', precioUnitario: '0', observaciones: '' });
+            if (result) await fetchTanques();
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, 'No fue posible registrar la entrada directa'));
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     return (
         <div className="space-y-6 animate-enter">
+            {/* ── Alerta de niveles críticos (Decreto 318/2003) ── */}
+            {lowTanks.length > 0 && (
+                <div className="rounded-[18px] border border-red-500/30 bg-red-500/[0.07] px-5 py-4">
+                    <div className="flex items-start gap-3">
+                        <BellRing size={16} className="mt-0.5 shrink-0 text-red-400" />
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-semibold text-red-300">
+                                {lowTanks.length === 1 ? '1 tanque por debajo del nivel mínimo operativo' : `${lowTanks.length} tanques por debajo del nivel mínimo operativo`}
+                                <span className="ml-2 font-mono text-[10px] text-red-400/70 font-normal">Decreto 318/2003</span>
+                            </p>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                                {lowTanks.map((t) => (
+                                    <span key={t.id} className="inline-flex items-center gap-1.5 rounded-[6px] border border-red-500/25 bg-red-500/10 px-2.5 py-1 text-[11px] text-red-300">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                                        {t.nombre} · {formatGallons(Number(t.nivelActual))} / {formatGallons(Number(t.nivelMinimo))} gal
+                                        <span className="font-mono text-[9px] text-red-400/60">{t.tipoCombustible}</span>
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
             <section className="relative overflow-hidden rounded-[28px] border border-amber-500/20 bg-[radial-gradient(circle_at_top_left,_rgba(245,166,35,0.18),_transparent_30%),linear-gradient(135deg,_rgba(18,18,16,1)_0%,_rgba(12,12,10,1)_55%,_rgba(36,21,2,1)_100%)] p-6 sm:p-8">
                 <div className="absolute inset-y-0 right-0 w-[38%] bg-[linear-gradient(135deg,transparent_0%,rgba(245,166,35,0.08)_45%,transparent_100%)]" />
                 <div className="relative grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
@@ -411,6 +492,21 @@ export function StationOperationsPage() {
                                 options={tipoServicioOptions.map((option) => ({ value: option.value, label: option.label }))}
                             />
 
+                            {selectedTanque?.tipoCombustible === 'ACPM' && (
+                                <label className="flex cursor-pointer items-center gap-3 rounded-[18px] border border-amber-500/20 bg-amber-500/[0.05] px-4 py-3 hover:bg-amber-500/[0.09] transition-colors">
+                                    <input
+                                        type="checkbox"
+                                        checked={form.esGranConsumidor}
+                                        onChange={(e) => setForm((current) => ({ ...current, esGranConsumidor: e.target.checked }))}
+                                        className="h-4 w-4 rounded border-amber-500/40 bg-transparent accent-amber-500"
+                                    />
+                                    <div>
+                                        <p className="text-[13px] font-medium text-white">Gran Consumidor <span className="ml-1 font-mono text-[10px] text-amber-400/80">Decreto 763/2024</span></p>
+                                        <p className="text-[11px] text-white/50 mt-0.5">Distribuidor REGULADO (&gt;20.000 gal/mes) · Precio paridad internacional</p>
+                                    </div>
+                                </label>
+                            )}
+
                             <div className="rounded-[20px] border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-white/68">
                                 {selectedServiceMeta?.helper}
                             </div>
@@ -477,14 +573,27 @@ export function StationOperationsPage() {
 
                 <div className="space-y-6">
                     <Card className="rounded-[28px] border-white/6 bg-[linear-gradient(180deg,rgba(16,16,14,0.98),rgba(10,10,9,0.98))]">
-                        <div className="flex items-center gap-3">
-                            <div className="rounded-[16px] border border-white/8 bg-white/[0.04] p-3 text-emerald-400">
-                                <Truck size={18} />
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <div className="rounded-[16px] border border-white/8 bg-white/[0.04] p-3 text-emerald-400">
+                                    <Truck size={18} />
+                                </div>
+                                <div>
+                                    <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-white/42">Recepción</p>
+                                    <h3 className="mt-1 text-lg font-semibold text-white">Entregas pendientes</h3>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-white/42">Recepción</p>
-                                <h3 className="mt-1 text-lg font-semibold text-white">Entregas pendientes</h3>
-                            </div>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setDirectEntryForm({ tanqueId: tanques[0]?.id ?? '', galones: '0', precioUnitario: '0', observaciones: '' });
+                                    setDirectEntryOpen(true);
+                                }}
+                                className="flex items-center gap-1.5 rounded-[12px] border border-emerald-500/25 bg-emerald-500/[0.08] px-3 py-1.5 text-[12px] font-medium text-emerald-300 transition-colors hover:bg-emerald-500/[0.14]"
+                            >
+                                <Plus size={13} />
+                                Entrada directa
+                            </button>
                         </div>
 
                         <div className="mt-5 space-y-3">
@@ -629,6 +738,77 @@ export function StationOperationsPage() {
                         </Button>
                         <Button type="submit" isLoading={submitting}>
                             Confirmar entrega
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
+
+            <Modal
+                open={directEntryOpen}
+                onClose={() => setDirectEntryOpen(false)}
+                title="Entrada directa de combustible"
+            >
+                <form onSubmit={handleDirectEntry} className="space-y-4">
+                    <div className="rounded-brand border border-emerald-500/20 bg-emerald-500/[0.07] px-3 py-3 text-[12px] text-emerald-200/80">
+                        Registra un ingreso de combustible sin necesidad de una remisión previa de distribuidor. El nivel del tanque se actualiza de inmediato y queda en auditoría.
+                    </div>
+
+                    <SelectField
+                        label="Tanque receptor"
+                        value={directEntryForm.tanqueId}
+                        onChange={(e) => setDirectEntryForm(cur => ({ ...cur, tanqueId: e.target.value }))}
+                        options={tanques.map(t => ({ value: t.id, label: `${t.nombre} · ${t.tipoCombustible} · ${formatGallons(Number(t.nivelActual))} gal` }))}
+                    />
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <InputField
+                            label="Galones a cargar"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={directEntryForm.galones}
+                            onChange={(e) => setDirectEntryForm(cur => ({ ...cur, galones: e.target.value }))}
+                            required
+                        />
+                        <InputField
+                            label="Precio unitario ($/gal)"
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={directEntryForm.precioUnitario}
+                            onChange={(e) => setDirectEntryForm(cur => ({ ...cur, precioUnitario: e.target.value }))}
+                            required
+                        />
+                    </div>
+
+                    <InputField
+                        label="Observaciones (opcional)"
+                        placeholder="Ej: carga de emergencia, proveedor alterno..."
+                        value={directEntryForm.observaciones}
+                        onChange={(e) => setDirectEntryForm(cur => ({ ...cur, observaciones: e.target.value }))}
+                    />
+
+                    {(() => {
+                        const t = tanques.find(tk => tk.id === directEntryForm.tanqueId) ?? tanques[0];
+                        const gals = Number(directEntryForm.galones) || 0;
+                        if (!t || gals <= 0) return null;
+                        const projected = Number(t.nivelActual) + gals;
+                        const cap = Number(t.capacidadGalones);
+                        const over = projected > cap;
+                        return (
+                            <div className={`rounded-brand border px-3 py-3 text-[12px] ${over ? 'border-red-500/25 bg-red-500/[0.07] text-red-300' : 'border-border-subtle bg-bg-elevated text-text-secondary'}`}>
+                                Nivel proyectado: {formatGallons(projected)} / {formatGallons(cap)} gal
+                                {over && ' · Supera la capacidad del tanque'}
+                            </div>
+                        );
+                    })()}
+
+                    <div className="flex justify-end gap-2 pt-2">
+                        <Button variant="ghost" type="button" onClick={() => setDirectEntryOpen(false)}>
+                            Cancelar
+                        </Button>
+                        <Button type="submit" isLoading={submitting}>
+                            Registrar entrada
                         </Button>
                     </div>
                 </form>

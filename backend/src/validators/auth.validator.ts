@@ -42,9 +42,22 @@ export const logoutSchema = z.object({
 });
 
 // ──────────────────────────────────────────
+// Schema: Actualizar perfil
+// ──────────────────────────────────────────
+export const updateProfileSchema = z.object({
+    nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(150).trim().optional(),
+    email: z.string().email('Email inválido').max(150)
+        .transform((v) => v.toLowerCase().trim()).optional(),
+    password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres').max(72).optional(),
+}).refine((v) => v.nombre !== undefined || v.email !== undefined || v.password !== undefined, {
+    message: 'Debes proporcionar al menos un campo para actualizar',
+});
+
+// ──────────────────────────────────────────
 // Tipos inferidos
 // ──────────────────────────────────────────
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 export type LogoutInput = z.infer<typeof logoutSchema>;
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

@@ -4,7 +4,8 @@ import {
     obtenerUsuarioPorIdHandler,
     crearUsuarioHandler,
     actualizarUsuarioHandler,
-    desactivarUsuarioHandler
+    desactivarUsuarioHandler,
+    obtenerRolesHandler,
 } from '../controllers/usuario.controller';
 
 const usuarioRouter = Router();
@@ -28,6 +29,21 @@ const usuarioRouter = Router();
  *         description: Lista de usuarios
  */
 usuarioRouter.get('/', obtenerUsuariosHandler);
+
+/**
+ * @swagger
+ * /api/usuarios/roles:
+ *   get:
+ *     summary: Lista todos los roles del sistema
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de roles
+ */
+// NOTE: Must be declared before GET /:id to avoid Express matching 'roles' as an id param
+usuarioRouter.get('/roles', obtenerRolesHandler);
 
 /**
  * @swagger

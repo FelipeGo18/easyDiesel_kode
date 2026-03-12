@@ -127,6 +127,15 @@ export class UsuarioService {
     }
 
     /**
+     * Obtiene todos los roles disponibles en el sistema.
+     */
+    async obtenerRoles() {
+        return prisma.rol.findMany({
+            orderBy: { nombre: 'asc' },
+        });
+    }
+
+    /**
      * Desactivación lógica (Soft Delete) del usuario.
      */
     async desactivarUsuario(id: string) {
