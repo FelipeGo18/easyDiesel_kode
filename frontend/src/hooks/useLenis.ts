@@ -21,7 +21,8 @@ export function useLenis() {
 
         lenisRef.current = lenis;
 
-        // Bridge Lenis scroll events into GSAP ScrollTrigger
+        // Expose globally so components can call programmatic scrollTo
+        (window as any).__lenis = lenis;
         lenis.on('scroll', ScrollTrigger.update);
 
         const rafTicker = (time: number) => lenis.raf(time * 1000);
@@ -32,6 +33,7 @@ export function useLenis() {
             gsap.ticker.remove(rafTicker);
             lenis.destroy();
             lenisRef.current = null;
+            delete (window as any).__lenis;
         };
     }, []);
 

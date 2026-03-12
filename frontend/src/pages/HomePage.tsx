@@ -347,151 +347,132 @@ export function HomePage() {
             </nav>
 
             {/* ══════════════════════════════════════════
-                  PRICE LOOKUP — Horizontal scroll pinned
+                  PRICE LOOKUP — Staggered Card Entrance
               ══════════════════════════════════════════ */}
             <section
                 ref={pricesRef}
                 id="precios"
-                className="relative z-10 bg-bg-base scroll-section overflow-hidden"
+                className="relative z-10 border-t border-border-subtle"
             >
-                {/* Step progress rail — top edge */}
-                <div className="prices-step-rail pointer-events-none absolute top-0 left-0 right-0 z-20 h-px bg-border-subtle">
-                    <div className="prices-step-fill h-full bg-amber-500/60" style={{ width: '25%' }} />
+                {/* Atmospheric background */}
+                <div className="pointer-events-none absolute inset-0">
+                    <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-amber-500/3 blur-[120px]" />
+                    <div className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full bg-green-500/3 blur-[100px]" />
+                    <div className="absolute inset-0" style={{
+                        backgroundImage: 'linear-gradient(rgba(245,166,35,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(245,166,35,0.03) 1px, transparent 1px)',
+                        backgroundSize: '48px 48px',
+                        mask: 'radial-gradient(ellipse 70% 80% at 30% 50%, black 30%, transparent 75%)',
+                        WebkitMask: 'radial-gradient(ellipse 70% 80% at 30% 50%, black 30%, transparent 75%)',
+                    }} />
                 </div>
 
-                <div className="prices-hscroll flex">
-
-                    {/* ══ Panel 1 — Configuración ══ */}
-                    <div className="hscroll-panel shrink-0 w-screen min-h-screen flex flex-col justify-center relative overflow-hidden">
-                        {/* Atmospheric background */}
-                        <div className="pointer-events-none absolute inset-0">
-                            <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-amber-500/3 blur-[120px]" />
-                            <div className="absolute inset-0" style={{
-                                backgroundImage: 'linear-gradient(rgba(245,166,35,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(245,166,35,0.03) 1px, transparent 1px)',
-                                backgroundSize: '48px 48px',
-                                mask: 'radial-gradient(ellipse 70% 80% at 30% 50%, black 30%, transparent 75%)',
-                                WebkitMask: 'radial-gradient(ellipse 70% 80% at 30% 50%, black 30%, transparent 75%)',
-                            }} />
+                {/* ── Header + Config ── */}
+                <div className="relative z-10 max-w-6xl mx-auto w-full px-8 md:px-16 pt-24 pb-12">
+                    <div className="grid md:grid-cols-2 gap-16 items-center">
+                        {/* Left: editorial copy */}
+                        <div>
+                            <span className="font-mono text-[10px] text-amber-500/60 tracking-[0.25em] uppercase block mb-6">Consulta de precios</span>
+                            <h2 className="font-display text-[64px] md:text-[80px] leading-none text-text-primary mb-4 tracking-wide">
+                                PRECIOS<br />
+                                <span className="text-amber-500">REGULADOS</span>
+                            </h2>
+                            <p className="text-[14px] text-text-secondary font-sans leading-relaxed max-w-xs">
+                                Selecciona tu zona geográfica, el tipo de combustible y la categoría de tu vehículo para consultar el precio oficial vigente.
+                            </p>
+                            {publicDataError && (
+                                <div className="mt-6 flex items-start gap-3 rounded-brand border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+                                    <Icon name="alert" size={14} className="text-amber-500 mt-0.5 shrink-0" />
+                                    <p className="text-[12px] text-amber-300/80 font-sans leading-relaxed">{publicDataError}</p>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="relative z-10 max-w-6xl mx-auto w-full px-8 md:px-16 py-24 grid md:grid-cols-2 gap-16 items-center">
-                            {/* Left: editorial copy */}
+                        {/* Right: filter card */}
+                        <div className="bg-bg-surface/60 backdrop-blur-sm border border-border-subtle rounded-[8px] p-6 space-y-6"
+                            style={{ boxShadow: '0 0 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.03)' }}>
+                            {/* Zona */}
                             <div>
-                                <span className="font-mono text-[10px] text-amber-500/60 tracking-[0.25em] uppercase block mb-6">01 / 04 — Configuración</span>
-                                <h2 className="font-display text-[64px] md:text-[80px] leading-none text-text-primary mb-4 tracking-wide">
-                                    PRECIOS<br />
-                                    <span className="text-amber-500">REGULADOS</span>
-                                </h2>
-                                <p className="text-[14px] text-text-secondary font-sans leading-relaxed max-w-xs">
-                                    Selecciona tu zona geográfica, el tipo de combustible y la categoría de tu vehículo para consultar el precio oficial vigente.
-                                </p>
-                                {publicDataError && (
-                                    <div className="mt-6 flex items-start gap-3 rounded-brand border border-amber-500/20 bg-amber-500/5 px-4 py-3">
-                                        <Icon name="alert" size={14} className="text-amber-500 mt-0.5 shrink-0" />
-                                        <p className="text-[12px] text-amber-300/80 font-sans leading-relaxed">{publicDataError}</p>
-                                    </div>
-                                )}
+                                <label htmlFor="select-zona" className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">
+                                    Zona de distribución
+                                </label>
+                                <div className="relative">
+                                    <select
+                                        id="select-zona"
+                                        value={zonaSeleccionada}
+                                        onChange={(e) => setZonaSeleccionada(e.target.value)}
+                                        disabled={!zonas.length}
+                                        className="w-full px-4 py-3 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[13px] font-sans appearance-none cursor-pointer interactive pr-10 focus:border-amber-500/40 focus:outline-none transition-colors"
+                                    >
+                                        {!zonas.length ? <option value="">Sin zonas disponibles</option> : null}
+                                        {zonas.map(z => <option key={z.id} value={z.id}>{z.nombre}</option>)}
+                                    </select>
+                                    <Icon name="chevron-down" size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+                                </div>
                             </div>
-
-                            {/* Right: filter card */}
-                            <div className="bg-bg-surface/60 backdrop-blur-sm border border-border-subtle rounded-[8px] p-6 space-y-6"
-                                style={{ boxShadow: '0 0 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.03)' }}>
-
-                                {/* Zona */}
-                                <div>
-                                    <label htmlFor="select-zona" className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">
-                                        Zona de distribución
-                                    </label>
-                                    <div className="relative">
-                                        <select
-                                            id="select-zona"
-                                            value={zonaSeleccionada}
-                                            onChange={(e) => setZonaSeleccionada(e.target.value)}
-                                            disabled={!zonas.length}
-                                            className="w-full px-4 py-3 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[13px] font-sans appearance-none cursor-pointer interactive pr-10 focus:border-amber-500/40 focus:outline-none transition-colors"
+                            {/* Combustible */}
+                            <div>
+                                <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">Tipo de combustible</span>
+                                <div className="flex gap-2">
+                                    {tiposCombustible.map(tc => (
+                                        <button key={tc.id} onClick={() => setCombustibleSeleccionado(tc.id)}
+                                            className={`flex-1 py-2.5 px-3 rounded-brand text-[11px] font-mono uppercase tracking-wider interactive border cursor-pointer transition-all duration-200 ${
+                                                combustibleSeleccionado === tc.id
+                                                    ? 'bg-amber-500/10 border-amber-500/40 text-amber-500'
+                                                    : 'bg-bg-elevated border-border-subtle text-text-muted hover:border-border-strong hover:text-text-secondary'
+                                            }`}
                                         >
-                                            {!zonas.length ? <option value="">Sin zonas disponibles</option> : null}
-                                            {zonas.map(z => <option key={z.id} value={z.id}>{z.nombre}</option>)}
-                                        </select>
-                                        <Icon name="chevron-down" size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
-                                    </div>
+                                            {tc.id === 'ACPM' ? 'ACPM' : 'Gasolina'}
+                                        </button>
+                                    ))}
                                 </div>
-
-                                {/* Combustible */}
-                                <div>
-                                    <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">Tipo de combustible</span>
-                                    <div className="flex gap-2">
-                                        {tiposCombustible.map(tc => (
-                                            <button
-                                                key={tc.id}
-                                                onClick={() => setCombustibleSeleccionado(tc.id)}
-                                                className={`flex-1 py-2.5 px-3 rounded-brand text-[11px] font-mono uppercase tracking-wider interactive border cursor-pointer transition-all duration-200 ${
-                                                    combustibleSeleccionado === tc.id
-                                                        ? 'bg-amber-500/10 border-amber-500/40 text-amber-500'
-                                                        : 'bg-bg-elevated border-border-subtle text-text-muted hover:border-border-strong hover:text-text-secondary'
-                                                }`}
-                                            >
-                                                {tc.id === 'ACPM' ? 'ACPM' : 'Gasolina'}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Servicio */}
-                                <div>
-                                    <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">Categoría de vehículo</span>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {tiposServicio.map(ts => (
-                                            <button
-                                                key={ts.id}
-                                                onClick={() => setServicioSeleccionado(ts.id)}
-                                                className={`py-2.5 px-3 rounded-brand text-[10px] font-mono uppercase tracking-wider interactive border cursor-pointer text-center transition-all duration-200 ${
-                                                    servicioSeleccionado === ts.id
-                                                        ? 'bg-amber-500/10 border-amber-500/40 text-amber-500'
-                                                        : 'bg-bg-elevated border-border-subtle text-text-muted hover:border-border-strong hover:text-text-secondary'
-                                                }`}
-                                            >
-                                                {ts.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Hint */}
-                                <div className="flex items-center gap-2 pt-1 border-t border-border-subtle">
-                                    <div className="w-1 h-1 rounded-full bg-amber-500/50" />
-                                    <span className="text-[10px] font-mono text-text-muted">Haz scroll para ver el resultado →</span>
+                            </div>
+                            {/* Servicio */}
+                            <div>
+                                <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">Categoría de vehículo</span>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {tiposServicio.map(ts => (
+                                        <button key={ts.id} onClick={() => setServicioSeleccionado(ts.id)}
+                                            className={`py-2.5 px-3 rounded-brand text-[10px] font-mono uppercase tracking-wider interactive border cursor-pointer text-center transition-all duration-200 ${
+                                                servicioSeleccionado === ts.id
+                                                    ? 'bg-amber-500/10 border-amber-500/40 text-amber-500'
+                                                    : 'bg-bg-elevated border-border-subtle text-text-muted hover:border-border-strong hover:text-text-secondary'
+                                            }`}
+                                        >
+                                            {ts.label}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    {/* ══ Panel 2 — Gauge + Precio ══ */}
-                    <div className="hscroll-panel shrink-0 w-screen min-h-screen flex flex-col justify-center relative overflow-hidden">
-                        {/* Radial amber glow behind gauge */}
-                        <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full"
-                            style={{ background: 'radial-gradient(circle, rgba(245,166,35,0.06) 0%, rgba(245,166,35,0.02) 40%, transparent 70%)' }} />
+                {/* ═══ 3 Result Cards — Page Shrinks to Corner ═══ */}
+                {/* prices-pin-wrap provides the scroll distance for the pinned animation.
+                    prices-pin-scene is CSS-sticky and stays at top:0 while scrolling,
+                    giving GSAP a 300vh window to drive the sequential reveal. */}
+                <div className="prices-pin-wrap">
+                    <div className="prices-pin-scene">
 
-                        <div className="relative z-10 max-w-4xl mx-auto w-full px-8 md:px-16 py-24 flex flex-col items-center gap-8">
-                            <span className="font-mono text-[10px] text-amber-500/60 tracking-[0.25em] uppercase">02 / 04 — Precio vigente</span>
+                        {/* ── Card 0 — Precio Vigente + Gauge ── */}
+                        <div className="pcard pcard-0">
+                            <div className="pcard-inner">
+                                <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-amber-500/60 via-amber-500/20 to-transparent" />
 
-                            {/* Context line */}
-                            <div className="flex items-center gap-3">
-                                <span className="text-[12px] text-text-secondary font-sans">
-                                    {zonas.find(z => z.id === zonaSeleccionada)?.nombre ?? '—'}
-                                </span>
+                                <span className="font-mono text-[9px] text-amber-500/60 tracking-[0.25em] uppercase block mb-4">Precio vigente</span>
+
+                            {/* Context */}
+                            <div className="flex flex-wrap items-center gap-2 mb-6">
+                                <span className="text-[11px] text-text-secondary font-sans">{zonas.find(z => z.id === zonaSeleccionada)?.nombre ?? '—'}</span>
                                 <span className="w-1 h-1 rounded-full bg-border-strong" />
-                                <span className="text-[12px] text-text-secondary font-sans">
-                                    {tiposCombustible.find(t => t.id === combustibleSeleccionado)?.label ?? '—'}
-                                </span>
-                                <span className="w-1 h-1 rounded-full bg-border-strong" />
+                                <span className="text-[11px] text-text-secondary font-sans">{tiposCombustible.find(t => t.id === combustibleSeleccionado)?.label ?? '—'}</span>
                                 <Badge variant={Number(precioActual?.subsidioGalon) > 0 ? 'green' : 'amber'}>
                                     {Number(precioActual?.subsidioGalon) > 0 ? 'Con subsidio' : 'Sin subsidio'}
                                 </Badge>
                             </div>
 
-                            {/* SVG Gauge — large */}
-                            <div className="relative w-80 h-44">
+                            {/* Compact Gauge */}
+                            <div className="relative w-full max-w-[200px] mx-auto h-28 mb-4">
                                 <svg viewBox="0 0 200 110" className="w-full h-full drop-shadow-[0_0_40px_rgba(245,166,35,0.1)]">
                                     <defs>
                                         <linearGradient id="gauge-grad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -504,50 +485,41 @@ export function HomePage() {
                                             <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
                                         </filter>
                                     </defs>
-                                    {/* Track */}
                                     <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#1a1a1a" strokeWidth="12" strokeLinecap="round" />
-                                    {/* Ticks */}
                                     {[0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180].map((angle, i) => {
                                         const rad = ((angle - 180) * Math.PI / 180);
-                                        const r1 = 88, r2 = 80;
-                                        const cx = 100, cy = 100;
                                         return (
                                             <line key={i}
-                                                x1={cx + r1 * Math.cos(rad)} y1={cy + r1 * Math.sin(rad)}
-                                                x2={cx + r2 * Math.cos(rad)} y2={cy + r2 * Math.sin(rad)}
+                                                x1={100 + 88 * Math.cos(rad)} y1={100 + 88 * Math.sin(rad)}
+                                                x2={100 + 80 * Math.cos(rad)} y2={100 + 80 * Math.sin(rad)}
                                                 stroke="#2a2a2a" strokeWidth="1.5" strokeLinecap="round" />
                                         );
                                     })}
-                                    {/* Active arc */}
                                     <path className="gauge-arc" d="M 20 100 A 80 80 0 0 1 180 100"
                                         fill="none" stroke="url(#gauge-grad)" strokeWidth="12" strokeLinecap="round"
                                         strokeDasharray="251.3" strokeDashoffset="251.3" filter="url(#gauge-glow)" />
-                                    {/* Needle */}
                                     <line className="gauge-needle" x1="100" y1="100" x2="100" y2="26"
                                         stroke="#F5A623" strokeWidth="2" strokeLinecap="round"
                                         style={{ transformOrigin: '100px 100px', transform: 'rotate(-90deg)' }} />
                                     <circle cx="100" cy="100" r="5" fill="#F5A623" />
                                     <circle cx="100" cy="100" r="2.5" fill="#080808" />
-                                    {/* Labels */}
                                     <text x="12" y="110" fill="#333" fontSize="7" fontFamily="JetBrains Mono,monospace">$0</text>
                                     <text x="158" y="110" fill="#333" fontSize="7" fontFamily="JetBrains Mono,monospace">MAX</text>
                                 </svg>
                             </div>
 
-                            {/* Price hero number */}
-                            <div className="text-center -mt-2">
-                                <span className="font-display text-[72px] md:text-[100px] lg:text-[120px] leading-none text-amber-500 tracking-wide"
-                                    style={{ textShadow: '0 0 80px rgba(245,166,35,0.3)' }}>
+                            {/* Price number */}
+                            <div className="text-center">
+                                <span className="font-display text-[48px] md:text-[56px] leading-none text-amber-500 tracking-wide"
+                                    style={{ textShadow: '0 0 60px rgba(245,166,35,0.3)' }}>
                                     {loadingPublicData ? '···' : precioActual ? formatCOP(Number(precioActual.precioGalon)) : '—'}
                                 </span>
-                                <span className="block text-[12px] text-text-muted font-mono tracking-[0.15em] mt-3 uppercase">
-                                    por galón · pesos colombianos
-                                </span>
+                                <span className="block text-[10px] text-text-muted font-mono tracking-[0.15em] mt-2 uppercase">por galón</span>
                             </div>
 
                             {/* Subsidy bar */}
                             {precioActual && Number(precioActual.subsidioGalon) > 0 && (
-                                <div className="w-full max-w-sm">
+                                <div className="w-full mt-5">
                                     <div className="flex justify-between font-mono text-[9px] text-text-muted mb-1.5">
                                         <span>Subsidio aplicado</span>
                                         <span className="text-green-500">{formatCOP(Number(precioActual.subsidioGalon))} / gal</span>
@@ -558,91 +530,76 @@ export function HomePage() {
                                 </div>
                             )}
                             {!loadingPublicData && !precioActual && (
-                                <p className="text-[12px] text-amber-300/70 font-mono">
-                                    Sin precio vigente para esta combinación
-                                </p>
+                                <p className="text-[11px] text-amber-300/70 font-mono mt-4 text-center">Sin precio vigente</p>
                             )}
+                            </div>
                         </div>
-                    </div>
 
-                    {/* ══ Panel 3 — Detalle decreto y subsidio ══ */}
-                    <div className="hscroll-panel shrink-0 w-screen min-h-screen flex flex-col justify-center relative overflow-hidden">
-                        <div className="pointer-events-none absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full bg-green-500/3 blur-[100px]" />
+                        {/* ── Card 1 — Detalle Regulatorio ── */}
+                        <div className="pcard pcard-1">
+                            <div className="pcard-inner">
+                                <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-green-500/60 via-green-500/20 to-transparent" />
 
-                        <div className="relative z-10 max-w-4xl mx-auto w-full px-8 md:px-16 py-24">
-                            <span className="font-mono text-[10px] text-amber-500/60 tracking-[0.25em] uppercase block mb-8">03 / 04 — Detalle regulatorio</span>
+                            <span className="font-mono text-[9px] text-amber-500/60 tracking-[0.25em] uppercase block mb-6">Detalle regulatorio</span>
 
                             {precioActual ? (
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-border-subtle rounded-[8px] overflow-hidden border border-border-subtle"
-                                    style={{ boxShadow: '0 0 80px rgba(0,0,0,0.5)' }}>
+                                <div className="space-y-6">
+                                    {/* Subsidio big number */}
+                                    <div>
+                                        <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">Subsidio por galón</span>
+                                        <div className="flex items-end justify-between gap-3">
+                                            <span className={`font-display text-[40px] leading-none ${Number(precioActual.subsidioGalon) > 0 ? 'text-green-500' : 'text-text-muted'}`}
+                                                style={Number(precioActual.subsidioGalon) > 0 ? { textShadow: '0 0 30px rgba(46,204,113,0.25)' } : {}}>
+                                                {Number(precioActual.subsidioGalon) > 0 ? formatCOP(Number(precioActual.subsidioGalon)) : 'N/A'}
+                                            </span>
+                                            {Number(precioActual.subsidioGalon) > 0 && (
+                                                <div className="shrink-0 w-9 h-9 rounded-full border border-green-500/30 bg-green-500/10 flex items-center justify-center mb-1">
+                                                    <Icon name="trending-down" size={16} className="text-green-500" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
 
-                                    {/* Subsidio — hero stat */}
-                                    <div className="md:col-span-3 bg-bg-surface px-8 py-10 flex items-end justify-between gap-4"
-                                        style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
-                                        <div>
-                                            <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-3">Subsidio por galón</span>
-                                            <span className={`font-display text-[56px] md:text-[72px] leading-none ${Number(precioActual.subsidioGalon) > 0 ? 'text-green-500' : 'text-text-muted'}`}
-                                                style={Number(precioActual.subsidioGalon) > 0 ? { textShadow: '0 0 40px rgba(46,204,113,0.25)' } : {}}>
-                                                {Number(precioActual.subsidioGalon) > 0
-                                                    ? formatCOP(Number(precioActual.subsidioGalon))
-                                                    : 'NO APLICA'}
+                                    {/* Stats grid */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="bg-bg-elevated/50 rounded-[6px] px-4 py-3">
+                                            <span className="font-mono text-[8px] text-text-muted uppercase tracking-[0.2em] block mb-1">Decreto</span>
+                                            <span className="font-mono text-[18px] text-text-primary font-semibold">{precioActual.decreto?.numero ?? 'N/A'}</span>
+                                        </div>
+                                        <div className="bg-bg-elevated/50 rounded-[6px] px-4 py-3">
+                                            <span className="font-mono text-[8px] text-text-muted uppercase tracking-[0.2em] block mb-1">Categoría</span>
+                                            <span className="font-mono text-[14px] text-amber-500 font-semibold leading-tight">
+                                                {tiposServicio.find(t => t.id === servicioSeleccionado)?.label ?? '—'}
                                             </span>
                                         </div>
-                                        {Number(precioActual.subsidioGalon) > 0 && (
-                                            <div className="shrink-0 w-12 h-12 rounded-full border border-green-500/30 bg-green-500/10 flex items-center justify-center">
-                                                <Icon name="trending-down" size={20} className="text-green-500" />
-                                            </div>
-                                        )}
                                     </div>
 
-                                    {/* Decreto */}
-                                    <div className="bg-bg-surface px-6 py-7">
-                                        <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">Decreto</span>
-                                        <span className="font-mono text-[22px] text-text-primary font-semibold block">{precioActual.decreto?.numero ?? 'N/A'}</span>
-                                        <span className="font-mono text-[9px] text-text-muted mt-1 block">reg. vigente</span>
-                                    </div>
-
-                                    {/* Servicio */}
-                                    <div className="bg-bg-surface px-6 py-7">
-                                        <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">Categoría</span>
-                                        <span className="font-mono text-[22px] text-amber-500 font-semibold block leading-tight">
-                                            {tiposServicio.find(t => t.id === servicioSeleccionado)?.label ?? '—'}
-                                        </span>
-                                        <span className="font-mono text-[9px] text-text-muted mt-1 block">tipo servicio</span>
-                                    </div>
-
-                                    {/* Zona */}
-                                    <div className="bg-bg-surface px-6 py-7">
-                                        <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">Zona</span>
-                                        <span className="font-sans text-[15px] text-text-primary font-medium block leading-tight">
+                                    <div className="bg-bg-elevated/50 rounded-[6px] px-4 py-3">
+                                        <span className="font-mono text-[8px] text-text-muted uppercase tracking-[0.2em] block mb-1">Zona</span>
+                                        <span className="font-sans text-[13px] text-text-primary font-medium">
                                             {zonas.find(z => z.id === zonaSeleccionada)?.nombre ?? '—'}
                                         </span>
-                                        <span className="font-mono text-[9px] text-text-muted mt-1 block">distribución</span>
                                     </div>
                                 </div>
                             ) : (
-                                <div className="border border-border-subtle rounded-[8px] bg-bg-surface px-8 py-16 text-center">
-                                    <span className="font-mono text-[10px] text-text-muted uppercase tracking-[0.2em]">Configura los filtros en el panel anterior</span>
+                                <div className="flex items-center justify-center h-40">
+                                    <span className="font-mono text-[10px] text-text-muted uppercase tracking-[0.2em]">Sin datos</span>
                                 </div>
                             )}
-                        </div>
-                    </div>
-
-                    {/* ══ Panel 4 — Comparativa ACPM vs Gasolina ══ */}
-                    <div className="hscroll-panel shrink-0 w-screen min-h-screen flex flex-col justify-center relative overflow-hidden">
-                        <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full bg-amber-500/3 blur-[120px]" />
-
-                        <div className="relative z-10 max-w-5xl mx-auto w-full px-8 md:px-16 py-24">
-                            <span className="font-mono text-[10px] text-amber-500/60 tracking-[0.25em] uppercase block mb-8">04 / 04 — Comparativa</span>
-
-                            <div className="mb-6">
-                                <h3 className="font-display text-[40px] md:text-[52px] text-text-primary leading-none">ACPM <span className="text-text-muted">vs</span> GASOLINA</h3>
-                                <p className="text-[12px] text-text-muted font-sans mt-1">
-                                    {zonas.find(z => z.id === zonaSeleccionada)?.nombre ?? '—'} · {tiposServicio.find(t => t.id === servicioSeleccionado)?.label ?? '—'}
-                                </p>
                             </div>
+                        </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* ── Card 2 — Comparativa ACPM vs Gasolina ── */}
+                        <div className="pcard pcard-2">
+                            <div className="pcard-inner">
+                                <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
+
+                            <span className="font-mono text-[9px] text-amber-500/60 tracking-[0.25em] uppercase block mb-4">Comparativa</span>
+                            <h3 className="font-display text-[28px] text-text-primary leading-none mb-6">
+                                ACPM <span className="text-text-muted text-[20px]">vs</span> GASOLINA
+                            </h3>
+
+                            <div className="space-y-3">
                                 {tiposCombustible.map((tc) => {
                                     const p = precios.find(pr => pr.zonaId === zonaSeleccionada && pr.tipoCombustible === tc.id && pr.tipoServicio === servicioSeleccionado);
                                     const isActive = tc.id === combustibleSeleccionado;
@@ -651,63 +608,48 @@ export function HomePage() {
                                         <button
                                             key={tc.id}
                                             onClick={() => setCombustibleSeleccionado(tc.id)}
-                                            className={`group relative text-left rounded-[8px] p-8 interactive cursor-pointer border transition-all duration-300 overflow-hidden ${
+                                            className={`group relative w-full text-left rounded-[8px] p-5 interactive cursor-pointer border transition-all duration-300 overflow-hidden ${
                                                 isActive
-                                                    ? 'border-amber-500/30 bg-bg-surface'
-                                                    : 'border-border-subtle bg-bg-surface/50 hover:border-border-strong hover:bg-bg-surface'
+                                                    ? 'border-amber-500/30 bg-bg-elevated'
+                                                    : 'border-border-subtle bg-bg-elevated/50 hover:border-border-strong'
                                             }`}
-                                            style={isActive ? { boxShadow: '0 0 60px rgba(245,166,35,0.08), inset 0 1px 0 rgba(245,166,35,0.05)' } : {}}
                                         >
-                                            {/* Active indicator dot */}
                                             {isActive && (
-                                                <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-amber-500"
+                                                <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-amber-500"
                                                     style={{ boxShadow: '0 0 8px rgba(245,166,35,0.8)' }} />
                                             )}
-
-                                            <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-5">
+                                            <span className="font-mono text-[8px] text-text-muted uppercase tracking-[0.2em] block mb-2">
                                                 {tc.id === 'ACPM' ? 'ACPM · Diésel' : 'Gasolina Corriente'}
                                             </span>
-
-                                            <span className={`font-display text-[52px] md:text-[64px] leading-none block transition-colors duration-300 ${
-                                                isActive ? 'text-amber-500' : 'text-text-primary group-hover:text-text-primary'
-                                            }`} style={isActive ? { textShadow: '0 0 40px rgba(245,166,35,0.25)' } : {}}>
+                                            <span className={`font-display text-[36px] leading-none block transition-colors duration-300 ${
+                                                isActive ? 'text-amber-500' : 'text-text-primary'
+                                            }`} style={isActive ? { textShadow: '0 0 30px rgba(245,166,35,0.25)' } : {}}>
                                                 {p ? formatCOP(Number(p.precioGalon)) : '—'}
                                             </span>
-
-                                            <span className="font-mono text-[9px] text-text-muted block mt-3">por galón</span>
-
+                                            <span className="font-mono text-[8px] text-text-muted block mt-1">por galón</span>
                                             {hasSubsidy && (
-                                                <div className="mt-4 flex items-center gap-2">
-                                                    <Icon name="trending-down" size={11} className="text-green-500" />
-                                                    <span className="font-mono text-[9px] text-green-500">
-                                                        {formatCOP(Number(p!.subsidioGalon))} subsidio
-                                                    </span>
+                                                <div className="mt-2 flex items-center gap-1.5">
+                                                    <Icon name="trending-down" size={10} className="text-green-500" />
+                                                    <span className="font-mono text-[8px] text-green-500">{formatCOP(Number(p!.subsidioGalon))} subsidio</span>
                                                 </div>
                                             )}
-
-                                            {/* Bottom accent line for active */}
-                                            <div className={`absolute bottom-0 left-0 h-px transition-all duration-500 ${
-                                                isActive ? 'w-full bg-gradient-to-r from-amber-500/60 via-amber-500/30 to-transparent' : 'w-0'
-                                            }`} />
                                         </button>
                                     );
                                 })}
                             </div>
 
-                            {/* CTA to full price table */}
-                            <div className="mt-8 flex items-center gap-4">
-                                <button
-                                    onClick={() => navigate('/ruta-economica')}
-                                    className="flex items-center gap-2 text-[11px] font-mono text-amber-500 hover:text-amber-400 transition-colors interactive cursor-pointer"
-                                >
-                                    Ver tabla completa por zona
-                                    <Icon name="arrow-right" size={12} />
-                                </button>
+                            <button
+                                onClick={() => navigate('/ruta-economica')}
+                                className="mt-5 flex items-center gap-2 text-[10px] font-mono text-amber-500 hover:text-amber-400 transition-colors interactive cursor-pointer"
+                            >
+                                Ver tabla completa por zona
+                                <Icon name="arrow-right" size={11} />
+                            </button>
                             </div>
                         </div>
-                    </div>
 
-                </div>
+                    </div>{/* prices-pin-scene */}
+                </div>{/* prices-pin-wrap */}
             </section>
 
                     {/* ══════════════════════════════════════════
