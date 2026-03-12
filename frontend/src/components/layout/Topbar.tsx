@@ -59,18 +59,19 @@ export function Topbar() {
                 {/* User avatar */}
                 {user && (
                     <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-[var(--radius-brand)] bg-amber-dim border border-amber-500/20 flex items-center justify-center">
-                            {user.fotoUrl ? (
+                        <div className="w-8 h-8 rounded-[var(--radius-brand)] bg-amber-dim border border-amber-500/20 flex items-center justify-center overflow-hidden relative">
+                            {user.fotoUrl && (
                                 <img
                                     src={user.fotoUrl}
                                     alt={user.nombre}
-                                    className="w-full h-full rounded-[var(--radius-brand)] object-cover"
+                                    referrerPolicy="no-referrer"
+                                    className="w-full h-full rounded-[var(--radius-brand)] object-cover absolute inset-0"
+                                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                 />
-                            ) : (
-                                <span className="text-amber-500 text-[11px] font-mono font-semibold uppercase">
-                                    {user.nombre?.charAt(0) || 'U'}
-                                </span>
                             )}
+                            <span className="text-amber-500 text-[11px] font-mono font-semibold uppercase">
+                                {user.nombre?.charAt(0) || 'U'}
+                            </span>
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[12px] text-text-primary font-sans">{user.nombre}</span>

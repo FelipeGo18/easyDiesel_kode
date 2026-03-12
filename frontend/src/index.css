@@ -287,6 +287,172 @@ html.lenis {
   overflow: hidden;
 }
 
+/* ══════════════════════════════════════════════════════
+   Hero Section — GSAP animation helpers
+   ══════════════════════════════════════════════════════ */
+.hero-root {
+  isolation: isolate;
+}
+
+/* Multilayer parallax targets */
+.hero-layer {
+  will-change: transform, opacity;
+}
+
+/* Animated hex-stroke path: values set by JS, declared here for safety */
+#hero-hex-stroke {
+  fill: none;
+}
+
+/* Individual letter spans for "DIESEL" stagger */
+.hero-letter {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+/* Logo wrapper: preserve-3d for the rotateY flip */
+.hero-logo-wrap {
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
+}
+
+/* Scanning line animation on CTA arrow line */
+@keyframes heroScan {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(200%); }
+}
+.hero-scan-line {
+  animation: heroScan 1.6s linear infinite;
+  opacity: 0.5;
+}
+
+/* Chevron gentle bounce */
+@keyframes heroBounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(4px); }
+}
+.hero-chevron {
+  animation: heroBounce 1.8s ease-in-out infinite;
+}
+
+/* ══════════════════════════════════════════════════════
+   Preloader
+   ══════════════════════════════════════════════════════ */
+.preloader-drop {
+  will-change: opacity;
+}
+
+/* ══════════════════════════════════════════════════════
+   Horizontal Scroll — Prices section
+   ══════════════════════════════════════════════════════ */
+.prices-hscroll {
+  will-change: transform;
+}
+
+.hscroll-panel {
+  will-change: transform, opacity;
+  min-width: 100vw;
+  min-height: 100vh;
+}
+
+/* Step progress rail */
+.prices-step-rail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  z-index: 20;
+}
+
+.prices-step-fill {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+/* Gauge SVG elements */
+.gauge-arc {
+  will-change: stroke-dashoffset;
+}
+
+.gauge-needle {
+  will-change: transform;
+}
+
+.fuel-subsidy-bar {
+  will-change: width;
+  transition: none;
+}
+
+/* ══════════════════════════════════════════════════════
+   Fuel Tube — Scroll indicator
+   ══════════════════════════════════════════════════════ */
+.fuel-tube-liquid {
+  will-change: height;
+}
+
+/* ══════════════════════════════════════════════════════
+   Route — Stroke draw connector
+   ══════════════════════════════════════════════════════ */
+.route-stroke-draw {
+  will-change: stroke-dashoffset;
+}
+
+/* ══════════════════════════════════════════════════════
+   Marquee infinite
+   ══════════════════════════════════════════════════════ */
+.marquee-inner {
+  will-change: transform;
+}
+
+/* ══════════════════════════════════════════════════════
+   Immersive Scroll — GSAP ScrollTrigger helpers
+   ══════════════════════════════════════════════════════ */
+
+/* Sections start invisible; GSAP reveals them on scroll */
+.scroll-section {
+  will-change: transform, opacity;
+}
+
+/* Individual items inside scroll sections */
+.scroll-child {
+  will-change: transform, opacity;
+}
+
+/* Decorative ambient glow parallax targets */
+.scroll-glow {
+  will-change: transform;
+}
+
+/* Route panel halves for split-slide animation */
+.route-left,
+.route-right {
+  will-change: transform, opacity;
+}
+
+/* Route dots for scale-in stagger */
+.route-dot {
+  will-change: transform, opacity;
+}
+
+/* Perspective container for 3D card tilts */
+.scroll-perspective {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+
+/* ══════════════════════════════════════════════════════
+   Cinematic Footer
+   ══════════════════════════════════════════════════════ */
+.footer-logo {
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
+}
+
+.footer-credits {
+  will-change: transform, opacity;
+}
+
 .economic-route-popup .mapboxgl-popup-content {
   background: rgba(8, 10, 14, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.06);

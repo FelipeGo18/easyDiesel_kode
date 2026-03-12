@@ -6,6 +6,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import type { ReactNode } from 'react';
 import { protectedRoutes, publicRoutes } from '@/features/routing/appRoutes';
 import { useAccess } from '@/hooks/useAccess';
+import { useLenis } from '@/hooks/useLenis';
 
 /* ── Protected route wrapper ── */
 function ProtectedRoute({ children, requiredPermissions = [] }: { children: ReactNode; requiredPermissions?: string[] }) {
@@ -84,6 +85,7 @@ function AppRoutes() {
 }
 
 function App() {
+  useLenis();
   return (
     <BrowserRouter>
       <AuthProvider>
