@@ -169,8 +169,9 @@ export const generarPDF = async (titulo: string, datos: any[]): Promise<Buffer> 
         try {
             const doc = new PDFDocument({
                 size: 'LETTER',
+                layout: 'landscape', // Cambiar a horizontal para más espacio
                 margin: MARGIN,
-                bufferPages: true, // permite contar páginas al final
+                bufferPages: true,
                 info: {
                     Title: `Reporte: ${titulo}`,
                     Author: 'EasyDiesel Platform',
@@ -179,29 +180,88 @@ export const generarPDF = async (titulo: string, datos: any[]): Promise<Buffer> 
                 }
             });
 
+            // Ajustar constantes para horizontal
+            const PAGE_W_LANDSCAPE = 792;
+            const CONTENT_W_LANDSCAPE = PAGE_W_LANDSCAPE - MARGIN * 2;
+
             const buffers: Buffer[] = [];
             doc.on('data', buffers.push.bind(buffers));
             doc.on('end', () => resolve(Buffer.concat(buffers)));
 
+            // Redefinir drawHeader y drawFooter para el contexto actual (horizontal)
+            const drawHeaderLandscape = (doc: PDFKit.PDFDocument, titulo: string) => {
+                const y = MARGIN;
+                doc.save();
+                doc.rect(0, 0, PAGE_W_LANDSCAPE, 6).fill(BRAND.secondary);
+                doc.restore();
+                doc.font('Helvetica-Bold').fontSize(20).fillColor(BRAND.primary).text('EasyDiesel', MARGIN, y + 10);
+                doc.moveTo(MARGIN + 120, y + 10).lineTo(MARGIN + 120, y + 35).strokeColor(BRAND.lineStrong).lineWidth(1).stroke();
+                doc.font('Helvetica').fontSize(10).fillColor(BRAND.textMid).text('SISTEMA DE GESTIÓN', MARGIN + 130, y + 12).text('DE COMBUSTIBLES', MARGIN + 130, y + 24);
+                doc.font('Helvetica-Bold').fontSize(11).fillColor(BRAND.primary).text(titulo.toUpperCase(), MARGIN, y + 50, { width: CONTENT_W_LANDSCAPE, align: 'right' });
+                doc.font('Helvetica').fontSize(8).fillColor(BRAND.textLight).text(`Generado: ${new Date().toLocaleString()}`, MARGIN, y + 65, { width: CONTENT_W_LANDSCAPE, align: 'right' });
+                doc.moveTo(MARGIN, y + 82).lineTo(MARGIN + CONTENT_W_LANDSCAPE, y + 82).strokeColor(BRAND.primary).lineWidth(2).stroke();
+                return y + 95;
+            };
+
+            const drawFooterLandscape = (doc: PDFKit.PDFDocument, pageNumber: number, totalRegistros: number) => {
+                const footerY = 540; // Ajustado para landscape (612 - MARGIN)
+                doc.moveTo(MARGIN, footerY).lineTo(MARGIN + CONTENT_W_LANDSCAPE, footerY).strokeColor(BRAND.lineStrong).lineWidth(0.5).stroke();
+                doc.font('Helvetica').fontSize(7).fillColor(BRAND.textLight);
+                doc.text('EasyDiesel © ' + new Date().getFullYear() + ' — Documento confidencial.', MARGIN, footerY + 6);
+                doc.text(`Total registros: ${totalRegistros} | Página ${pageNumber}`, MARGIN, footerY + 6, { width: CONTENT_W_LANDSCAPE, align: 'right' });
+            };
+
+            const drawTableHeaderLandscape = (doc: PDFKit.PDFDocument, columns: any[], startY: number) => {
+                const rowH = 20;
+                doc.save();
+                doc.rect(MARGIN, startY, CONTENT_W_LANDSCAPE, rowH).fill(BRAND.primary);
+                doc.restore();
+                doc.font('Helvetica-Bold').fontSize(8).fillColor(BRAND.white);
+                let x = MARGIN + 6;
+                columns.forEach(col => {
+                    doc.text(col.label, x, startY + 6, { width: col.width - 12, align: 'left', lineBreak: false });
+                    x += col.width;
+                });
+                return startY + rowH;
+            };
+
+            const drawTableRowLandscape = (doc: PDFKit.PDFDocument, columns: any[], item: any, startY: number, isZebra: boolean) => {
+                const rowH = 18;
+                if (isZebra) {
+                    doc.save();
+                    doc.rect(MARGIN, startY, CONTENT_W_LANDSCAPE, rowH).fill(BRAND.bgZebra);
+                    doc.restore();
+                }
+                doc.moveTo(MARGIN, startY + rowH).lineTo(MARGIN + CONTENT_W_LANDSCAPE, startY + rowH).strokeColor(BRAND.lineSoft).lineWidth(0.5).stroke();
+                doc.font('Helvetica').fontSize(7.5).fillColor(BRAND.textDark);
+                let x = MARGIN + 6;
+                columns.forEach(col => {
+                    const text = formatValue(item[col.key]);
+                    doc.text(text, x, startY + 5, { width: col.width - 12, align: 'left', lineBreak: true, ellipsis: true });
+                    x += col.width;
+                });
+                return startY + rowH;
+            };
+
             // ── Sin datos ──
             if (!datos || datos.length === 0) {
-                drawHeader(doc, titulo);
+                drawHeaderLandscape(doc, titulo);
                 doc.moveDown(3);
-                doc.font('Helvetica').fontSize(12).fillColor(BRAND.textMid)
-                    .text('No hay datos disponibles para este reporte.', { align: 'center' });
-                drawFooter(doc, 1, 0);
+                doc.font('Helvetica').fontSize(12).fillColor(BRAND.textMid).text('No hay datos disponibles.', { align: 'center' });
+                drawFooterLandscape(doc, 1, 0);
                 doc.end();
                 return;
             }
 
             // ── Preparar columnas ──
             const sampleItem = datos[0];
-            const columnKeys = Object.keys(sampleItem).filter(key =>
+            const columnKeys = Object.keys(sampleItem).filter(key => 
                 typeof sampleItem[key] !== 'object' && key !== 'id'
             );
 
-            // Distribuir ancho equitativamente con un mínimo
-            const colW = Math.max(60, Math.floor(CONTENT_W / columnKeys.length));
+            // Calcular anchos dinámicos
+            const totalWidth = CONTENT_W_LANDSCAPE;
+            const colW = Math.floor(totalWidth / columnKeys.length);
             const columns = columnKeys.map(key => ({
                 key,
                 label: humanize(key).toUpperCase(),
@@ -210,28 +270,23 @@ export const generarPDF = async (titulo: string, datos: any[]): Promise<Buffer> 
 
             // ── Dibujar ──
             let pageNum = 1;
-            let cursorY = drawHeader(doc, titulo);
+            let cursorY = drawHeaderLandscape(doc, titulo);
             cursorY = drawSummaryBadge(doc, cursorY, datos.length);
-            cursorY = drawTableHeader(doc, columns, cursorY);
+            cursorY = drawTableHeaderLandscape(doc, columns, cursorY);
 
             datos.forEach((item, idx) => {
-                // Si no cabe la fila, nueva página
-                if (cursorY > 720) {
-                    drawFooter(doc, pageNum, datos.length);
-                    doc.addPage();
+                // Si no cabe la fila (landscape height es 612), nueva página
+                if (cursorY > 520) {
+                    drawFooterLandscape(doc, pageNum, datos.length);
+                    doc.addPage({ layout: 'landscape' });
                     pageNum++;
-
-                    // Re-dibujar header en la nueva página
-                    cursorY = drawHeader(doc, titulo);
-                    cursorY = drawTableHeader(doc, columns, cursorY);
+                    cursorY = drawHeaderLandscape(doc, titulo);
+                    cursorY = drawTableHeaderLandscape(doc, columns, cursorY);
                 }
-
-                cursorY = drawTableRow(doc, columns, item, cursorY, idx % 2 === 0);
+                cursorY = drawTableRowLandscape(doc, columns, item, cursorY, idx % 2 === 0);
             });
 
-            // Footer de la última página
-            drawFooter(doc, pageNum, datos.length);
-
+            drawFooterLandscape(doc, pageNum, datos.length);
             doc.end();
         } catch (error) {
             reject(error);

@@ -150,7 +150,7 @@ export function AuditoriaPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-h1 text-text-primary mb-1 flex items-center gap-2">
-                        <Icon name="shield" size={24} className="text-amber-500" />
+                        <Icon name="audit" size={24} className="text-amber-500" />
                         Rastro de Auditoría
                     </h1>
                     <p className="text-small text-text-secondary">Monitoreo inmutable de todas las operaciones del sistema.</p>
@@ -169,7 +169,7 @@ export function AuditoriaPage() {
                         <select
                             value={filterModulo}
                             onChange={(e) => setFilterModulo(e.target.value)}
-                            className="w-full px-3 py-2 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[13px] interactive"
+                            className="w-full h-[38px] px-3 py-2 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[13px] interactive"
                         >
                             <option value="">Todos los módulos</option>
                             {MODULOS.map((m) => (
@@ -183,7 +183,7 @@ export function AuditoriaPage() {
                             type="date"
                             value={filterDesde}
                             onChange={(e) => setFilterDesde(e.target.value)}
-                            className="w-full px-3 py-2 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[13px] interactive"
+                            className="w-full h-[38px] px-3 py-2 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[13px] interactive"
                         />
                     </div>
                     <div className="space-y-1">
@@ -192,19 +192,19 @@ export function AuditoriaPage() {
                             type="date"
                             value={filterHasta}
                             onChange={(e) => setFilterHasta(e.target.value)}
-                            className="w-full px-3 py-2 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[13px] interactive"
+                            className="w-full h-[38px] px-3 py-2 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[13px] interactive"
                         />
                     </div>
-                    <div className="flex items-end">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full"
+                    <div className="space-y-1">
+                        <label className="text-[10px] font-mono uppercase tracking-wider text-text-muted invisible">Acción</label>
+                        <button
+                            type="button"
                             onClick={() => { setFilterModulo(''); setFilterDesde(''); setFilterHasta(''); }}
+                            className="w-full h-[38px] flex items-center justify-center gap-2 px-3 py-2 bg-bg-elevated border border-border-default rounded-brand text-text-muted hover:text-text-primary hover:border-amber-500/50 transition-all text-[11px] font-mono uppercase tracking-wider"
                         >
-                            <Icon name="x" size={13} />
+                            <Icon name="close" size={14} className="opacity-80" />
                             Limpiar filtros
-                        </Button>
+                        </button>
                     </div>
                 </div>
                 {pagination.total > 0 && (
