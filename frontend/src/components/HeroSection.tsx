@@ -18,6 +18,7 @@ export function HeroSection({ onIntroStateChange }: HeroSectionProps) {
     const heroRef      = useRef<HTMLElement>(null);
     const contentRef   = useRef<HTMLDivElement>(null);
     const gridRef      = useRef<HTMLDivElement>(null);
+    const canvasRef    = useRef<HTMLCanvasElement>(null);
     const glowRef      = useRef<HTMLDivElement>(null);
     const logoWrapRef  = useRef<HTMLDivElement>(null);
     const logoRef      = useRef<HTMLDivElement>(null);
@@ -33,6 +34,218 @@ export function HeroSection({ onIntroStateChange }: HeroSectionProps) {
 
     const onChangeRef = useRef(onIntroStateChange);
     onChangeRef.current = onIntroStateChange;
+
+    /* ══════════════════════════════════════════════════════
+       Canvas particle background — flowing constellation
+       + nebulae + rising ember sparks + connection web
+    ══════════════════════════════════════════════════════ */
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        let raf: number;
+        let W = 0, H = 0;
+        let mouseX = -1, mouseY = -1;
+
+        interface Dot {
+            x: number; y: number;
+            vx: number; vy: number;
+            r: number; alpha: number;
+            alphaSpeed: number; alphaDir: number;
+        }
+
+        interface Ember {
+            x: number; y: number;
+            vy: number; vx: number;
+            life: number; maxLife: number;
+            r: number;
+        }
+
+        const DOTS = 75;
+        const EMBERS = 30;
+        const CONNECTION_DIST = 140;
+        const dots: Dot[] = [];
+        const embers: Ember[] = [];
+
+        const resize = () => {
+            W = canvas.width  = canvas.offsetWidth  || window.innerWidth;
+            H = canvas.height = canvas.offsetHeight || window.innerHeight;
+        };
+        resize();
+        const retryId = setTimeout(resize, 100);
+        window.addEventListener('resize', resize, { passive: true });
+
+        const onMouse = (e: MouseEvent) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        };
+        window.addEventListener('mousemove', onMouse, { passive: true });
+
+        // Spawn dots
+        for (let i = 0; i < DOTS; i++) {
+            dots.push({
+                x: Math.random() * (W || window.innerWidth),
+                y: Math.random() * (H || window.innerHeight),
+                vx: (Math.random() - 0.5) * 0.35,
+                vy: (Math.random() - 0.5) * 0.25,
+                r: Math.random() * 2 + 0.5,
+                alpha: Math.random() * 0.5 + 0.15,
+                alphaSpeed: Math.random() * 0.003 + 0.001,
+                alphaDir: Math.random() > 0.5 ? 1 : -1,
+            });
+        }
+
+        // Spawn initial embers
+        const spawnEmber = (): Ember => ({
+            x: Math.random() * (W || window.innerWidth),
+            y: (H || window.innerHeight) + Math.random() * 20,
+            vy: -(Math.random() * 0.8 + 0.3),
+            vx: (Math.random() - 0.5) * 0.4,
+            life: 0,
+            maxLife: 180 + Math.random() * 120,
+            r: Math.random() * 1.5 + 0.4,
+        });
+        for (let i = 0; i < EMBERS; i++) {
+            const e = spawnEmber();
+            e.y = Math.random() * (H || window.innerHeight);
+            e.life = Math.random() * e.maxLife;
+            embers.push(e);
+        }
+
+        // Nebula angles
+        let ang1 = 0, ang2 = Math.PI, ang3 = Math.PI * 0.5;
+
+        const draw = () => {
+            ctx.clearRect(0, 0, W, H);
+
+            // ── Nebula blobs (3) ──
+            ang1 += 0.0014; ang2 += 0.001; ang3 += 0.0018;
+            const drawNeb = (cx: number, cy: number, r: number, a: number) => {
+                const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+                g.addColorStop(0, `rgba(245,166,35,${a})`);
+                g.addColorStop(0.5, `rgba(245,166,35,${a * 0.35})`);
+                g.addColorStop(1, 'transparent');
+                ctx.fillStyle = g;
+                ctx.fillRect(0, 0, W, H);
+            };
+            drawNeb(
+                W * 0.5 + Math.cos(ang1) * W * 0.18,
+                H * 0.45 + Math.sin(ang1 * 1.3) * H * 0.12,
+                W * 0.32, 0.08
+            );
+            drawNeb(
+                W * 0.35 + Math.cos(ang2) * W * 0.12,
+                H * 0.6 + Math.sin(ang2 * 0.8) * H * 0.15,
+                W * 0.24, 0.055
+            );
+            drawNeb(
+                W * 0.7 + Math.sin(ang3) * W * 0.1,
+                H * 0.35 + Math.cos(ang3 * 1.1) * H * 0.1,
+                W * 0.20, 0.045
+            );
+
+            // ── Connection lines between nearby dots ──
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i < DOTS; i++) {
+                for (let j = i + 1; j < DOTS; j++) {
+                    const dx = dots[i].x - dots[j].x;
+                    const dy = dots[i].y - dots[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < CONNECTION_DIST) {
+                        const lineAlpha = (1 - dist / CONNECTION_DIST) * 0.12;
+                        ctx.strokeStyle = `rgba(245,166,35,${lineAlpha})`;
+                        ctx.beginPath();
+                        ctx.moveTo(dots[i].x, dots[i].y);
+                        ctx.lineTo(dots[j].x, dots[j].y);
+                        ctx.stroke();
+                    }
+                }
+                // Also connect to mouse if close
+                if (mouseX > 0 && mouseY > 0) {
+                    const dmx = dots[i].x - mouseX;
+                    const dmy = dots[i].y - mouseY;
+                    const dMouse = Math.sqrt(dmx * dmx + dmy * dmy);
+                    if (dMouse < 180) {
+                        const lineAlpha = (1 - dMouse / 180) * 0.2;
+                        ctx.strokeStyle = `rgba(245,166,35,${lineAlpha})`;
+                        ctx.beginPath();
+                        ctx.moveTo(dots[i].x, dots[i].y);
+                        ctx.lineTo(mouseX, mouseY);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // ── Dots ──
+            for (const d of dots) {
+                // Gentle attraction toward mouse
+                if (mouseX > 0 && mouseY > 0) {
+                    const dmx = mouseX - d.x;
+                    const dmy = mouseY - d.y;
+                    const dist = Math.sqrt(dmx * dmx + dmy * dmy);
+                    if (dist < 250 && dist > 1) {
+                        const force = 0.012 * (1 - dist / 250);
+                        d.vx += (dmx / dist) * force;
+                        d.vy += (dmy / dist) * force;
+                    }
+                }
+                // Dampen velocity
+                d.vx *= 0.998;
+                d.vy *= 0.998;
+
+                d.x += d.vx;
+                d.y += d.vy;
+                if (d.x < 0) d.x = W; if (d.x > W) d.x = 0;
+                if (d.y < 0) d.y = H; if (d.y > H) d.y = 0;
+
+                d.alpha += d.alphaSpeed * d.alphaDir;
+                if (d.alpha > 0.65) { d.alpha = 0.65; d.alphaDir = -1; }
+                if (d.alpha < 0.08) { d.alpha = 0.08; d.alphaDir = 1; }
+
+                ctx.beginPath();
+                ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(245,166,35,${d.alpha})`;
+                ctx.fill();
+            }
+
+            // ── Rising embers ──
+            for (const e of embers) {
+                e.x += e.vx + Math.sin(e.life * 0.03) * 0.15;
+                e.y += e.vy;
+                e.life++;
+                const progress = e.life / e.maxLife;
+                const eAlpha = progress < 0.2
+                    ? progress / 0.2
+                    : progress > 0.7
+                        ? 1 - (progress - 0.7) / 0.3
+                        : 1;
+
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, e.r * (1 - progress * 0.4), 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(245,166,35,${eAlpha * 0.5})`;
+                ctx.fill();
+
+                if (e.life >= e.maxLife) {
+                    Object.assign(e, spawnEmber());
+                }
+            }
+
+            raf = requestAnimationFrame(draw);
+        };
+        draw();
+
+        return () => {
+            cancelAnimationFrame(raf);
+            clearTimeout(retryId);
+            window.removeEventListener('resize', resize);
+            window.removeEventListener('mousemove', onMouse);
+        };
+    }, []);
 
     const scrollToContent = useCallback(() => {
         const hero = heroRef.current;
@@ -173,7 +386,22 @@ export function HeroSection({ onIntroStateChange }: HeroSectionProps) {
                 pinSpacing: true,
                 scrub: 1,
                 animation: scrubTL,
-                onLeave:     () => onChangeRef.current?.(true),
+                onLeave: () => {
+                    onChangeRef.current?.(true);
+                    // Smooth snap to #precios without stopping Lenis —
+                    // stopping Lenis causes a deadlock in v1.x because the RAF
+                    // loop is halted so onComplete never fires and start() is
+                    // never called, permanently locking scroll.
+                    const l = (window as any).__lenis;
+                    const target = document.getElementById('precios');
+                    if (l && target) {
+                        l.scrollTo(target, {
+                            offset: 0,
+                            duration: 1.2,
+                            easing: (t: number) => 1 - Math.pow(1 - t, 4),
+                        });
+                    }
+                },
                 onEnterBack: () => onChangeRef.current?.(false),
             });
 
@@ -182,13 +410,61 @@ export function HeroSection({ onIntroStateChange }: HeroSectionProps) {
         return () => { gsapCtx.revert(); };
     }, []);
 
+    /* ── Logo hover interaction (outside gsap.context to avoid conflicts) ── */
+    useEffect(() => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const logoWrap = logoWrapRef.current;
+        const logoEl   = logoRef.current;
+        const hexPath  = hexStrokeRef.current;
+        if (!logoWrap || !logoEl) return;
+
+        const onLogoEnter = () => {
+            gsap.to(logoEl, { scale: 1.08, rotateY: 12, rotateX: -6, duration: 0.4, ease: 'power2.out', overwrite: 'auto' });
+            gsap.to(logoWrap, { filter: 'drop-shadow(0 0 40px rgba(245,166,35,0.55))', duration: 0.35, ease: 'power2.out', overwrite: 'auto' });
+            if (hexPath) {
+                const len = hexPath.getTotalLength();
+                gsap.fromTo(hexPath,
+                    { strokeDashoffset: len },
+                    { strokeDashoffset: 0, duration: 0.65, ease: 'power2.out', overwrite: 'auto' }
+                );
+            }
+        };
+
+        const onLogoLeave = () => {
+            gsap.to(logoEl, { scale: 1, rotateY: 0, rotateX: 0, duration: 0.55, ease: 'elastic.out(1, 0.45)', overwrite: 'auto' });
+            gsap.to(logoWrap, { filter: 'drop-shadow(0 0 0px transparent)', duration: 0.5, ease: 'power2.out', overwrite: 'auto' });
+        };
+
+        const onLogoMove = (e: MouseEvent) => {
+            const rect = logoWrap.getBoundingClientRect();
+            const dx = (e.clientX - rect.left - rect.width  / 2) / (rect.width  / 2);
+            const dy = (e.clientY - rect.top  - rect.height / 2) / (rect.height / 2);
+            gsap.to(logoEl, { rotateY: dx * 18, rotateX: -dy * 14, duration: 0.25, ease: 'power2.out', overwrite: 'auto' });
+        };
+
+        logoWrap.addEventListener('mouseenter', onLogoEnter);
+        logoWrap.addEventListener('mouseleave', onLogoLeave);
+        logoWrap.addEventListener('mousemove',  onLogoMove);
+
+        return () => {
+            logoWrap.removeEventListener('mouseenter', onLogoEnter);
+            logoWrap.removeEventListener('mouseleave', onLogoLeave);
+            logoWrap.removeEventListener('mousemove',  onLogoMove);
+        };
+    }, []);
+
     return (
         <div className="hero-root">
             <section
                 ref={heroRef}
                 className="h-screen relative overflow-hidden bg-bg-base flex flex-col items-center justify-center px-6"
             >
-                {/* ── Capa 0: Grid background ── */}
+                {/* ── Capa -1: Animated canvas background ── */}
+                <canvas
+                    ref={canvasRef}
+                    className="hero-layer absolute inset-0 w-full h-full pointer-events-none"
+                    style={{ opacity: 0.9 }}
+                />
                 <div
                     ref={gridRef}
                     className="hero-layer absolute inset-0 pointer-events-none"
@@ -230,7 +506,7 @@ export function HeroSection({ onIntroStateChange }: HeroSectionProps) {
                     {/* Logo */}
                     <div
                         ref={logoWrapRef}
-                        className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 mb-6"
+                        className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 mb-6 cursor-pointer interactive"
                         style={{ perspective: '900px' }}
                     >
                         <div ref={logoRef} className="w-full h-full hero-logo-wrap">

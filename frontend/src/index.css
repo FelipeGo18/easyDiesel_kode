@@ -343,31 +343,42 @@ html.lenis {
 }
 
 /* ══════════════════════════════════════════════════════
-   Horizontal Scroll — Prices section
+   Prices — “Page Shrinks to Corner” sequential reveal
+   Each card enters BIG (centered, large) then the GSAP
+   scrub timeline shrinks it into its column position while
+   the next card slides in big from the right.
+   - prices-pin-wrap  : 400vh tall → provides 300vh of scroll
+   - prices-pin-scene : sticky top:0, 100vh viewport
+   - .pcard           : absolutely positioned, GSAP-driven
+   - .pcard-inner     : relative container for content
    ══════════════════════════════════════════════════════ */
-.prices-hscroll {
-  will-change: transform;
+.prices-pin-wrap {
+  position: relative;
+  height: 400vh;
 }
 
-.hscroll-panel {
-  will-change: transform, opacity;
-  min-width: 100vw;
-  min-height: 100vh;
-}
-
-/* Step progress rail */
-.prices-step-rail {
-  position: absolute;
+.prices-pin-scene {
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  z-index: 20;
+  height: 100vh;
+  overflow: hidden;
 }
 
-.prices-step-fill {
+.pcard {
+  position: absolute;
+  overflow: hidden;
+  will-change: width, height, transform, border-radius;
+  background: rgba(12, 12, 12, 0.94);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: 0 0 80px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.pcard-inner {
+  position: relative;
+  width: 100%;
   height: 100%;
-  transition: width 0.4s ease;
+  padding: 2rem;
+  overflow-y: auto;
 }
 
 /* Gauge SVG elements */

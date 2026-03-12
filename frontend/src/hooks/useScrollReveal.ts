@@ -56,87 +56,119 @@ export function useScrollReveal(refs: SectionRefs, enabled: boolean) {
                 }
 
                 /* ────────────────────────────────
-                   PRICES — Horizontal scroll pinned
-                   Single pin + single gsap.to(x)
-                   + gauge arc animation + subsidy bar
+                   PRICES — Page Shrinks to Corner
+                   Sequential scroll-driven reveal:
+                   Card 0 enters big → shrinks left
+                   Card 1 slides in big → shrinks center
+                   Card 2 slides in big → shrinks right
+                   Powered by CSS sticky + GSAP scrub.
                    ──────────────────────────────── */
                 if (refs.prices.current) {
-                    const pricesInner = refs.prices.current.querySelector<HTMLElement>('.prices-hscroll');
-                    if (pricesInner) {
-                        const panels = pricesInner.querySelectorAll('.hscroll-panel');
-                        if (panels.length > 1) {
-                            const getDistance = () => pricesInner.scrollWidth - window.innerWidth;
+                    const wrap  = refs.prices.current.querySelector<HTMLElement>('.prices-pin-wrap');
+                    const scene = refs.prices.current.querySelector<HTMLElement>('.prices-pin-scene');
+                    const pcs   = Array.from(refs.prices.current.querySelectorAll<HTMLElement>('.pcard'));
 
-                            // Single pin + horizontal translate
-                            gsap.to(pricesInner, {
-                                x: () => -getDistance(),
-                                ease: 'none',
-                                scrollTrigger: {
-                                    trigger: refs.prices.current,
-                                    start: 'top top',
-                                    end: () => `+=${getDistance()}`,
-                                    pin: true,
-                                    scrub: 1,
-                                    anticipatePin: 1,
-                                    invalidateOnRefresh: true,
-                                },
-                            });
+                    if (!wrap || !scene || pcs.length < 3) return;
 
-                            // Gauge arc: animate strokeDashoffset based on section scroll
-                            const gaugeArc = refs.prices.current.querySelector('.gauge-arc');
-                            if (gaugeArc) {
-                                gsap.fromTo(gaugeArc,
-                                    { strokeDashoffset: 251.3 },
-                                    {
-                                        strokeDashoffset: 60,
-                                        ease: 'power2.out',
-                                        scrollTrigger: {
-                                            trigger: refs.prices.current,
-                                            start: () => `top+=${getDistance() * 0.2} top`,
-                                            end: () => `top+=${getDistance() * 0.5} top`,
-                                            scrub: 1,
-                                        },
-                                    }
-                                );
+                    const W = scene.offsetWidth  || window.innerWidth;
+                    const H = scene.offsetHeight || window.innerHeight;
+
+                    /* ─ Active (big, centred) state ─ */
+                    const aW = Math.min(W * 0.66, 860);
+                    const aH = H * 0.78;
+                    const aX = (W - aW) / 2;
+                    const aY = (H - aH) / 2;
+
+                    /* ─ Final (grid column) state ─ */
+                    const PAD = Math.max(24, W * 0.025);
+                    const GAP = 18;
+                    const fW  = (W - 2 * PAD - 2 * GAP) / 3;
+                    const fH  = H * 0.74;
+                    const fY  = (H - fH) / 2;
+                    const fX  = [PAD, PAD + fW + GAP, PAD + 2 * (fW + GAP)];
+
+                    /* ─ All cards start OFF-SCREEN right + invisible.
+                       Nothing shows until the user scrolls into pin-wrap.
+                       Card 0 enters first as the scrub timeline begins. ─ */
+                    gsap.set(pcs[0], { width: aW, height: aH, x: W + 30, y: aY, borderRadius: 20, opacity: 0 });
+                    gsap.set(pcs[1], { width: aW, height: aH, x: W + 30, y: aY, borderRadius: 20, opacity: 0 });
+                    gsap.set(pcs[2], { width: aW, height: aH, x: W + 30, y: aY, borderRadius: 20, opacity: 0 });
+
+                    /* ─ Scrub timeline — driven by prices-pin-wrap scroll.
+                       Total duration: 6 units across 300vh of scroll.
+                       Each "unit" ≈ 50vh of scroll movement.
+                    ─ */
+                    const tl = gsap.timeline({
+                        scrollTrigger: {
+                            trigger: wrap,
+                            start: 'top top',
+                            end: 'bottom bottom',
+                            scrub: 1.8,
+                        },
+                    });
+
+                    // 0 → 0.8 : Card 0 slides in big from right → centered
+                    tl.to(pcs[0], { x: aX, opacity: 1, duration: 0.8, ease: 'power2.out' }, 0);
+
+                    // 0.8 → 2.0 : Card 0 shrinks to left column
+                    tl.to(pcs[0], {
+                        width: fW, height: fH, x: fX[0], y: fY, borderRadius: 12,
+                        duration: 1.2, ease: 'power2.inOut',
+                    }, 0.8);
+
+                    // 1.8 → 2.6 : Card 1 slides in big from right → centered
+                    tl.to(pcs[1], { x: aX, opacity: 1, duration: 0.8, ease: 'power2.out' }, 1.8);
+
+                    // 2.6 → 3.8 : Card 1 shrinks to centre column
+                    tl.to(pcs[1], {
+                        width: fW, height: fH, x: fX[1], y: fY, borderRadius: 12,
+                        duration: 1.2, ease: 'power2.inOut',
+                    }, 2.6);
+
+                    // 3.6 → 4.4 : Card 2 slides in big from right → centered
+                    tl.to(pcs[2], { x: aX, opacity: 1, duration: 0.8, ease: 'power2.out' }, 3.6);
+
+                    // 4.4 → 5.6 : Card 2 shrinks to right column
+                    tl.to(pcs[2], {
+                        width: fW, height: fH, x: fX[2], y: fY, borderRadius: 12,
+                        duration: 1.2, ease: 'power2.inOut',
+                    }, 4.4);
+
+                    /* ─ Gauge + needle + subsidy — trigger on scene enter ─ */
+                    const gaugeArc  = refs.prices.current.querySelector('.gauge-arc');
+                    const needle    = refs.prices.current.querySelector('.gauge-needle');
+                    const subsidyBar = refs.prices.current.querySelector('.fuel-subsidy-bar');
+
+                    if (gaugeArc) {
+                        gsap.fromTo(gaugeArc,
+                            { strokeDashoffset: 251.3 },
+                            {
+                                strokeDashoffset: 60, duration: 1.4, ease: 'power2.out',
+                                delay: 0.3,
+                                scrollTrigger: { trigger: scene, start: 'top 80%', toggleActions: 'play none none reverse' },
                             }
-
-                            // Gauge needle rotation
-                            const needle = refs.prices.current.querySelector('.gauge-needle');
-                            if (needle) {
-                                gsap.fromTo(needle,
-                                    { rotation: -90 },
-                                    {
-                                        rotation: 55,
-                                        ease: 'power2.out',
-                                        transformOrigin: '100px 100px',
-                                        scrollTrigger: {
-                                            trigger: refs.prices.current,
-                                            start: () => `top+=${getDistance() * 0.2} top`,
-                                            end: () => `top+=${getDistance() * 0.5} top`,
-                                            scrub: 1,
-                                        },
-                                    }
-                                );
+                        );
+                    }
+                    if (needle) {
+                        gsap.fromTo(needle,
+                            { rotation: -90 },
+                            {
+                                rotation: 55, duration: 1.4, ease: 'power2.out',
+                                transformOrigin: '100px 100px',
+                                delay: 0.3,
+                                scrollTrigger: { trigger: scene, start: 'top 80%', toggleActions: 'play none none reverse' },
                             }
-
-                            // Subsidy fuel bar fill
-                            const subsidyBar = refs.prices.current.querySelector('.fuel-subsidy-bar');
-                            if (subsidyBar) {
-                                gsap.fromTo(subsidyBar,
-                                    { width: '0%' },
-                                    {
-                                        width: '65%',
-                                        ease: 'power2.out',
-                                        scrollTrigger: {
-                                            trigger: refs.prices.current,
-                                            start: () => `top+=${getDistance() * 0.25} top`,
-                                            end: () => `top+=${getDistance() * 0.5} top`,
-                                            scrub: 1,
-                                        },
-                                    }
-                                );
+                        );
+                    }
+                    if (subsidyBar) {
+                        gsap.fromTo(subsidyBar,
+                            { width: '0%' },
+                            {
+                                width: '65%', duration: 1.2, ease: 'power2.out',
+                                delay: 0.5,
+                                scrollTrigger: { trigger: scene, start: 'top 70%', toggleActions: 'play none none reverse' },
                             }
-                        }
+                        );
                     }
                 }
 
