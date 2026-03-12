@@ -139,4 +139,15 @@ export const inventarioService = {
     
     cierreTurno: (data: CierreTurnoData) => 
         api.post<ApiResponse<CierreTurnoResult>>('/inventario/cierre-turno', data).then(r => r.data.data as CierreTurnoResult),
+
+    listarTransacciones: (opts: { estacionId?: string; placaVehiculo?: string; page?: number; limit?: number }) =>
+        api.get<any>('/inventario/transacciones', { params: opts })
+            .then(r => ({
+                data: (r.data.data ?? []) as TransaccionCombustible[],
+                pagination: r.data.pagination as PaginatedResult<TransaccionCombustible>['pagination'] | undefined,
+            })),
+
+    cancelarEntrega: (entregaId: string) =>
+        api.delete<ApiResponse<{ cancelada: boolean; entregaId: string }>>(`/inventario/entregas/${entregaId}`)
+            .then(r => r.data.data as { cancelada: boolean; entregaId: string }),
 };

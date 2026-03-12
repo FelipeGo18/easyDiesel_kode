@@ -93,7 +93,7 @@ export interface EntregaDistribuidor {
     id: string;
     distribuidorId: string;
     estacionId: string;
-    tanqueId: string;
+    tanqueId: string | null;
     tipoCombustible: TipoCombustible;
     galones: number;
     precioUnitario: number;

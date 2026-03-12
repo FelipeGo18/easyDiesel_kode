@@ -4,8 +4,11 @@ import { crearUsuarioSchema, actualizarUsuarioSchema } from '../validators/usuar
 
 export const obtenerUsuariosHandler = async (req: Request, res: Response) => {
     try {
-        const usuarios = await usuarioService.obtenerUsuarios();
-        res.json({ success: true, data: usuarios });
+        const search = req.query.search as string | undefined;
+        const page = req.query.page ? Number(req.query.page) : undefined;
+        const limit = req.query.limit ? Number(req.query.limit) : undefined;
+        const result = await usuarioService.obtenerUsuarios({ search, page, limit });
+        res.json({ success: true, ...result });
     } catch (error: any) {
         res.status(500).json({ success: false, message: 'Error interno o de base de datos', error: error.message });
     }

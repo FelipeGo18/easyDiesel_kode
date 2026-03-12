@@ -102,10 +102,30 @@ export class AuthService {
             },
         });
 
+        // Fetch estacion/distribuidor for roles that need them
+        const rolesThatNeedRelations = ['estacion', 'distribuidor', 'distribuidor_regulado'];
+        let estacion = null;
+        let distribuidor = null;
+        if (rolesThatNeedRelations.includes(session.usuario.rol as string)) {
+            const fullUser = await prisma.usuario.findUnique({
+                where: { id: usuario.id },
+                select: {
+                    estacionGestionada: { select: { id: true, nombre: true, codigoSicom: true, zonaId: true } },
+                    distribuidorGestionado: { select: { id: true, nombre: true, nit: true } },
+                },
+            });
+            estacion = fullUser?.estacionGestionada ?? null;
+            distribuidor = fullUser?.distribuidorGestionado ?? null;
+        }
+
         return {
             token,
             refreshToken,
-            usuario: session.usuario,
+            usuario: {
+                ...session.usuario,
+                estacion,
+                distribuidor,
+            },
         };
     }
 

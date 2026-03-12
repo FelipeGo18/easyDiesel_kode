@@ -13,8 +13,11 @@ import {
 
 export const obtenerEstacionesHandler = async (req: Request, res: Response) => {
     try {
-        const estaciones = await actorService.obtenerEstaciones();
-        res.json({ success: true, data: estaciones });
+        const search = req.query.search as string | undefined;
+        const page = req.query.page ? Number(req.query.page) : undefined;
+        const limit = req.query.limit ? Number(req.query.limit) : undefined;
+        const result = await actorService.obtenerEstaciones({ search, page, limit });
+        res.json({ success: true, ...result });
     } catch (error: any) {
         res.status(500).json({ success: false, message: 'Error interno o de base de datos', error: error.message });
     }
@@ -27,6 +30,20 @@ export const obtenerEstacionPorIdHandler = async (req: Request, res: Response) =
         res.json({ success: true, data: estacion });
     } catch (error: any) {
         res.status(404).json({ success: false, message: error.message });
+    }
+};
+
+export const actualizarZonaEstacionHandler = async (req: Request, res: Response) => {
+    try {
+        const id = req.params.id as string;
+        const { zonaId } = req.body;
+        if (!zonaId || typeof zonaId !== 'string') {
+            return res.status(400).json({ success: false, message: 'Se requiere zonaId (string)' });
+        }
+        const estacion = await actorService.actualizarZonaEstacion(id, zonaId);
+        res.json({ success: true, message: 'Zona actualizada', data: estacion });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message });
     }
 };
 
@@ -70,8 +87,11 @@ export const actualizarEstacionHandler = async (req: Request, res: Response) => 
 
 export const obtenerDistribuidoresHandler = async (req: Request, res: Response) => {
     try {
-        const distribuidores = await actorService.obtenerDistribuidores();
-        res.json({ success: true, data: distribuidores });
+        const search = req.query.search as string | undefined;
+        const page = req.query.page ? Number(req.query.page) : undefined;
+        const limit = req.query.limit ? Number(req.query.limit) : undefined;
+        const result = await actorService.obtenerDistribuidores({ search, page, limit });
+        res.json({ success: true, ...result });
     } catch (error: any) {
         res.status(500).json({ success: false, message: 'Error interno o de base de datos', error: error.message });
     }

@@ -19,9 +19,10 @@ describe('UsuarioService', () => {
             prismaMock.usuario.findMany.mockResolvedValue([
                 { id: '1', email: 'a@b.co', nombre: 'A', passwordHash: 'xxx', rol: { nombre: 'admin' } },
             ]);
+            prismaMock.usuario.count.mockResolvedValue(1);
             const result = await service.obtenerUsuarios();
-            expect(result).toHaveLength(1);
-            expect(result[0]).not.toHaveProperty('passwordHash');
+            expect(result.data).toHaveLength(1);
+            expect(result.data[0]).not.toHaveProperty('passwordHash');
         });
     });
 

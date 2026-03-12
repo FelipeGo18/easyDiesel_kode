@@ -21,10 +21,10 @@ const ALL_PERMISSIONS = [
 
 const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     admin: ALL_PERMISSIONS,
-    estacion: ['tanques:leer', 'inventario:leer', 'inventario:escribir', 'precios:leer', 'decretos:leer', 'auditoria:leer', 'reportes:leer', 'reportes:generar', 'dashboard:leer'],
+    estacion: ['actores:leer', 'tanques:leer', 'tanques:escribir', 'inventario:leer', 'inventario:escribir', 'precios:leer', 'decretos:leer', 'auditoria:leer', 'reportes:leer', 'reportes:generar', 'dashboard:leer'],
     distribuidor: ['actores:leer', 'inventario:leer', 'inventario:escribir', 'precios:leer', 'decretos:leer', 'auditoria:leer', 'reportes:leer', 'reportes:generar', 'dashboard:leer'],
-    regulador: ['precios:leer', 'zonas:leer', 'decretos:leer', 'reportes:leer', 'dashboard:leer', 'auditoria:leer'],
-    auditor: ['auditoria:leer', 'reportes:leer', 'dashboard:leer'],
+    regulador: ['precios:leer', 'zonas:leer', 'decretos:leer', 'reportes:leer', 'dashboard:leer', 'auditoria:leer', 'actores:leer'],
+    auditor: ['auditoria:leer', 'reportes:leer', 'reportes:generar', 'dashboard:leer'],
     particular: ['precios:leer', 'dashboard:leer'],
     distribuidor_regulado: ['inventario:leer', 'inventario:escribir', 'precios:leer', 'decretos:leer', 'auditoria:leer', 'reportes:leer', 'reportes:generar', 'dashboard:leer'],
 };

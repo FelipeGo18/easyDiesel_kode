@@ -3,6 +3,44 @@ import { inventarioService } from '../services/inventario.service';
 import { registrarEntregaSchema, confirmarEntregaSchema, registrarTransaccionSchema, cierreTurnoSchema, entradaDirectaSchema } from '../validators/inventario.validator';
 import { ZodError } from 'zod';
 
+export const obtenerTransaccionesHandler = async (req: Request, res: Response) => {
+    try {
+        const estacionId = req.query.estacionId as string | undefined;
+        const placaVehiculo = req.query.placaVehiculo as string | undefined;
+        if (!estacionId && !placaVehiculo) {
+            res.status(400).json({ success: false, message: 'Se requiere estacionId o placaVehiculo' });
+            return;
+        }
+        const page = req.query.page ? Number(req.query.page) : undefined;
+        const limit = req.query.limit ? Number(req.query.limit) : undefined;
+        const result = await inventarioService.listarTransacciones({ estacionId, placaVehiculo, page, limit });
+        res.json({ success: true, ...result });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const cancelarEntregaHandler = async (req: Request, res: Response) => {
+    try {
+        const entregaId = req.params.id as string;
+        if (!entregaId) {
+            res.status(400).json({ success: false, message: 'Se requiere el ID de la entrega' });
+            return;
+        }
+        // El distribuidor solo puede cancelar sus propias entregas
+        const distribuidorId = (req.user as any)?.distribuidorId as string | undefined;
+        const result = await inventarioService.cancelarEntrega(entregaId, {
+            distribuidorId,
+            usuarioId: req.user?.userId,
+            ip: req.ip,
+            userAgent: typeof req.get === 'function' ? req.get('user-agent') || undefined : undefined,
+        });
+        res.json({ success: true, message: 'Entrega cancelada correctamente', data: result });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
 export const obtenerEntregasPendientesHandler = async (req: Request, res: Response) => {
     try {
         const estacionId = req.query.estacionId as string;

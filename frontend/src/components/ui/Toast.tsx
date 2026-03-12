@@ -1,4 +1,4 @@
-import { useState, useCallback, type ReactNode } from 'react';
+import { useState, useCallback, useMemo, type ReactNode } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { ToastContext, type ToastContextValue, type ToastItem, type ToastType } from '@/components/ui/ToastContext';
 
@@ -17,10 +17,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         setTimeout(() => remove(id), 4000);
     }, [remove]);
 
-    const ctx: ToastContextValue = {
+    const ctx = useMemo<ToastContextValue>(() => ({
         success: (msg) => add('success', msg),
         error: (msg) => add('error', msg),
-    };
+    }), [add]);
 
     return (
         <ToastContext.Provider value={ctx}>

@@ -8,8 +8,9 @@ import { Badge } from '@/components/ui/Badge';
 import { useToast } from '@/components/ui/useToast';
 import { tanquesService } from '@/services/inventario';
 import { estacionesService } from '@/services/actores';
-import { type Tanque, type EstacionServicio, type TipoCombustible } from '@/types';
+import { type Tanque, type EstacionServicio, type TipoCombustible, type AuthenticatedUser } from '@/types';
 import { getErrorMessage } from '@/lib/http';
+import { useAuth } from '@/context/useAuth';
 
 const tipoCombustibleOptions = [
     { value: 'ACPM', label: 'ACPM' },
@@ -18,6 +19,10 @@ const tipoCombustibleOptions = [
 
 export function TanquesPage() {
     const toast = useToast();
+    const { user } = useAuth();
+    const currentUser = user as AuthenticatedUser | null;
+    const myEstacionId = currentUser?.estacion?.id ?? null;
+
     const [tanques, setTanques] = useState<Tanque[]>([]);
     const [estaciones, setEstaciones] = useState<EstacionServicio[]>([]);
     const [loading, setLoading] = useState(true);
@@ -31,26 +36,36 @@ export function TanquesPage() {
         capacidadGalones: 0,
         nivelMinimo: 0,
         tipoCombustible: 'ACPM',
-        estacionId: '',
+        estacionId: myEstacionId ?? '',
     });
 
     const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             const [tanquesData, estacionesData] = await Promise.all([
-                tanquesService.getAll(),
-                estacionesService.getAll()
+                tanquesService.getAll(myEstacionId ?? undefined),
+                estacionesService.getAll(),
             ]);
             setTanques(Array.isArray(tanquesData) ? tanquesData : []);
-            setEstaciones(Array.isArray(estacionesData) ? estacionesData : []);
+            // If user has a fixed station, only show that one in the dropdown
+            const estList = Array.isArray(estacionesData.data) ? estacionesData.data :
+                Array.isArray(estacionesData) ? estacionesData as EstacionServicio[] : [];
+            setEstaciones(myEstacionId ? estList.filter(e => e.id === myEstacionId) : estList);
         } catch (error: unknown) {
             toast.error(`Error al cargar datos: ${getErrorMessage(error)}`);
         } finally {
             setLoading(false);
         }
-    }, [toast]);
+    }, [myEstacionId]); // toast excluded — stable ref
 
     useEffect(() => { fetchData(); }, [fetchData]);
+
+    // Keep formData.estacionId in sync when myEstacionId becomes available after async auth load
+    useEffect(() => {
+        if (myEstacionId) {
+            setFormData(prev => ({ ...prev, estacionId: myEstacionId }));
+        }
+    }, [myEstacionId]);
 
     const openCreate = () => {
         setEditing(null);
@@ -59,7 +74,7 @@ export function TanquesPage() {
             capacidadGalones: 0,
             nivelMinimo: 0,
             tipoCombustible: 'ACPM',
-            estacionId: '',
+            estacionId: myEstacionId ?? '',
         });
         setModalOpen(true);
     };
@@ -182,9 +197,16 @@ export function TanquesPage() {
                     />
                     <SelectField
                         label="Estación de Servicio"
-                        value={formData.estacionId}
+                        value={myEstacionId ?? formData.estacionId ?? ''}
                         onChange={(e) => setFormData({ ...formData, estacionId: e.target.value })}
-                        options={estaciones.map(e => ({ value: e.id, label: e.nombre }))}
+                        options={[
+                            // Fallback: always include the user's own station even if fetchData hasn't resolved yet
+                            ...(myEstacionId && currentUser?.estacion && !estaciones.find(e => e.id === myEstacionId)
+                                ? [{ value: myEstacionId, label: currentUser.estacion.nombre }]
+                                : []),
+                            ...estaciones.map(e => ({ value: e.id, label: e.nombre })),
+                        ]}
+                        disabled={!!myEstacionId}
                         required
                     />
                     <SelectField
