@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { obtenerEntregasPendientesHandler, obtenerEntregasPorDistribuidorHandler, registrarEntregaHandler, confirmarEntregaHandler, registrarTransaccionHandler, cierreTurnoHandler, registrarEntradaDirectaHandler } from '../controllers/inventario.controller';
+import { obtenerEntregasPendientesHandler, obtenerEntregasPorDistribuidorHandler, registrarEntregaHandler, confirmarEntregaHandler, registrarTransaccionHandler, cierreTurnoHandler, registrarEntradaDirectaHandler, obtenerTransaccionesHandler, cancelarEntregaHandler } from '../controllers/inventario.controller';
 
 const router = Router();
 
@@ -92,6 +92,32 @@ router.post('/entregas', registrarEntregaHandler); // Registro de abastecimiento
  *         description: Entrega confirmada y tanque actualizado
  */
 router.post('/entregas/:id/confirmar', confirmarEntregaHandler);
+
+/** DELETE /inventario/entregas/:id — Cancela (elimina) una entrega pendiente */
+router.delete('/entregas/:id', cancelarEntregaHandler);
+
+/**
+ * @swagger
+ * /api/inventario/transacciones:
+ *   get:
+ *     summary: Lista transacciones de una estación o por placa de vehículo
+ *     tags: [Inventario]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: estacionId
+ *       - in: query
+ *         name: placaVehiculo
+ *       - in: query
+ *         name: page
+ *       - in: query
+ *         name: limit
+ *     responses:
+ *       200:
+ *         description: Lista paginada de transacciones
+ */
+router.get('/transacciones', obtenerTransaccionesHandler);
 
 /**
  * @swagger

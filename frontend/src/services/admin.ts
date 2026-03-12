@@ -83,9 +83,21 @@ export const preciosService = {
     update: (id: string, data: Partial<Precio>) => api.put<ApiResponse<Precio>>(`/precios/${id}`, data).then(r => r.data.data as Precio),
 };
 
+export type UsuariosPagination = {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+};
+
 /* ── Usuarios ── */
 export const usuariosService = {
-    getAll: () => api.get<ApiResponse<Usuario[]>>('/usuarios').then(r => r.data.data ?? []),
+    getAll: (opts?: { search?: string; page?: number; limit?: number }) =>
+        api.get<ApiResponse<Usuario[]> & { pagination?: UsuariosPagination }>('/usuarios', { params: opts })
+            .then(r => ({
+                data: ((r.data as any).data ?? []) as Usuario[],
+                pagination: (r.data as any).pagination as UsuariosPagination | undefined,
+            })),
     getById: (id: string) => api.get<ApiResponse<Usuario>>(`/usuarios/${id}`).then(r => r.data.data as Usuario),
     create: (data: Record<string, unknown>) => api.post<ApiResponse<Usuario>>('/usuarios', data).then(r => r.data.data as Usuario),
     update: (id: string, data: Record<string, unknown>) => api.put<ApiResponse<Usuario>>(`/usuarios/${id}`, data).then(r => r.data.data as Usuario),

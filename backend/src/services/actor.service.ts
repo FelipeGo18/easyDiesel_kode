@@ -11,14 +11,37 @@ export class ActorService {
     // ESTACIONES DE SERVICIO
     // ==========================================
 
-    async obtenerEstaciones() {
-        return prisma.estacionServicio.findMany({
-            include: {
-                zona: true,
-                usuario: { select: { id: true, nombre: true, email: true } }
-            },
-            orderBy: { createdAt: 'desc' },
-        });
+    async obtenerEstaciones(opts?: { search?: string; page?: number; limit?: number }) {
+        const page = Math.max(1, opts?.page ?? 1);
+        const limit = Math.min(200, Math.max(1, opts?.limit ?? 100));
+        const skip = (page - 1) * limit;
+
+        const where: any = {};
+        if (opts?.search?.trim()) {
+            const q = opts.search.trim();
+            where.OR = [
+                { nombre: { contains: q, mode: 'insensitive' } },
+                { nit: { contains: q, mode: 'insensitive' } },
+                { ciudad: { contains: q, mode: 'insensitive' } },
+                { codigoSicom: { contains: q, mode: 'insensitive' } },
+            ];
+        }
+
+        const [data, total] = await Promise.all([
+            prisma.estacionServicio.findMany({
+                where,
+                include: {
+                    zona: true,
+                    usuario: { select: { id: true, nombre: true, email: true } },
+                },
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: limit,
+            }),
+            prisma.estacionServicio.count({ where }),
+        ]);
+
+        return { data, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
     }
 
     async obtenerEstacionPorId(id: string) {
@@ -61,6 +84,20 @@ export class ActorService {
         });
     }
 
+    async actualizarZonaEstacion(estacionId: string, zonaId: string) {
+        const existe = await prisma.estacionServicio.findUnique({ where: { id: estacionId } });
+        if (!existe) throw new Error('Estación no encontrada');
+
+        const zona = await prisma.zonaDistribucion.findUnique({ where: { id: zonaId } });
+        if (!zona) throw new Error('Zona no encontrada');
+
+        return prisma.estacionServicio.update({
+            where: { id: estacionId },
+            data: { zona: { connect: { id: zonaId } } },
+            include: { zona: true },
+        });
+    }
+
     async actualizarEstacion(id: string, data: ActualizarEstacionInput) {
         const existe = await prisma.estacionServicio.findUnique({ where: { id } });
         if (!existe) throw new Error('Estación no encontrada');
@@ -93,13 +130,35 @@ export class ActorService {
     // DISTRIBUIDORES
     // ==========================================
 
-    async obtenerDistribuidores() {
-        return prisma.distribuidor.findMany({
-            include: {
-                usuario: { select: { id: true, nombre: true, email: true } }
-            },
-            orderBy: { createdAt: 'desc' },
-        });
+    async obtenerDistribuidores(opts?: { search?: string; page?: number; limit?: number }) {
+        const page = Math.max(1, opts?.page ?? 1);
+        const limit = Math.min(200, Math.max(1, opts?.limit ?? 100));
+        const skip = (page - 1) * limit;
+
+        const where: any = {};
+        if (opts?.search?.trim()) {
+            const q = opts.search.trim();
+            where.OR = [
+                { nombre: { contains: q, mode: 'insensitive' } },
+                { nit: { contains: q, mode: 'insensitive' } },
+                { ciudad: { contains: q, mode: 'insensitive' } },
+            ];
+        }
+
+        const [data, total] = await Promise.all([
+            prisma.distribuidor.findMany({
+                where,
+                include: {
+                    usuario: { select: { id: true, nombre: true, email: true } },
+                },
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: limit,
+            }),
+            prisma.distribuidor.count({ where }),
+        ]);
+
+        return { data, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
     }
 
     async obtenerDistribuidorPorId(id: string) {

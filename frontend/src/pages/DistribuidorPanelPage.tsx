@@ -46,6 +46,8 @@ export function DistribuidorPanelPage() {
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [canceling, setCanceling] = useState<string | null>(null);
+    const [cancelConfirmId, setCancelConfirmId] = useState<string | null>(null);
 
     // Form state
     const [form, setForm] = useState({
@@ -72,13 +74,13 @@ export function DistribuidorPanelPage() {
                 estacionesService.getAll(),
             ]);
             setEntregas(entregasData.data ?? []);
-            setEstaciones(estacionesData);
+            setEstaciones(estacionesData.data ?? []);
         } catch (error: unknown) {
             toast.error(`Error al cargar datos: ${getErrorMessage(error)}`);
         } finally {
             setLoading(false);
         }
-    }, [distribuidorId, toast]);
+    }, [distribuidorId]); // toast is stable after ToastProvider fix — excluded intentionally
 
     useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -142,9 +144,24 @@ export function DistribuidorPanelPage() {
         }
     };
 
-    // ── Render ───────────────────────────────────────────────────────────────
+    // ── Cancelar entrega pendiente ───────────────────────────────────────────────────────
 
-    if (!distribuidorId) {
+    const handleCancelar = async () => {
+        if (!cancelConfirmId) return;
+        setCanceling(cancelConfirmId);
+        try {
+            await inventarioService.cancelarEntrega(cancelConfirmId);
+            toast.success('Entrega cancelada');
+            setCancelConfirmId(null);
+            await fetchData();
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, 'No fue posible cancelar la entrega'));
+        } finally {
+            setCanceling(null);
+        }
+    };
+
+    if (!distribuidor) {
         return (
             <div className="flex flex-col items-center justify-center h-[60vh] gap-4 text-text-muted">
                 <Truck className="w-10 h-10 opacity-30" />
@@ -219,7 +236,7 @@ export function DistribuidorPanelPage() {
                         <table className="w-full text-[12px]">
                             <thead>
                                 <tr className="border-b border-border-subtle">
-                                    {['Remisión', 'Estación', 'Combustible', 'Galones', 'Total', 'Fecha', 'Estado'].map(h => (
+                                    {['Remisión', 'Estación', 'Combustible', 'Galones', 'Total', 'Fecha', 'Estado', ''].map(h => (
                                         <th key={h} className="text-left px-4 py-2.5 text-text-muted font-medium tracking-wide uppercase text-[10px]">{h}</th>
                                     ))}
                                 </tr>
@@ -247,6 +264,18 @@ export function DistribuidorPanelPage() {
                                             <Badge variant={e.confirmada ? 'green' : 'yellow'}>
                                                 {e.confirmada ? 'Confirmada' : 'Pendiente'}
                                             </Badge>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            {!e.confirmada && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCancelConfirmId(e.id)}
+                                                    className="text-[11px] font-medium text-red-400/80 hover:text-red-400 transition-colors px-2 py-1 rounded-[6px] hover:bg-red-500/10"
+                                                    title="Cancelar entrega"
+                                                >
+                                                    Cancelar
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
@@ -338,6 +367,44 @@ export function DistribuidorPanelPage() {
                         </Button>
                     </div>
                 </form>
+            </Modal>
+
+            {/* ── Modal: Confirmar cancelación ── */}
+            <Modal
+                open={!!cancelConfirmId}
+                onClose={() => setCancelConfirmId(null)}
+                title="Cancelar entrega"
+            >
+                <div className="space-y-4">
+                    <p className="text-[13px] text-text-secondary">
+                        ¿Confirmas la cancelación de esta entrega pendiente? Solo las entregas no confirmadas por la estación pueden cancelarse.
+                    </p>
+                    {cancelConfirmId && (() => {
+                        const e = entregas.find(x => x.id === cancelConfirmId);
+                        if (!e) return null;
+                        return (
+                            <div className="rounded-brand border border-border-subtle bg-bg-elevated px-3 py-3 text-[12px] text-text-secondary">
+                                Remisión <span className="font-mono text-text-primary">{e.numeroRemision}</span>
+                                {' · '}{formatGallons(Number(e.galones))} gal
+                                {' · '}<span className="text-amber-400">{e.tipoCombustible}</span>
+                                {' · '}{formatCurrency(Number(e.precioTotal))}
+                            </div>
+                        );
+                    })()}
+                    <div className="flex justify-end gap-2 pt-2">
+                        <Button variant="ghost" type="button" onClick={() => setCancelConfirmId(null)}>
+                            No, conservar
+                        </Button>
+                        <Button
+                            type="button"
+                            isLoading={!!canceling}
+                            onClick={handleCancelar}
+                            className="border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                        >
+                            Sí, cancelar entrega
+                        </Button>
+                    </div>
+                </div>
             </Modal>
         </div>
     );

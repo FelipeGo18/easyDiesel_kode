@@ -3,7 +3,10 @@ import { z } from 'zod';
 export const registrarEntregaSchema = z.object({
     distribuidorId: z.string().uuid('ID de distribuidor inválido'),
     estacionId: z.string().uuid('ID de estación inválido'),
-    tanqueId: z.string().uuid('ID de tanque inválido'),
+    tanqueId: z.preprocess(
+        (val) => (val === '' ? null : val),
+        z.string().uuid('ID de tanque inválido').nullable().optional()
+    ),
     tipoCombustible: z.enum(['ACPM', 'GASOLINA_CORRIENTE', 'GASOLINA_EXTRA']),
     galones: z.number().positive('La cantidad de galones debe ser mayor a 0'),
     precioUnitario: z.number().positive('El precio unitario debe ser mayor a 0'),

@@ -307,20 +307,15 @@ export function HomePage() {
                                             </div>
                                             <div className="p-1">
                                                 {(() => {
-                                                    const rolNombre = typeof user?.rol === 'object' ? user.rol.nombre : user?.rol;
-                                                    const isParticular = rolNombre === 'particular';
-
                                                     return (
                                                         <>
-                                                            {!isParticular && (
-                                                                <button
-                                                                    onClick={() => { navigate('/dashboard'); setShowProfileMenu(false); }}
-                                                                    className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-text-secondary hover:text-text-primary hover:bg-bg-elevated rounded-sm transition-colors"
-                                                                >
-                                                                    <Icon name="dashboard" size={14} />
-                                                                    Mi panel
-                                                                </button>
-                                                            )}
+                                                            <button
+                                                                onClick={() => { navigate('/dashboard'); setShowProfileMenu(false); }}
+                                                                className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-text-secondary hover:text-text-primary hover:bg-bg-elevated rounded-sm transition-colors"
+                                                            >
+                                                                <Icon name="dashboard" size={14} />
+                                                                Mi panel
+                                                            </button>
                                                             <button
                                                                 onClick={() => { logout(); setShowProfileMenu(false); }}
                                                                 className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-red-500 hover:bg-red-500/5 rounded-sm transition-colors"

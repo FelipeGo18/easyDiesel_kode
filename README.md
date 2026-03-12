@@ -84,7 +84,7 @@ easyDiesel_kode/
 │   │   ├── utils/           # Helpers y funciones auxiliares
 │   │   └── types/           # Interfaces TypeScript del dominio
 │   ├── prisma/
-│   │   ├── schema.prisma    # Modelo de base de datos
+│   │   ├── schema.prisma    # Modelo de base de datos (13 tablas)
 │   │   └── migrations/      # Historial de migraciones
 │   ├── tests/
 │   │   ├── unit/            # Pruebas de servicios con Jest
@@ -95,29 +95,23 @@ easyDiesel_kode/
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── pages/           # Una carpeta por módulo del sistema
+│   │   ├── pages/           # Panel por rol + páginas de admin
 │   │   ├── features/        # Componentes específicos del negocio
 │   │   ├── components/
-│   │   │   ├── ui/          # Componentes base de shadcn/ui
+│   │   │   ├── ui/          # Componentes base (Button, Card, Badge...)
 │   │   │   ├── common/      # Navbar, Sidebar, Table, Modal...
 │   │   │   └── layout/      # Estructura de página
 │   │   ├── hooks/           # Custom hooks por módulo
 │   │   ├── services/        # Capa de llamadas a la API REST
-│   │   ├── context/         # AuthContext, RolContext
+│   │   ├── context/         # AuthContext
 │   │   ├── types/           # Interfaces TypeScript del dominio
-│   │   └── lib/             # Utils de shadcn/ui, constantes, ENUMs
+│   │   └── lib/             # Utils, constantes, ENUMs
 │   ├── tests/
 │   ├── .env.example
 │   ├── vite.config.ts
-│   ├── tailwind.config.ts
 │   ├── package.json
 │   └── tsconfig.json
 │
-├── docs/                    # Documentación técnica del proyecto
-│   ├── Arquitectura_Plataforma_Combustibles.md
-│   ├── arquitectura_combustibles.puml
-│   ├── modelo_base_datos_combustibles.puml
-│   └── branding/            # Assets SVG de marca
 ├── normativa/               # Documentación normativa (decretos, reglas)
 │   └── decreto.md
 ├── .agents/                 # Skills reutilizables para agentes de IA
@@ -183,7 +177,7 @@ FRONTEND_URL="http://localhost:5173"
 # Google OAuth 2.0
 GOOGLE_CLIENT_ID="tu_google_client_id"
 GOOGLE_CLIENT_SECRET="tu_google_client_secret"
-GOOGLE_CALLBACK_URL="http://localhost:3000/api/auth/google/callback"
+GOOGLE_REDIRECT_URI="http://localhost:3000/api/auth/google/callback"
 ```
 
 ### Variables de entorno — Frontend
@@ -230,9 +224,9 @@ Cada push a la rama `main` dispara el despliegue automático en Vercel y Railway
 
 ## 📐 Base de datos
 
-El modelo de datos tiene **12 tablas** en PostgreSQL 16, gestionadas con Prisma Migrate:
+El modelo de datos tiene **13 tablas** en PostgreSQL 16, gestionadas con Prisma Migrate:
 
-`usuarios` · `roles` · `estaciones_servicio` · `distribuidores` · `tanques` · `transacciones_combustible` · `entregas_distribuidor` · `zonas_distribucion` · `precios_vigentes` · `decretos_normativos` · `auditoria_log` · `reportes`
+`usuarios` · `roles` · `session_tokens` · `estaciones_servicio` · `distribuidores` · `tanques` · `transacciones_combustible` · `entregas_distribuidor` · `zonas_distribucion` · `precios_vigentes` · `decretos_normativos` · `auditoria_log` · `reportes`
 
 Para visualizar el modelo entidad-relación, abrir `docs/modelo_base_datos_combustibles.puml` en [plantuml.com](https://www.plantuml.com/plantuml/uml).
 
@@ -240,12 +234,9 @@ Para visualizar el modelo entidad-relación, abrir `docs/modelo_base_datos_combu
 
 ## 📄 Documentación
 
-| Documento                                        | Descripción                                         |
-| ------------------------------------------------ | ---------------------------------------------------- |
-| `docs/Arquitectura_Plataforma_Combustibles.md` | Arquitectura, modelo de BD y diseño de API completo |
-| `docs/arquitectura_combustibles.puml`          | Diagrama de arquitectura (PlantUML)                  |
-| `docs/modelo_base_datos_combustibles.puml`     | Diagrama ERD (PlantUML)                              |
-| `normativa/decreto.md`                         | Reglas del Decreto 1428/2025 y motor de precios      |
+| Documento                  | Descripción                                     |
+| -------------------------- | ----------------------------------------------- |
+| `normativa/decreto.md`   | Reglas del Decreto 1428/2025 y motor de precios |
 
 ---
 
@@ -266,9 +257,8 @@ Para visualizar el modelo entidad-relación, abrir `docs/modelo_base_datos_combu
 - [X] API REST diseñada (12 grupos de endpoints)
 - [X] Estructura de carpetas definida
 - [X] Implementación backend (12 controllers, 12 services, 13 routes, middleware auth)
-- [X] Scaffolding frontend (React + Vite + Tailwind v4 + estructura base)
+- [X] Implementación frontend (páginas y componentes de negocio — todos los roles)
 - [X] Pruebas unitarias backend (11 archivos de tests con Jest)
-- [ ] Implementación frontend (páginas y componentes de negocio)
 - [ ] Despliegue en producción
 
 ---

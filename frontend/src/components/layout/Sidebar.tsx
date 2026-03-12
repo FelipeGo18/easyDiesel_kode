@@ -11,7 +11,13 @@ export function Sidebar() {
     const { user, logout } = useAuth();
     const { hasAnyPermission } = useAccess();
     const location = useLocation();
-    const navItems = navigationRoutes.filter((route) => hasAnyPermission(...(route.requiredPermissions || [])));
+    const userRoleName: string = typeof (user as any)?.rol === 'string'
+        ? (user as any).rol
+        : (user as any)?.rol?.nombre ?? '';
+    const navItems = navigationRoutes.filter((route) => {
+        if (route.excludeRoles?.includes(userRoleName)) return false;
+        return hasAnyPermission(...(route.requiredPermissions || []));
+    });
 
     return (
         <aside

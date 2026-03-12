@@ -7,22 +7,38 @@ export class UsuarioService {
      * Obtener todos los usuarios, con sus relaciones básicas.
      * Por defecto, no se envía el hash del password.
      */
-    async obtenerUsuarios() {
-        const usuarios = await prisma.usuario.findMany({
-            include: {
-                rol: true,
-                estacionGestionada: {
-                    select: { id: true, nombre: true }
+    async obtenerUsuarios(opts?: { search?: string; page?: number; limit?: number }) {
+        const page = Math.max(1, opts?.page ?? 1);
+        const limit = Math.min(200, Math.max(1, opts?.limit ?? 50));
+        const skip = (page - 1) * limit;
+
+        const where: any = {};
+        if (opts?.search?.trim()) {
+            const q = opts.search.trim();
+            where.OR = [
+                { nombre: { contains: q, mode: 'insensitive' } },
+                { email: { contains: q, mode: 'insensitive' } },
+            ];
+        }
+
+        const [usuarios, total] = await Promise.all([
+            prisma.usuario.findMany({
+                where,
+                include: {
+                    rol: true,
+                    estacionGestionada: { select: { id: true, nombre: true } },
+                    distribuidorGestionado: { select: { id: true, nombre: true } }
                 },
-                distribuidorGestionado: {
-                    select: { id: true, nombre: true }
-                }
-            },
-            orderBy: { createdAt: 'desc' }
-        });
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: limit,
+            }),
+            prisma.usuario.count({ where }),
+        ]);
 
         // Remover passwordHash
-        return usuarios.map(({ passwordHash, ...user }: any) => user);
+        const data = usuarios.map(({ passwordHash, ...user }: any) => user);
+        return { data, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
     }
 
     /**
@@ -56,7 +72,7 @@ export class UsuarioService {
             throw new Error('El correo electrónico ya está registrado');
         }
 
-        let { rolId, password, ...restData } = data;
+        let { rolId, password, estacionId: newEstacionId, ...restData } = data;
 
         // Si no se envía un rol (por algún motivo), asignar rol 'particular'
         if (!rolId) {
@@ -81,6 +97,13 @@ export class UsuarioService {
             },
             include: { rol: true }
         });
+
+        if (newEstacionId) {
+            await prisma.estacionServicio.update({
+                where: { id: newEstacionId },
+                data: { usuarioId: usuario.id },
+            });
+        }
 
         const { passwordHash: _, ...newUser } = usuario;
         return newUser;
@@ -121,6 +144,19 @@ export class UsuarioService {
             data: updateData,
             include: { rol: true, estacionGestionada: true, distribuidorGestionado: true }
         });
+
+        if ('estacionId' in data) {
+            await prisma.estacionServicio.updateMany({
+                where: { usuarioId: id },
+                data: { usuarioId: null },
+            });
+            if (data.estacionId) {
+                await prisma.estacionServicio.update({
+                    where: { id: data.estacionId as string },
+                    data: { usuarioId: id },
+                });
+            }
+        }
 
         const { passwordHash: _, ...newUser } = usuario;
         return newUser;

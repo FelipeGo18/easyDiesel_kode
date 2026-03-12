@@ -26,6 +26,8 @@ export interface AppRouteConfig {
     description?: string;
     requiredPermissions?: string[];
     showInNavigation?: boolean;
+    /** Role names that should NOT see this item in the sidebar nav */
+    excludeRoles?: string[];
 }
 
 export const publicRoutes: AppRouteConfig[] = [
@@ -73,6 +75,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         description: 'Estaciones y distribuidores registrados',
         requiredPermissions: ['actores:leer', 'actores:escribir'],
         showInNavigation: true,
+        excludeRoles: ['estacion', 'despachador'],
     },
     {
         path: '/tanques',
@@ -103,6 +106,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         description: 'Decretos y reglas regulatorias aplicables',
         requiredPermissions: ['decretos:leer', 'decretos:escribir'],
         showInNavigation: true,
+        excludeRoles: ['estacion', 'despachador'],
     },
     {
         path: '/usuarios',

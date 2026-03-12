@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/useAuth';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { Card } from '@/components/ui/Card';
@@ -9,7 +9,6 @@ import {
     ArrowRight,
     Activity,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { dashboardService, type DashboardSummary, type DashboardAlert, type DashboardRecentOperation } from '@/services/dashboard';
 import { useToast } from '@/components/ui/useToast';
 import { navigationRoutes } from '@/features/routing/appRoutes';
@@ -17,6 +16,9 @@ import { useAccess } from '@/hooks/useAccess';
 import { getErrorMessage } from '@/lib/http';
 import { StationOperationsPage } from '@/pages/DespachadorPanelPage';
 import { DistribuidorPanelPage } from '@/pages/DistribuidorPanelPage';
+import { ParticularPanelPage } from '@/pages/ParticularPanelPage';
+import { ReguladorPanelPage } from '@/pages/ReguladorPanelPage';
+import { AuditorPanelPage } from '@/pages/AuditorPanelPage';
 
 export function DashboardPage() {
     const { user } = useAuth();
@@ -27,6 +29,8 @@ export function DashboardPage() {
     const [loading, setLoading] = useState(true);
 
     const fetchData = useCallback(async () => {
+        // Roles with dedicated panels don't use this admin dashboard data
+        if (roleName === 'estacion' || roleName === 'distribuidor' || roleName === 'distribuidor_regulado' || roleName === 'particular' || roleName === 'regulador' || roleName === 'auditor') return;
         try {
             setLoading(true);
             const data = await dashboardService.getSummary();
@@ -50,9 +54,16 @@ export function DashboardPage() {
         return <DistribuidorPanelPage />;
     }
 
-    // Usuarios particulares no tienen panel — redirigir a la homepage pública
     if (roleName === 'particular') {
-        return <Navigate to="/" replace />;
+        return <ParticularPanelPage />;
+    }
+
+    if (roleName === 'regulador') {
+        return <ReguladorPanelPage />;
+    }
+
+    if (roleName === 'auditor') {
+        return <AuditorPanelPage />;
     }
 
     // Lógica de visualización condicional basada en roles

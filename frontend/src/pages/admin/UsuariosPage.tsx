@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
+import { Search } from 'lucide-react';
 import { Icon } from '@/components/ui/Icon';
 import { DataTable, type Column } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
@@ -7,6 +8,8 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { useToast } from '@/components/ui/useToast';
 import { usuariosService, rolesService, type Usuario, type Rol } from '@/services/admin';
+import { estacionesService } from '@/services/actores';
+import type { EstacionServicio } from '@/types';
 import { getErrorMessage } from '@/lib/http';
 
 export function UsuariosPage() {
@@ -16,36 +19,55 @@ export function UsuariosPage() {
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
     const [editing, setEditing] = useState<Usuario | null>(null);
+    const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+    const LIMIT = 25;
 
     // Form
     const [email, setEmail] = useState('');
     const [nombre, setNombre] = useState('');
     const [password, setPassword] = useState('');
     const [rolId, setRolId] = useState('');
+    const [estacionId, setEstacionId] = useState('');
+    const [estaciones, setEstaciones] = useState<EstacionServicio[]>([]);
     const [submitting, setSubmitting] = useState(false);
 
-    const fetchData = useCallback(async () => {
+    const fetchUsers = useCallback(async (searchTerm: string, pg: number) => {
         try {
             setLoading(true);
-            const [usersData, rolesData] = await Promise.all([
-                usuariosService.getAll(),
-                rolesService.getAll(),
-            ]);
-            setUsuarios(Array.isArray(usersData) ? usersData : []);
-            setRoles(Array.isArray(rolesData) ? rolesData : []);
+            const usersData = await usuariosService.getAll({ search: searchTerm, page: pg, limit: LIMIT });
+            setUsuarios(usersData.data ?? []);
+            setPagination({ total: usersData.pagination?.total ?? 0, totalPages: usersData.pagination?.totalPages ?? 1 });
         } catch (error: unknown) {
-            toast.error(`Error al cargar datos: ${getErrorMessage(error)}`);
+            toast.error(`Error al cargar usuarios: ${getErrorMessage(error)}`);
         } finally {
             setLoading(false);
         }
-    }, [toast]);
+    }, []); // toast excluded — stable ref
 
-    useEffect(() => { fetchData(); }, [fetchData]);
+    // Fetch roles and estaciones once on mount
+    useEffect(() => {
+        rolesService.getAll().then(r => setRoles(r)).catch(() => {});
+        estacionesService.getAll().then(r => setEstaciones(r.data ?? [])).catch(() => {});
+    }, []);
+
+    // Debounced re-fetch on search/page change
+    useEffect(() => {
+        const delay = search ? 300 : 0;
+        const t = setTimeout(() => fetchUsers(search, page), delay);
+        return () => clearTimeout(t);
+    }, [search, page, fetchUsers]);
+
+    const fetchData = useCallback(() => {
+        fetchUsers(search, page);
+    }, [fetchUsers, search, page]);
 
     const openCreate = () => {
         setEditing(null);
         setEmail(''); setNombre(''); setPassword('');
         setRolId(roles[0]?.id || '');
+        setEstacionId('');
         setModalOpen(true);
     };
 
@@ -55,6 +77,7 @@ export function UsuariosPage() {
         setNombre(u.nombre);
         setPassword('');
         setRolId(u.rol?.id || '');
+        setEstacionId(u.estacionGestionada?.id || '');
         setModalOpen(true);
     };
 
@@ -72,15 +95,19 @@ export function UsuariosPage() {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
+        const selectedRoleName = roles.find(r => r.id === rolId)?.nombre || '';
         try {
             if (editing) {
                 const payload: Record<string, unknown> = { nombre, email };
                 if (password) payload.password = password;
                 if (rolId) payload.rolId = rolId;
+                if (selectedRoleName === 'estacion') payload.estacionId = estacionId || null;
                 await usuariosService.update(editing.id, payload);
                 toast.success('Usuario actualizado');
             } else {
-                await usuariosService.create({ email, nombre, password: password || undefined, rolId });
+                const createPayload: Record<string, unknown> = { email, nombre, password: password || undefined, rolId };
+                if (selectedRoleName === 'estacion' && estacionId) createPayload.estacionId = estacionId;
+                await usuariosService.create(createPayload);
                 toast.success('Usuario creado correctamente');
             }
             setModalOpen(false);
@@ -168,11 +195,22 @@ export function UsuariosPage() {
                 </Button>
             </div>
 
+            <div className="mb-4 relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+                <input
+                    type="text"
+                    placeholder="Buscar por nombre o email…"
+                    value={search}
+                    onChange={e => { setSearch(e.target.value); setPage(1); }}
+                    className="w-full rounded-brand border border-border-input bg-bg-input pl-8 pr-4 py-2.5 text-[13px] text-text-primary placeholder:text-text-muted focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/30 transition-colors"
+                />
+            </div>
+
             <DataTable
                 columns={columns}
                 data={usuarios}
                 loading={loading}
-                searchPlaceholder="Buscar por nombre o email..."
+                searchable={false}
                 emptyMessage="No hay usuarios registrados."
                 actions={(u) => (
                     <>
@@ -195,6 +233,25 @@ export function UsuariosPage() {
                     </>
                 )}
             />
+
+            {pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 px-1">
+                    <p className="text-[12px] text-text-muted">{pagination.total} usuarios</p>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={page <= 1}
+                            className="px-3 py-1.5 rounded-brand border border-border-subtle text-[12px] text-text-muted hover:text-text-primary disabled:opacity-40 transition-colors"
+                        >Anterior</button>
+                        <span className="px-3 py-1.5 text-[12px] text-text-secondary">{page} / {pagination.totalPages}</span>
+                        <button
+                            onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+                            disabled={page >= pagination.totalPages}
+                            className="px-3 py-1.5 rounded-brand border border-border-subtle text-[12px] text-text-muted hover:text-text-primary disabled:opacity-40 transition-colors"
+                        >Siguiente</button>
+                    </div>
+                </div>
+            )}
 
             {/* Modal */}
             <Modal
@@ -237,6 +294,15 @@ export function UsuariosPage() {
                             onChange={(e) => setRolId(e.target.value)}
                             options={roles.map(r => ({ value: r.id, label: r.nombre }))}
                             placeholder="Seleccionar rol"
+                        />
+                    )}
+                    {roles.find(r => r.id === rolId)?.nombre === 'estacion' && (
+                        <SelectField
+                            label="Estación asignada"
+                            id="user-estacion"
+                            value={estacionId}
+                            onChange={(e) => setEstacionId(e.target.value)}
+                            options={[{ value: '', label: '— Sin estación —' }, ...estaciones.map(e => ({ value: e.id, label: e.nombre }))]}
                         />
                     )}
                     <div className="flex justify-end gap-2 pt-2">

@@ -4,6 +4,7 @@ import {
     obtenerEstacionPorIdHandler,
     crearEstacionHandler,
     actualizarEstacionHandler,
+    actualizarZonaEstacionHandler,
     obtenerDistribuidoresHandler,
     obtenerDistribuidorPorIdHandler,
     crearDistribuidorHandler,
@@ -102,6 +103,7 @@ actorRouter.post('/estaciones', crearEstacionHandler);
  *         description: Estación actualizada
  */
 actorRouter.put('/estaciones/:id', actualizarEstacionHandler);
+actorRouter.put('/estaciones/:id/zona', actualizarZonaEstacionHandler);
 
 // --- RUTAS DISTRIBUIDORES ---
 /**

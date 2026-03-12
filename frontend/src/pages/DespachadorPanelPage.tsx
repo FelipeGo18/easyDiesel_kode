@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { BellRing, Fuel, MapPinned, Plus, ShieldCheck, TimerReset, Truck } from 'lucide-react';
+import { BellRing, ClipboardList, Fuel, MapPinned, Plus, Receipt, ShieldCheck, TimerReset, Truck } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { InputField, SelectField } from '@/components/ui/FormFields';
+import { InputField, SelectField, TextAreaField } from '@/components/ui/FormFields';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/useToast';
 import { useAuth } from '@/context/useAuth';
 import { getErrorMessage } from '@/lib/http';
-import { inventarioService, tanquesService, type EntradaDirectaData, type RegistrarTransaccionData } from '@/services/inventario';
+import { inventarioService, tanquesService, type CierreTurnoData, type EntradaDirectaData, type RegistrarTransaccionData } from '@/services/inventario';
 import { preciosService, type PrecioActual } from '@/services/precios';
-import type { AuthenticatedUser, EntregaDistribuidor, Tanque, TipoServicio } from '@/types';
+import type { AuthenticatedUser, CierreTurnoResult, EntregaDistribuidor, Tanque, TipoServicio, TransaccionCombustible } from '@/types';
 
 const tipoServicioOptions: { value: TipoServicio; label: string; helper: string }[] = [
     { value: 'PARTICULAR', label: 'Particular', helper: 'Aplica precio pleno sin subsidio.' },
@@ -68,6 +68,11 @@ export function StationOperationsPage() {
         precioUnitario: '0',
         observaciones: '',
     });
+    const [ventas, setVentas] = useState<TransaccionCombustible[]>([]);
+    const [ventasLoading, setVentasLoading] = useState(false);
+    const [cierreModalOpen, setCierreModalOpen] = useState(false);
+    const [cierreForm, setCierreForm] = useState({ tanqueId: '', nivelFisico: '0', observaciones: '' });
+    const [cierreResult, setCierreResult] = useState<CierreTurnoResult | null>(null);
     const [form, setForm] = useState({
         tanqueId: '',
         tipoServicio: 'PARTICULAR' as TipoServicio,
@@ -97,11 +102,7 @@ export function StationOperationsPage() {
         } finally {
             setLoading(false);
         }
-    }, [stationId, toast]);
-
-    useEffect(() => {
-        fetchTanques();
-    }, [fetchTanques]);
+    }, [stationId]); // toast excluded — stable after ToastProvider useMemo fix
 
     const fetchPendingDeliveries = useCallback(async () => {
         if (!stationId) {
@@ -119,11 +120,22 @@ export function StationOperationsPage() {
         } finally {
             setPendingDeliveriesLoading(false);
         }
-    }, [stationId, toast]);
+    }, [stationId]); // toast excluded — stable after ToastProvider useMemo fix
 
-    useEffect(() => {
-        fetchPendingDeliveries();
-    }, [fetchPendingDeliveries]);
+    const fetchVentas = useCallback(async () => {
+        if (!stationId) { setVentas([]); return; }
+        try {
+            setVentasLoading(true);
+            const result = await inventarioService.listarTransacciones({ estacionId: stationId, limit: 20 });
+            setVentas(result.data ?? []);
+        } catch {
+            // non-critical — no toast to avoid noise
+        } finally {
+            setVentasLoading(false);
+        }
+    }, [stationId]);
+
+    useEffect(() => { fetchVentas(); }, [fetchVentas]);
 
     const selectedTanque = useMemo(
         () => tanques.find((tanque) => tanque.id === form.tanqueId) ?? tanques[0] ?? null,
@@ -221,6 +233,7 @@ export function StationOperationsPage() {
                 esGranConsumidor: false,
             }));
             await fetchTanques();
+            fetchVentas();
         } catch (error: unknown) {
             toast.error(getErrorMessage(error, 'No fue posible registrar la venta'));
         } finally {
@@ -231,7 +244,7 @@ export function StationOperationsPage() {
     const openConfirmDelivery = (delivery: EntregaDistribuidor) => {
         setSelectedDelivery(delivery);
         setConfirmReceiptForm({
-            tanqueId: delivery.tanqueId,
+            tanqueId: delivery.tanqueId ?? '',
             galonesRecibidos: String(Number(delivery.galones) || 0),
         });
         setConfirmDeliveryOpen(true);
@@ -273,6 +286,36 @@ export function StationOperationsPage() {
             await Promise.all([fetchTanques(), fetchPendingDeliveries()]);
         } catch (error: unknown) {
             toast.error(getErrorMessage(error, 'No fue posible confirmar la entrega'));
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleCierre = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!stationId || !cierreForm.tanqueId) {
+            toast.error('Selecciona un tanque para el cierre.');
+            return;
+        }
+        const nivelFisico = Number(cierreForm.nivelFisico);
+        if (isNaN(nivelFisico) || nivelFisico < 0) {
+            toast.error('Ingresa un nivel físico válido (≥ 0).');
+            return;
+        }
+        setSubmitting(true);
+        try {
+            const result = await inventarioService.cierreTurno({
+                estacionId: stationId,
+                tanqueId: cierreForm.tanqueId,
+                nivelFisico,
+                observaciones: cierreForm.observaciones || undefined,
+            } satisfies CierreTurnoData);
+            setCierreResult(result);
+            toast.success(`Cierre completado. Diferencia: ${result.diferencia > 0 ? '+' : ''}${result.diferencia.toFixed(2)} gal`);
+            await fetchTanques();
+            fetchVentas();
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, 'Error al realizar el cierre de turno'));
         } finally {
             setSubmitting(false);
         }
@@ -636,7 +679,7 @@ export function StationOperationsPage() {
                     <Card className="rounded-[28px] border-white/6 bg-[linear-gradient(180deg,rgba(16,16,14,0.98),rgba(10,10,9,0.98))]">
                         <div className="flex items-center gap-3">
                             <div className="rounded-[16px] border border-white/8 bg-white/[0.04] p-3 text-amber-400">
-                                <Truck size={18} />
+                                <TimerReset size={18} />
                             </div>
                             <div>
                                 <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-white/42">Foco operativo</p>
@@ -648,6 +691,36 @@ export function StationOperationsPage() {
                             <div className="rounded-[18px] border border-white/8 bg-white/[0.03] px-4 py-3">Despachar solo desde el tanque correcto para el combustible seleccionado.</div>
                             <div className="rounded-[18px] border border-white/8 bg-white/[0.03] px-4 py-3">Escalar de inmediato si un tanque cae por debajo del mínimo operativo.</div>
                         </div>
+                    </Card>
+
+                    <Card className="rounded-[28px] border-amber-500/15 bg-[linear-gradient(180deg,rgba(16,16,12,0.98),rgba(10,10,8,0.98))]">
+                        <div className="flex items-center gap-3">
+                            <div className="rounded-[16px] border border-amber-500/20 bg-amber-500/[0.08] p-3 text-amber-400">
+                                <ClipboardList size={18} />
+                            </div>
+                            <div>
+                                <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-amber-500/60">Operativo</p>
+                                <h3 className="mt-1 text-lg font-semibold text-white">Cierre de turno</h3>
+                            </div>
+                        </div>
+                        <p className="mt-3 text-xs leading-5 text-white/55">
+                            Compara el nivel físico del tanque con el cálculo teórico y registra la diferencia en auditoría.
+                        </p>
+                        <button
+                            type="button"
+                            className="mt-4 w-full rounded-[14px] border border-amber-500/25 bg-amber-500/[0.08] px-4 py-2.5 text-[13px] font-medium text-amber-300 transition-colors hover:bg-amber-500/[0.14]"
+                            onClick={() => {
+                                setCierreResult(null);
+                                setCierreForm({
+                                    tanqueId: tanques[0]?.id ?? '',
+                                    nivelFisico: String(Number(tanques[0]?.nivelActual ?? '0').toFixed(2)),
+                                    observaciones: '',
+                                });
+                                setCierreModalOpen(true);
+                            }}
+                        >
+                            Iniciar cierre de turno
+                        </button>
                     </Card>
 
                     <Card className="rounded-[28px] border-white/6 bg-[linear-gradient(180deg,rgba(16,16,14,0.98),rgba(10,10,9,0.98))]">
@@ -692,6 +765,75 @@ export function StationOperationsPage() {
                     </Card>
                 </div>
             </div>
+
+            {/* ── Ventas del turno ── */}
+            <Card className="rounded-[28px] border-white/5 bg-[linear-gradient(180deg,rgba(20,20,18,0.98),rgba(12,12,10,0.98))] p-0 overflow-hidden">
+                <div className="flex items-center justify-between gap-4 border-b border-white/6 px-6 py-5">
+                    <div className="flex items-center gap-3">
+                        <div className="rounded-[16px] border border-white/8 bg-white/[0.04] p-3 text-amber-400">
+                            <Receipt size={18} />
+                        </div>
+                        <div>
+                            <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-amber-500/70">Historial</p>
+                            <h2 className="mt-1 text-xl font-semibold text-white">Ventas del turno</h2>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={fetchVentas}
+                        className="text-[12px] text-white/45 hover:text-white/75 transition-colors"
+                    >
+                        Actualizar
+                    </button>
+                </div>
+
+                {ventasLoading && (
+                    <div className="p-6 space-y-3">
+                        {[1, 2, 3].map(i => <div key={i} className="h-10 rounded-[12px] bg-white/[0.04] animate-pulse" />)}
+                    </div>
+                )}
+
+                {!ventasLoading && ventas.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-14 gap-3 text-white/38">
+                        <Receipt size={32} className="opacity-30" />
+                        <p className="text-sm">No hay registros de venta en este turno.</p>
+                    </div>
+                )}
+
+                {!ventasLoading && ventas.length > 0 && (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-[12px]">
+                            <thead>
+                                <tr className="border-b border-white/6">
+                                    {['Hora', 'Tanque', 'Servicio', 'Combustible', 'Galones', 'Precio/gal', 'Total', 'Placa'].map(h => (
+                                        <th key={h} className="px-4 py-3 text-left text-[10px] font-mono uppercase tracking-wider text-white/38">{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/[0.04]">
+                                {ventas.map(v => (
+                                    <tr key={v.id} className="hover:bg-white/[0.03] transition-colors">
+                                        <td className="px-4 py-3 font-mono text-white/55">
+                                            {new Date((v as any).createdAt ?? v.fecha).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+                                        </td>
+                                        <td className="px-4 py-3 text-white/75">{(v as any).tanque?.nombre ?? '\u2014'}</td>
+                                        <td className="px-4 py-3">
+                                            <Badge variant="blue" className="text-[10px]">{v.tipoServicio}</Badge>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <Badge variant="amber" className="text-[10px]">{v.tipoCombustible}</Badge>
+                                        </td>
+                                        <td className="px-4 py-3 font-mono text-white/75">{formatGallons(Number(v.galones))}</td>
+                                        <td className="px-4 py-3 font-mono text-white/55">{formatCurrency(Number(v.precioUnitario))}</td>
+                                        <td className="px-4 py-3 font-mono text-amber-300">{formatCurrency(Number(v.precioTotal))}</td>
+                                        <td className="px-4 py-3 font-mono text-white/45">{v.placaVehiculo || '\u2014'}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </Card>
 
             <Modal
                 open={confirmDeliveryOpen}
@@ -812,6 +954,96 @@ export function StationOperationsPage() {
                         </Button>
                     </div>
                 </form>
+            </Modal>
+
+            {/* ── Modal: Cierre de turno ── */}
+            <Modal
+                open={cierreModalOpen}
+                onClose={() => { setCierreModalOpen(false); setCierreResult(null); }}
+                title="Cierre de turno"
+            >
+                {cierreResult ? (
+                    <div className="space-y-4">
+                        <div className="rounded-brand border border-emerald-500/25 bg-emerald-500/[0.07] p-4">
+                            <p className="text-[11px] font-mono uppercase tracking-wider text-emerald-300/70 mb-3">Resultado del cierre</p>
+                            <div className="grid grid-cols-3 gap-3">
+                                <div>
+                                    <p className="text-[10px] text-white/45 uppercase tracking-wider">Teórico</p>
+                                    <p className="mt-1 text-lg font-semibold text-white">{formatGallons(cierreResult.nivelTeorico)} gal</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-white/45 uppercase tracking-wider">Físico</p>
+                                    <p className="mt-1 text-lg font-semibold text-white">{formatGallons(cierreResult.nivelFisico)} gal</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-white/45 uppercase tracking-wider">Diferencia</p>
+                                    <p className={`mt-1 text-lg font-semibold ${Math.abs(cierreResult.diferencia) < 0.01 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                        {cierreResult.diferencia > 0 ? '+' : ''}{formatGallons(cierreResult.diferencia)} gal
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <Button className="w-full" onClick={() => { setCierreModalOpen(false); setCierreResult(null); }}>
+                            Cerrar
+                        </Button>
+                    </div>
+                ) : (
+                    <form onSubmit={handleCierre} className="space-y-4">
+                        <div className="rounded-brand border border-amber-500/20 bg-amber-500/[0.05] px-3 py-3 text-[12px] text-amber-200/75">
+                            Ingresa el nivel físico observado. El sistema calcula la diferencia respecto al inventario teórico y registra el ajuste.
+                        </div>
+                        <SelectField
+                            label="Tanque a cerrar"
+                            value={cierreForm.tanqueId}
+                            onChange={e => setCierreForm(c => ({ ...c, tanqueId: e.target.value }))}
+                            options={tanques.map(t => ({
+                                value: t.id,
+                                label: `${t.nombre} · ${t.tipoCombustible} · ${formatGallons(Number(t.nivelActual))} gal (teórico)`,
+                            }))}
+                        />
+                        <InputField
+                            label="Nivel físico observado (galones)"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={cierreForm.nivelFisico}
+                            onChange={e => setCierreForm(c => ({ ...c, nivelFisico: e.target.value }))}
+                            required
+                        />
+                        {(() => {
+                            const t = tanques.find(tk => tk.id === cierreForm.tanqueId);
+                            const nf = Number(cierreForm.nivelFisico) || 0;
+                            if (!t) return null;
+                            const diff = nf - Number(t.nivelActual);
+                            const cls = Math.abs(diff) < 0.01
+                                ? 'border-border-subtle bg-bg-elevated text-text-secondary'
+                                : diff > 0
+                                    ? 'border-emerald-500/25 bg-emerald-500/[0.07] text-emerald-300'
+                                    : 'border-amber-500/25 bg-amber-500/[0.07] text-amber-300';
+                            return (
+                                <div className={`rounded-brand border px-3 py-3 text-[12px] ${cls}`}>
+                                    Diferencia estimada: {diff > 0 ? '+' : ''}{formatGallons(diff)} gal
+                                    {Math.abs(diff) >= 0.01 && (diff > 0 ? ' (sobrante)' : ' (faltante)')}
+                                </div>
+                            );
+                        })()}
+                        <TextAreaField
+                            label="Observaciones (opcional)"
+                            placeholder="Causa de la diferencia, novedades del turno..."
+                            rows={3}
+                            value={cierreForm.observaciones}
+                            onChange={e => setCierreForm(c => ({ ...c, observaciones: e.target.value }))}
+                        />
+                        <div className="flex justify-end gap-2 pt-2">
+                            <Button variant="ghost" type="button" onClick={() => setCierreModalOpen(false)}>
+                                Cancelar
+                            </Button>
+                            <Button type="submit" isLoading={submitting}>
+                                Registrar cierre
+                            </Button>
+                        </div>
+                    </form>
+                )}
             </Modal>
         </div>
     );

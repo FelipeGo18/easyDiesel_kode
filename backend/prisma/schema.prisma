@@ -159,7 +159,7 @@ model EntregaDistribuidor {
   id              String                   @id @default(uuid())
   distribuidorId  String                   @map("distribuidor_id")
   estacionId      String                   @map("estacion_id")
-  tanqueId        String                   @map("tanque_id")
+  tanqueId        String?                  @map("tanque_id")
   tipoCombustible TipoCombustible          @map("tipo_combustible")
   galones         Decimal                  @db.Decimal(10, 2)
   precioUnitario  Decimal                  @map("precio_unitario") @db.Decimal(10, 2)
@@ -171,7 +171,7 @@ model EntregaDistribuidor {
   updatedAt       DateTime                 @updatedAt @map("updated_at")
   distribuidor    Distribuidor             @relation(fields: [distribuidorId], references: [id])
   estacion        EstacionServicio         @relation(fields: [estacionId], references: [id])
-  tanque          Tanque                   @relation(fields: [tanqueId], references: [id])
+  tanque          Tanque?                  @relation(fields: [tanqueId], references: [id])
   transacciones   TransaccionCombustible[]
 
   @@index([distribuidorId, fechaEntrega])

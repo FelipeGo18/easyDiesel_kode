@@ -89,15 +89,17 @@ export class InventarioService {
      * Registra una entrega mayorista o distribuidor regulado, sumando el volumen al tanque.
      */
     async registrarEntrega(data: RegistrarEntregaInput, options?: { usuarioId?: string; ip?: string; userAgent?: string }) {
-        const tanque = await prisma.tanque.findUnique({ where: { id: data.tanqueId } });
-        if (!tanque) throw new Error('Tanque no encontrado');
+        if (data.tanqueId) {
+            const tanque = await prisma.tanque.findUnique({ where: { id: data.tanqueId } });
+            if (!tanque) throw new Error('Tanque no encontrado');
 
-        if (tanque.estacionId !== data.estacionId) {
-            throw new Error('El tanque no pertenece a la estación indicada');
-        }
+            if (tanque.estacionId !== data.estacionId) {
+                throw new Error('El tanque no pertenece a la estación indicada');
+            }
 
-        if (tanque.tipoCombustible !== data.tipoCombustible) {
-            throw new Error(`El tanque es de ${tanque.tipoCombustible}, se intentó descargar ${data.tipoCombustible}`);
+            if (tanque.tipoCombustible !== data.tipoCombustible) {
+                throw new Error(`El tanque es de ${tanque.tipoCombustible}, se intentó descargar ${data.tipoCombustible}`);
+            }
         }
 
         const precioTotal = Number((data.galones * data.precioUnitario).toFixed(2));
@@ -108,7 +110,7 @@ export class InventarioService {
                 data: {
                     distribuidorId: data.distribuidorId,
                     estacionId: data.estacionId,
-                    tanqueId: data.tanqueId,
+                    tanqueId: data.tanqueId ?? null,
                     tipoCombustible: data.tipoCombustible,
                     galones: data.galones,
                     precioUnitario: data.precioUnitario,
@@ -476,6 +478,91 @@ export class InventarioService {
             }
 
             return { transaccion, nivelAnterior: nivelActual, nivelNuevo: nuevoNivel };
+        });
+    }
+
+    /**
+     * Lista transacciones de una estación o filtra por placa de vehículo.
+     * Requiere al menos uno de los dos filtros.
+     */
+    async listarTransacciones(opts: {
+        estacionId?: string;
+        placaVehiculo?: string;
+        page?: number;
+        limit?: number;
+    }) {
+        if (!opts.estacionId && !opts.placaVehiculo) {
+            throw new Error('Se requiere al menos estacionId o placaVehiculo');
+        }
+        const page = Math.max(1, opts.page ?? 1);
+        const limit = Math.min(100, Math.max(1, opts.limit ?? 20));
+        const skip = (page - 1) * limit;
+
+        const where: Record<string, unknown> = {};
+        if (opts.estacionId) where.estacionId = opts.estacionId;
+        if (opts.placaVehiculo) {
+            where.placaVehiculo = { contains: opts.placaVehiculo.toUpperCase().replace(/\s/g, ''), mode: 'insensitive' };
+        }
+
+        const [data, total] = await Promise.all([
+            prisma.transaccionCombustible.findMany({
+                where,
+                include: {
+                    tanque: { select: { id: true, nombre: true } },
+                    estacion: { select: { id: true, nombre: true, ciudad: true } },
+                },
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: limit,
+            }),
+            prisma.transaccionCombustible.count({ where }),
+        ]);
+
+        return { data, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
+    }
+
+    /**
+     * Cancela (elimina) una entrega pendiente de confirmación.
+     * Solo el distribuidor que la registró puede cancelarla y solo si no está confirmada.
+     */
+    async cancelarEntrega(entregaId: string, options?: {
+        distribuidorId?: string;
+        usuarioId?: string;
+        ip?: string;
+        userAgent?: string;
+    }) {
+        const entrega = await prisma.entregaDistribuidor.findUnique({ where: { id: entregaId } });
+        if (!entrega) throw new Error('Entrega no encontrada');
+        if (entrega.confirmada) throw new Error('No se puede cancelar una entrega ya confirmada por la estación');
+        if (options?.distribuidorId && entrega.distribuidorId !== options.distribuidorId) {
+            throw new Error('No tienes permiso para cancelar esta entrega');
+        }
+
+        return prisma.$transaction(async (tx: any) => {
+            await tx.entregaDistribuidor.delete({ where: { id: entregaId } });
+
+            if (options?.usuarioId) {
+                await tx.auditoriaLog.create({
+                    data: {
+                        usuarioId: options.usuarioId,
+                        modulo: 'inventario',
+                        accion: 'CANCELAR_ENTREGA',
+                        entidad: 'entrega_distribuidor',
+                        entidadId: entregaId,
+                        datosAntes: {
+                            distribuidorId: entrega.distribuidorId,
+                            estacionId: entrega.estacionId,
+                            galones: Number(entrega.galones),
+                            numeroRemision: entrega.numeroRemision,
+                            tipoCombustible: entrega.tipoCombustible,
+                        },
+                        ip: options.ip,
+                        userAgent: options.userAgent,
+                    },
+                });
+            }
+
+            return { cancelada: true, entregaId };
         });
     }
 }
