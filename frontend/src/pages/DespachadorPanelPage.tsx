@@ -13,11 +13,10 @@ import { preciosService, type PrecioActual } from '@/services/precios';
 import type { AuthenticatedUser, CierreTurnoResult, EntregaDistribuidor, Tanque, TipoServicio, TransaccionCombustible } from '@/types';
 
 const tipoServicioOptions: { value: TipoServicio; label: string; helper: string }[] = [
-    { value: 'PARTICULAR', label: 'Particular', helper: 'Aplica precio pleno sin subsidio.' },
-    { value: 'PUBLICO', label: 'Público', helper: 'Servicio público habilitado para subsidio.' },
-    { value: 'CARGA', label: 'Carga', helper: 'Transporte de carga con tarifa regulada.' },
-    { value: 'OFICIAL', label: 'Oficial', helper: 'Operación institucional o gubernamental.' },
+    { value: 'PUBLICO', label: 'Público', helper: 'Servicio público habilitado para subsidio ($2.350/gal).' },
     { value: 'DIPLOMATICO', label: 'Diplomático', helper: 'Casos especiales definidos por norma.' },
+    { value: 'OFICIAL', label: 'Oficial', helper: 'Operación institucional o gubernamental.' },
+    { value: 'PARTICULAR', label: 'Particular', helper: 'Aplica precio pleno sin subsidio.' },
 ];
 
 function formatCurrency(value: number) {
@@ -608,7 +607,11 @@ export function StationOperationsPage() {
                                 <Button type="button" variant="ghost" onClick={fetchTanques}>
                                     Actualizar niveles
                                 </Button>
-                                <Button type="submit" isLoading={submitting || loading || pricingLoading} disabled={!selectedTanque || tanques.length === 0}>
+                                <Button 
+                                    type="submit" 
+                                    isLoading={submitting || loading || pricingLoading} 
+                                    disabled={!selectedTanque || tanques.length === 0 || !form.placaVehiculo || Number(form.galones) <= 0}
+                                >
                                     Confirmar despacho
                                 </Button>
                             </div>

@@ -1,9 +1,22 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { Navigate, Link } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import { useAuth } from '@/context/useAuth';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { getErrorMessage } from '@/lib/http';
+
+// Configuración personalizada de SweetAlert para el tema de la aplicación
+const Alert = Swal.mixin({
+    background: '#0f0f0f',
+    color: '#E8E8E8',
+    confirmButtonColor: '#F5A623',
+    customClass: {
+        popup: 'rounded-brand border border-border-strong',
+        title: 'text-h2 font-heading',
+        confirmButton: 'rounded-brand px-6 py-2 text-[13px] font-sans font-medium uppercase tracking-wider',
+    }
+});
 
 export function LoginPage() {
     const { isAuthenticated, isLoading, login, loginWithGoogle, oauthError } = useAuth();
@@ -13,6 +26,18 @@ export function LoginPage() {
     const [submitting, setSubmitting] = useState(false);
     const [isOauthProcessing, setIsOauthProcessing] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+
+    // Efecto para mostrar error de OAuth si existe
+    useEffect(() => {
+        if (oauthError) {
+            Alert.fire({
+                icon: 'error',
+                title: 'Error de Autenticación',
+                text: oauthError,
+                iconColor: '#E74C3C',
+            });
+        }
+    }, [oauthError]);
 
     // Si ya estamos autenticados, redirigir inmediatamente
     if (isAuthenticated) {
@@ -37,7 +62,14 @@ export function LoginPage() {
         setSubmitting(true);
         try {
             await login(email, password);
-        } catch {
+        } catch (err: unknown) {
+            console.error('Login error:', err);
+            Alert.fire({
+                icon: 'error',
+                title: 'Error de Acceso',
+                text: 'Email o contraseña incorrectos. Por favor, verifica tus credenciales.',
+                iconColor: '#E74C3C',
+            });
             setError('Credenciales inválidas. Verifica tu email y contraseña.');
         } finally {
             setSubmitting(false);

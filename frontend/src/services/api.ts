@@ -70,7 +70,8 @@ api.interceptors.response.use(
             originalRequest &&
             !originalRequest._retry &&
             !String(originalRequest.url || '').includes('/auth/refresh') &&
-            !String(originalRequest.url || '').includes('/auth/logout')
+            !String(originalRequest.url || '').includes('/auth/logout') &&
+            !String(originalRequest.url || '').includes('/auth/login')
         ) {
             originalRequest._retry = true;
             const newToken = await renewSession();

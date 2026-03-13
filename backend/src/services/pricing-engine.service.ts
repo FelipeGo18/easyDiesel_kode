@@ -60,7 +60,8 @@ export class PricingEngineService {
         }
 
         const precioUnitario = Number(precio.precioGalon);
-        const subsidioGalon = Number(precio.subsidioGalon);
+        // Subsidio de $2350 solo para PUBLICO, el resto $0
+        const subsidioGalon = input.tipoServicio === 'PUBLICO' ? 2350 : 0;
         const granConsumidorAplicado = !!(input.esGranConsumidor && input.tipoCombustible === 'ACPM' && !esZonaNI);
 
         return {
