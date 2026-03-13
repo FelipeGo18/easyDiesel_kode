@@ -65,16 +65,20 @@ export class ReporteService {
     /**
      * Lista todos los reportes generados.
      */
-    async obtenerReportes(page = 1, limit = 20) {
+    async obtenerReportes(page = 1, limit = 20, usuarioId?: string) {
         const skip = (page - 1) * limit;
+        const where: any = {};
+        if (usuarioId) where.generadoPor = usuarioId;
+
         const [reportes, total] = await Promise.all([
             prisma.reporte.findMany({
+                where,
                 include: { usuario: { select: { nombre: true, email: true } } },
                 orderBy: { createdAt: 'desc' },
                 skip,
                 take: limit,
             }),
-            prisma.reporte.count()
+            prisma.reporte.count({ where })
         ]);
 
         return {
@@ -148,6 +152,15 @@ export class ReporteService {
 
     private async datosAuditoria(params?: any) {
         const where: any = {};
+
+        if (params?.estacionId) {
+            where.usuario = {
+                estacionGestionada: {
+                    id: params.estacionId
+                }
+            };
+        }
+
         if (params?.fechaDesde || params?.fechaHasta) {
             where.createdAt = {};
             if (params?.fechaDesde) where.createdAt.gte = new Date(params.fechaDesde);

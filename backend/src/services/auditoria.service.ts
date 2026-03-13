@@ -44,12 +44,22 @@ export class AuditoriaService {
         hasta?: string;
         page?: number;
         limit?: number;
+        estacionId?: string;
     }) {
         const where: any = {};
         if (filtros?.usuarioId) where.usuarioId = filtros.usuarioId;
         if (filtros?.modulo) where.modulo = filtros.modulo;
         if (filtros?.accion) where.accion = filtros.accion;
         if (filtros?.entidad) where.entidad = filtros.entidad;
+
+        // Si hay filtro por estación, solo mostramos logs generados por usuarios de esa estación
+        if (filtros?.estacionId) {
+            where.usuario = {
+                estacionGestionada: {
+                    id: filtros.estacionId
+                }
+            };
+        }
 
         if (filtros?.desde || filtros?.hasta) {
             where.createdAt = {};
@@ -95,6 +105,18 @@ export class AuditoriaService {
         });
         if (!log) throw new Error('Log de auditoria no encontrado');
         return log;
+    }
+
+    /**
+     * Obtiene un usuario con su estación gestionada.
+     */
+    async obtenerUsuarioConEstacion(usuarioId: string) {
+        return prisma.usuario.findUnique({
+            where: { id: usuarioId },
+            include: {
+                estacionGestionada: { select: { id: true, nombre: true } }
+            }
+        });
     }
 }
 
