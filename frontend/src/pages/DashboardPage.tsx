@@ -65,7 +65,7 @@ export function DashboardPage() {
     if (roleName === 'auditor') {
         return <AuditorPanelPage />;
     }
-
+// prueba logica dashbotd
     // Lógica de visualización condicional basada en roles
     const availableModules = navigationRoutes.filter((route) => route.path !== '/dashboard' && hasAnyPermission(...(route.requiredPermissions || [])));
 
