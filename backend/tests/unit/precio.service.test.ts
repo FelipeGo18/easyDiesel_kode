@@ -97,7 +97,26 @@ describe('PrecioService', () => {
         it('debe lanzar error si no hay precio vigente', async () => {
             prismaMock.precioVigente.findFirst.mockResolvedValue(null);
             await expect(service.consultarPrecioActual('ACPM', 'PARTICULAR', 'z1'))
-                .rejects.toThrow('No hay precio vigente');
+                .rejects.toThrow('No hay precio vigente para esa combinacion');
+        });
+    });
+
+    describe('actualizarPrecio', () => {
+        it('debe actualizar un precio exitosamente', async () => {
+            const existing = { id: 'p1', precioGalon: 10000 };
+            const updateData = { precioGalon: 11000 };
+            prismaMock.precioVigente.findUnique.mockResolvedValue(existing);
+            prismaMock.precioVigente.update.mockResolvedValue({ ...existing, ...updateData });
+
+            const result = await service.actualizarPrecio('p1', updateData);
+            expect(result.precioGalon).toBe(11000);
+            expect(prismaMock.precioVigente.update).toHaveBeenCalled();
+        });
+
+        it('debe lanzar error si el precio no existe', async () => {
+            prismaMock.precioVigente.findUnique.mockResolvedValue(null);
+            await expect(service.actualizarPrecio('bad', { precioGalon: 1 }))
+                .rejects.toThrow('Precio no encontrado');
         });
     });
 });

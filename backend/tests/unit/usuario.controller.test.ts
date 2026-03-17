@@ -18,7 +18,8 @@ describe('Usuario Controller', () => {
     beforeEach(() => {
         mockRequest = {
             params: {},
-            body: {}
+            body: {},
+            query: {}
         };
         mockResponse = {
             status: jest.fn().mockReturnThis(),
@@ -33,11 +34,12 @@ describe('Usuario Controller', () => {
     describe('obtenerUsuariosHandler', () => {
         it('deberia retornar 200 y una lista de usuarios', async () => {
             const mockUsers = [{ id: '1', nombre: 'Test 1' }, { id: '2', nombre: 'Test 2' }];
-            (usuarioService.obtenerUsuarios as jest.Mock).mockResolvedValue(mockUsers);
+            const mockResult = { data: mockUsers, pagination: { page: 1, limit: 50, total: 2, totalPages: 1 } };
+            (usuarioService.obtenerUsuarios as jest.Mock).mockResolvedValue(mockResult);
 
             await obtenerUsuariosHandler(mockRequest as Request, mockResponse as Response);
 
-            expect(mockResponse.json).toHaveBeenCalledWith({ success: true, data: mockUsers });
+            expect(mockResponse.json).toHaveBeenCalledWith({ success: true, ...mockResult });
         });
 
         it('deberia retornar 500 en caso de error', async () => {

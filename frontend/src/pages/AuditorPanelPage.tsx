@@ -20,7 +20,7 @@ interface AuditoriaLog {
     createdAt: string;
     usuario: { nombre: string; email: string };
 }
-
+//interface
 interface AuditoriaResponse {
     data: AuditoriaLog[];
     pagination: { page: number; limit: number; total: number; totalPages: number };

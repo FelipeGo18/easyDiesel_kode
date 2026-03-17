@@ -29,13 +29,21 @@ export class ReporteService {
                 contenido = await this.datosInventario(data.parametros);
                 break;
             case 'TRANSACCIONES':
-                contenido = await this.datosTransacciones(data.parametros);
+                contenido = await this.datosTransacciones({ 
+                    ...data.parametros, 
+                    fechaDesde: data.periodoInicio, 
+                    fechaHasta: data.periodoFin 
+                });
                 break;
             case 'PRECIOS':
                 contenido = await this.datosPrecios(data.parametros);
                 break;
             case 'AUDITORIA':
-                contenido = await this.datosAuditoria(data.parametros);
+                contenido = await this.datosAuditoria({ 
+                    ...data.parametros, 
+                    fechaDesde: data.periodoInicio, 
+                    fechaHasta: data.periodoFin 
+                });
                 break;
             case 'NORMATIVO':
                 contenido = await this.datosNormativo();
@@ -103,12 +111,28 @@ export class ReporteService {
 
     private async datosTransacciones(params?: any) {
         const where: any = {};
-        if (params?.estacionId) where.estacionId = params.estacionId;
-        if (params?.tipoCombustible) where.tipoCombustible = params.tipoCombustible;
-        if (params?.fechaDesde || params?.fechaHasta) {
-            where.createdAt = {};
-            if (params?.fechaDesde) where.createdAt.gte = new Date(params.fechaDesde);
-            if (params?.fechaHasta) where.createdAt.lte = new Date(params.fechaHasta);
+        if (params?.estacionId) {
+            where.estacionId = params.estacionId;
+        }
+
+        if (params?.tipoCombustible) {
+            where.tipoCombustible = params.tipoCombustible;
+        }
+
+        if (params?.fechaDesde) {
+            where.createdAt = {
+                ...where.createdAt,
+                gte: new Date(params.fechaDesde)
+            };
+        }
+
+        if (params?.fechaHasta) {
+            const fechaHasta = new Date(params.fechaHasta);
+            fechaHasta.setHours(23, 59, 59, 999);
+            where.createdAt = {
+                ...where.createdAt,
+                lte: fechaHasta
+            };
         }
 
         const data = await prisma.transaccionCombustible.findMany({
@@ -161,10 +185,36 @@ export class ReporteService {
             };
         }
 
-        if (params?.fechaDesde || params?.fechaHasta) {
-            where.createdAt = {};
-            if (params?.fechaDesde) where.createdAt.gte = new Date(params.fechaDesde);
-            if (params?.fechaHasta) where.createdAt.lte = new Date(params.fechaHasta);
+        if (params?.fechaDesde) {
+            where.createdAt = {
+                ...where.createdAt,
+                gte: new Date(params.fechaDesde)
+            };
+        }
+
+        if (params?.fechaHasta) {
+            const fechaHasta = new Date(params.fechaHasta);
+            fechaHasta.setHours(23, 59, 59, 999);
+            where.createdAt = {
+                ...where.createdAt,
+                lte: fechaHasta
+            };
+        }
+
+        if (params?.usuarioId) {
+            where.usuarioId = params.usuarioId;
+        }
+
+        if (params?.modulo) {
+            where.modulo = params.modulo;
+        }
+
+        if (params?.entidad) {
+            where.entidad = params.entidad;
+        }
+
+        if (params?.accion) {
+            where.accion = params.accion;
         }
 
         return prisma.auditoriaLog.findMany({

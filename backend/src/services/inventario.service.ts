@@ -92,13 +92,18 @@ export class InventarioService {
         if (data.tanqueId) {
             const tanque = await prisma.tanque.findUnique({ where: { id: data.tanqueId } });
             if (!tanque) throw new Error('Tanque no encontrado');
-
             if (tanque.estacionId !== data.estacionId) {
                 throw new Error('El tanque no pertenece a la estación indicada');
             }
-
             if (tanque.tipoCombustible !== data.tipoCombustible) {
                 throw new Error(`El tanque es de ${tanque.tipoCombustible}, se intentó descargar ${data.tipoCombustible}`);
+            }
+
+            // Validación de capacidad
+            const nivelActual = Number(tanque.nivelActual);
+            const capacidadMaxima = Number(tanque.capacidadGalones);
+            if (nivelActual + data.galones > capacidadMaxima) {
+                throw new Error(`La entrega excede la capacidad del tanque (${capacidadMaxima} galones máx).`);
             }
         }
 
