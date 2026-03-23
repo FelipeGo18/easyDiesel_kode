@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/useToast';
 import api from '@/services/api';
 import type { ApiResponse } from '@/types';
 import { getErrorMessage } from '@/lib/http';
+import { useAuth } from '@/context/useAuth';
 
 interface ReporteRegistro {
     id: string;
@@ -22,24 +23,39 @@ interface ReporteRegistro {
     };
 }
 
-const tiposReporte = [
-    { id: 'INVENTARIO', label: 'Estado de Inventarios', icon: 'pie-chart', description: 'Niveles actuales de tanques y capacidad disponible.' },
-    { id: 'TRANSACCIONES', label: 'Ventas y Despachos', icon: 'history', description: 'Registro detallado de entradas y salidas de combustible.' },
-    { id: 'PRECIOS', label: 'Histórico de Precios', icon: 'spreadsheet', description: 'Evolución de precios por zona y tipo de combustible.' },
-    { id: 'NORMATIVO', label: 'Cumplimiento Normativo', icon: 'normativa', description: 'Decretos vigentes y resoluciones aplicadas.' },
+const tiposReporteBase = [
+    { id: 'INVENTARIO', label: 'Estado de Inventarios', icon: 'pie-chart', description: 'Niveles actuales de tanques y capacidad disponible.', roles: ['admin'] },
+    { id: 'TRANSACCIONES', label: 'Ventas y Despachos', icon: 'history', description: 'Registro detallado de entradas y salidas de combustible.', roles: ['admin', 'estacion', 'distribuidor'] },
+    { id: 'PRECIOS', label: 'Histórico de Precios', icon: 'spreadsheet', description: 'Evolución de precios por zona y tipo de combustible.', roles: ['admin', 'estacion', 'distribuidor', 'regulador'] },
+    { id: 'NORMATIVO', label: 'Cumplimiento Normativo', icon: 'normativa', description: 'Decretos vigentes y resoluciones aplicadas.', roles: ['admin', 'estacion', 'distribuidor', 'regulador'] },
 ];
 
 export function ReportesPage() {
     const toast = useToast();
+    const { user } = useAuth();
+    const userRole = typeof user?.rol === 'object' ? user.rol.nombre : user?.rol;
+
     const [reportes, setReportes] = useState<ReporteRegistro[]>([]);
     const [loading, setLoading] = useState(true);
     const [generating, setGenerating] = useState<string | null>(null);
 
+    // Filtrar tipos de reporte según el rol
+    const tiposDisponibles = useMemo(() => {
+        return tiposReporteBase.filter(t => t.roles.includes(userRole || ''));
+    }, [userRole]);
+
     // Filtros para generación
-    const [tipoSeleccionado, setTipoSeleccionado] = useState(tiposReporte[0].id);
+    const [tipoSeleccionado, setTipoSeleccionado] = useState(tiposDisponibles[0]?.id || '');
     const [formato, setFormato] = useState<'PDF' | 'EXCEL'>('PDF');
     const [fechaInicio, setFechaInicio] = useState(new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0]);
     const [fechaFin, setFechaFin] = useState(new Date().toISOString().split('T')[0]);
+
+    // Sincronizar tipo seleccionado si los disponibles cambian
+    useEffect(() => {
+        if (tiposDisponibles.length > 0 && !tiposDisponibles.find(t => t.id === tipoSeleccionado)) {
+            setTipoSeleccionado(tiposDisponibles[0].id);
+        }
+    }, [tiposDisponibles, tipoSeleccionado]);
 
     const fetchReportes = useCallback(async () => {
         try {
@@ -152,7 +168,7 @@ export function ReportesPage() {
                             <div className="space-y-2">
                                 <label className="text-label text-text-secondary">Tipo de información</label>
                                 <div className="grid grid-cols-1 gap-2">
-                                    {tiposReporte.map((t) => (
+                                    {tiposDisponibles.map((t) => (
                                         <button
                                             key={t.id}
                                             onClick={() => setTipoSeleccionado(t.id)}

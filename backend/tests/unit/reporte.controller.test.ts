@@ -108,7 +108,7 @@ describe('Reporte Controller', () => {
 
             await obtenerReportesHandler(mockRequest as Request, mockResponse as Response);
 
-            expect(reporteService.obtenerReportes).toHaveBeenCalledWith(2, 10);
+            expect(reporteService.obtenerReportes).toHaveBeenCalledWith(2, 10, undefined);
             expect(mockResponse.json).toHaveBeenCalledWith({ success: true, ...mockResponseData });
         });
 

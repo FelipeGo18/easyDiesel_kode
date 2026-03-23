@@ -25,6 +25,7 @@ export const prismaMock: any = {
         findUnique: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
+        updateMany: jest.fn(),
         count: jest.fn(),
     },
     distribuidor: {
@@ -49,7 +50,10 @@ export const prismaMock: any = {
     },
     entregaDistribuidor: {
         findMany: jest.fn(),
+        findUnique: jest.fn(),
         create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
         count: jest.fn(),
     },
     zonaDistribucion: {
@@ -87,6 +91,14 @@ export const prismaMock: any = {
         findMany: jest.fn(),
         create: jest.fn(),
         count: jest.fn(),
+    },
+    sessionToken: {
+        create: jest.fn(),
+        findUnique: jest.fn(),
+        update: jest.fn(),
+        updateMany: jest.fn(),
+        delete: jest.fn(),
+        deleteMany: jest.fn(),
     },
     $transaction: jest.fn((fn: any) => fn(prismaMock)),
     $queryRaw: jest.fn().mockResolvedValue([]),

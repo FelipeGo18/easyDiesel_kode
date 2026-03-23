@@ -192,6 +192,14 @@ export class AuthService {
             throw Object.assign(new Error('Credenciales inválidas'), { statusCode: 401 });
         }
 
+        if (usuario.googleId && (data as any).googleId !== usuario.googleId) {
+            throw Object.assign(new Error('Este correo ya está registrado con otro método de autenticación.'), { statusCode: 400 });
+        }
+
+        if (!usuario.rol) {
+            throw Object.assign(new Error('Usuario sin rol asignado.'), { statusCode: 403 });
+        }
+
         if (!usuario.activo) {
             throw Object.assign(new Error('Cuenta desactivada. Contacta al administrador.'), { statusCode: 403 });
         }
@@ -220,6 +228,11 @@ export class AuthService {
         });
 
         if (usuario) {
+            // Verificar si el correo ya está registrado con otro método
+            if (usuario.googleId && usuario.googleId !== data.googleId) {
+                throw Object.assign(new Error('Este correo ya está registrado con otro método de autenticación.'), { statusCode: 400 });
+            }
+
             // Actualizar información de Google si es necesario
             if (!usuario.googleId || usuario.authProvider !== 'GOOGLE') {
                 usuario = await prisma.usuario.update({
@@ -252,6 +265,10 @@ export class AuthService {
                 },
                 include: { rol: true },
             });
+        }
+
+        if (!usuario.rol) {
+            throw Object.assign(new Error('Usuario sin rol asignado.'), { statusCode: 403 });
         }
 
         if (!usuario.activo) {
