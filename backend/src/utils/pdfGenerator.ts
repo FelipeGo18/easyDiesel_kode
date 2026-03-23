@@ -169,124 +169,137 @@ export const generarPDF = async (titulo: string, datos: any[]): Promise<Buffer> 
         try {
             const doc = new PDFDocument({
                 size: 'LETTER',
-                layout: 'landscape', // Cambiar a horizontal para más espacio
-                margin: MARGIN,
-                bufferPages: true,
-                info: {
-                    Title: `Reporte: ${titulo}`,
-                    Author: 'EasyDiesel Platform',
-                    Subject: titulo,
-                    Creator: 'EasyDiesel Report Engine',
-                }
+                layout: 'landscape',
+                margin: 0,
+                autoFirstPage: true, // Volver al estándar para evitar páginas fantasma
+                bufferPages: true
             });
 
-            // Ajustar constantes para horizontal
-            const PAGE_W_LANDSCAPE = 792;
-            const CONTENT_W_LANDSCAPE = PAGE_W_LANDSCAPE - MARGIN * 2;
+            const PAGE_W = 792;
+            const PAGE_H = 612;
+            const CONTENT_W = PAGE_W - (MARGIN * 2);
+            const TOP_LIMIT = 140; // Más espacio para el header
+            const BOTTOM_LIMIT = 540;
 
             const buffers: Buffer[] = [];
             doc.on('data', buffers.push.bind(buffers));
             doc.on('end', () => resolve(Buffer.concat(buffers)));
 
-            // Redefinir drawHeader y drawFooter para el contexto actual (horizontal)
-            const drawHeaderLandscape = (doc: PDFKit.PDFDocument, titulo: string) => {
+            // ─── Funciones de Dibujo ───
+
+            const drawPageDecoration = (titulo: string, pageIdx: number, totalPages: number, totalRegs: number) => {
                 const y = MARGIN;
                 doc.save();
-                doc.rect(0, 0, PAGE_W_LANDSCAPE, 6).fill(BRAND.secondary);
+                // Franja decorativa superior
+                doc.rect(0, 0, PAGE_W, 6).fill(BRAND.secondary);
                 doc.restore();
-                doc.font('Helvetica-Bold').fontSize(20).fillColor(BRAND.primary).text('EasyDiesel', MARGIN, y + 10);
-                doc.moveTo(MARGIN + 120, y + 10).lineTo(MARGIN + 120, y + 35).strokeColor(BRAND.lineStrong).lineWidth(1).stroke();
-                doc.font('Helvetica').fontSize(10).fillColor(BRAND.textMid).text('SISTEMA DE GESTIÓN', MARGIN + 130, y + 12).text('DE COMBUSTIBLES', MARGIN + 130, y + 24);
-                doc.font('Helvetica-Bold').fontSize(11).fillColor(BRAND.primary).text(titulo.toUpperCase(), MARGIN, y + 50, { width: CONTENT_W_LANDSCAPE, align: 'right' });
-                doc.font('Helvetica').fontSize(8).fillColor(BRAND.textLight).text(`Generado: ${new Date().toLocaleString()}`, MARGIN, y + 65, { width: CONTENT_W_LANDSCAPE, align: 'right' });
-                doc.moveTo(MARGIN, y + 82).lineTo(MARGIN + CONTENT_W_LANDSCAPE, y + 82).strokeColor(BRAND.primary).lineWidth(2).stroke();
-                return y + 95;
-            };
 
-            const drawFooterLandscape = (doc: PDFKit.PDFDocument, pageNumber: number, totalRegistros: number) => {
-                const footerY = 540; // Ajustado para landscape (612 - MARGIN)
-                doc.moveTo(MARGIN, footerY).lineTo(MARGIN + CONTENT_W_LANDSCAPE, footerY).strokeColor(BRAND.lineStrong).lineWidth(0.5).stroke();
+                // Logo y Textos institucionales
+                doc.font('Helvetica-Bold').fontSize(20).fillColor(BRAND.primary).text('EasyDiesel', MARGIN, y + 5);
+                doc.moveTo(MARGIN + 120, y + 5).lineTo(MARGIN + 120, y + 30).strokeColor(BRAND.lineStrong).lineWidth(1).stroke();
+                doc.font('Helvetica').fontSize(10).fillColor(BRAND.textMid).text('SISTEMA DE GESTIÓN', MARGIN + 130, y + 7).text('DE COMBUSTIBLES', MARGIN + 130, y + 19);
+                
+                // Título del reporte y fecha (Derecha)
+                doc.font('Helvetica-Bold').fontSize(11).fillColor(BRAND.primary).text(titulo.toUpperCase(), MARGIN, y + 40, { width: CONTENT_W, align: 'right' });
+                doc.font('Helvetica').fontSize(8).fillColor(BRAND.textLight).text(`Generado: ${new Date().toLocaleString()}`, MARGIN, y + 53, { width: CONTENT_W, align: 'right' });
+                
+                // Línea divisoria principal
+                doc.moveTo(MARGIN, y + 70).lineTo(MARGIN + CONTENT_W, y + 70).strokeColor(BRAND.primary).lineWidth(2).stroke();
+
+                // Footer
+                const footerY = 560;
+                doc.moveTo(MARGIN, footerY).lineTo(MARGIN + CONTENT_W, footerY).strokeColor(BRAND.lineStrong).lineWidth(0.5).stroke();
                 doc.font('Helvetica').fontSize(7).fillColor(BRAND.textLight);
-                doc.text('EasyDiesel © ' + new Date().getFullYear() + ' — Documento confidencial.', MARGIN, footerY + 6);
-                doc.text(`Total registros: ${totalRegistros} | Página ${pageNumber}`, MARGIN, footerY + 6, { width: CONTENT_W_LANDSCAPE, align: 'right' });
+                doc.text('EasyDiesel © ' + new Date().getFullYear() + ' — Documento confidencial.', MARGIN, footerY + 10);
+                doc.text(`Total registros: ${totalRegs} | Página ${pageIdx + 1} de ${totalPages}`, MARGIN, footerY + 10, { width: CONTENT_W, align: 'right' });
             };
 
-            const drawTableHeaderLandscape = (doc: PDFKit.PDFDocument, columns: any[], startY: number) => {
-                const rowH = 20;
-                doc.save();
-                doc.rect(MARGIN, startY, CONTENT_W_LANDSCAPE, rowH).fill(BRAND.primary);
-                doc.restore();
-                doc.font('Helvetica-Bold').fontSize(8).fillColor(BRAND.white);
-                let x = MARGIN + 6;
-                columns.forEach(col => {
-                    doc.text(col.label, x, startY + 6, { width: col.width - 12, align: 'left', lineBreak: false });
-                    x += col.width;
-                });
-                return startY + rowH;
-            };
+            // ─── Lógica de Contenido ───
 
-            const drawTableRowLandscape = (doc: PDFKit.PDFDocument, columns: any[], item: any, startY: number, isZebra: boolean) => {
-                const rowH = 18;
-                if (isZebra) {
-                    doc.save();
-                    doc.rect(MARGIN, startY, CONTENT_W_LANDSCAPE, rowH).fill(BRAND.bgZebra);
-                    doc.restore();
-                }
-                doc.moveTo(MARGIN, startY + rowH).lineTo(MARGIN + CONTENT_W_LANDSCAPE, startY + rowH).strokeColor(BRAND.lineSoft).lineWidth(0.5).stroke();
-                doc.font('Helvetica').fontSize(7.5).fillColor(BRAND.textDark);
-                let x = MARGIN + 6;
-                columns.forEach(col => {
-                    const text = formatValue(item[col.key]);
-                    doc.text(text, x, startY + 5, { width: col.width - 12, align: 'left', lineBreak: true, ellipsis: true });
-                    x += col.width;
-                });
-                return startY + rowH;
-            };
-
-            // ── Sin datos ──
             if (!datos || datos.length === 0) {
-                drawHeaderLandscape(doc, titulo);
-                doc.moveDown(3);
-                doc.font('Helvetica').fontSize(12).fillColor(BRAND.textMid).text('No hay datos disponibles.', { align: 'center' });
-                drawFooterLandscape(doc, 1, 0);
-                doc.end();
-                return;
+                doc.addPage();
+                doc.font('Helvetica').fontSize(12).fillColor(BRAND.textMid).text('No hay datos disponibles.', MARGIN, 200, { align: 'center', width: CONTENT_W });
+            } else {
+                // Preparar columnas
+                const sampleItem = datos[0];
+                const columnKeys = Object.keys(sampleItem).filter(key => typeof sampleItem[key] !== 'object' && key !== 'id');
+                
+                const columns = columnKeys.map(key => {
+                    let weight = 1;
+                    const lowerKey = key.toLowerCase();
+                    if (lowerKey.includes('titulo') || lowerKey.includes('descripcion') || lowerKey.includes('entidad')) weight = 2.2; // Reducido un poco
+                    else if (lowerKey.includes('id') || lowerKey.includes('fecha') || lowerKey.includes('precio') || lowerKey.includes('galon')) weight = 0.7;
+                    return { key, label: humanize(key).toUpperCase(), weight };
+                });
+
+                const totalWeight = columns.reduce((acc, col) => acc + col.weight, 0);
+                const finalColumns = columns.map(col => ({ ...col, width: Math.floor((col.weight / totalWeight) * CONTENT_W) }));
+
+                let cursorY = TOP_LIMIT;
+
+                const startNewPage = () => {
+                    // Si ya hay una página, PDFKit añadirá la siguiente. 
+                    // Si es la primera llamada, doc.addPage() creará la primera página real (evitando la inicial en blanco)
+                    doc.addPage();
+                    cursorY = TOP_LIMIT;
+                    // Dibujar cabecera de tabla
+                    doc.save();
+                    doc.rect(MARGIN, cursorY, CONTENT_W, 22).fill(BRAND.primary);
+                    doc.restore();
+                    doc.font('Helvetica-Bold').fontSize(8).fillColor(BRAND.white);
+                    let tx = MARGIN + 6;
+                    finalColumns.forEach(col => {
+                        doc.text(col.label, tx, cursorY + 7, { width: col.width - 12, lineBreak: false });
+                        tx += col.width;
+                    });
+                    cursorY += 22;
+                };
+
+                // Iniciar la primera página con contenido
+                startNewPage();
+                
+                // Badge de resumen (solo en la primera página)
+                const badgeH = 28;
+                doc.save();
+                doc.roundedRect(MARGIN, cursorY + 10, 160, badgeH, 4).fill(BRAND.secondary);
+                doc.restore();
+                doc.font('Helvetica-Bold').fontSize(9).fillColor(BRAND.white).text(`${datos.length} registros encontrados`, MARGIN + 10, cursorY + 18);
+                cursorY += badgeH + 25;
+
+                datos.forEach((item, idx) => {
+                    doc.font('Helvetica').fontSize(7.5);
+                    let rowH = 18;
+                    finalColumns.forEach(col => {
+                        const h = doc.heightOfString(formatValue(item[col.key]), { width: col.width - 12 });
+                        if (h + 8 > rowH) rowH = h + 8;
+                    });
+
+                    if (cursorY + rowH > BOTTOM_LIMIT) {
+                        startNewPage();
+                    }
+
+                    if (idx % 2 === 0) {
+                        doc.save().rect(MARGIN, cursorY, CONTENT_W, rowH).fill(BRAND.bgZebra).restore();
+                    }
+                    doc.moveTo(MARGIN, cursorY + rowH).lineTo(MARGIN + CONTENT_W, cursorY + rowH).strokeColor(BRAND.lineSoft).lineWidth(0.5).stroke();
+
+                    doc.fillColor(BRAND.textDark);
+                    let rx = MARGIN + 6;
+                    finalColumns.forEach(col => {
+                        doc.text(formatValue(item[col.key]), rx, cursorY + 4, { width: col.width - 12, lineBreak: true });
+                        rx += col.width;
+                    });
+                    cursorY += rowH;
+                });
             }
 
-            // ── Preparar columnas ──
-            const sampleItem = datos[0];
-            const columnKeys = Object.keys(sampleItem).filter(key => 
-                typeof sampleItem[key] !== 'object' && key !== 'id'
-            );
+            // ─── Post-procesar páginas para Header/Footer ───
+            const range = doc.bufferedPageRange();
+            for (let i = range.start; i < range.start + range.count; i++) {
+                doc.switchToPage(i);
+                drawPageDecoration(titulo, i, range.count, datos.length);
+            }
 
-            // Calcular anchos dinámicos
-            const totalWidth = CONTENT_W_LANDSCAPE;
-            const colW = Math.floor(totalWidth / columnKeys.length);
-            const columns = columnKeys.map(key => ({
-                key,
-                label: humanize(key).toUpperCase(),
-                width: colW,
-            }));
-
-            // ── Dibujar ──
-            let pageNum = 1;
-            let cursorY = drawHeaderLandscape(doc, titulo);
-            cursorY = drawSummaryBadge(doc, cursorY, datos.length);
-            cursorY = drawTableHeaderLandscape(doc, columns, cursorY);
-
-            datos.forEach((item, idx) => {
-                // Si no cabe la fila (landscape height es 612), nueva página
-                if (cursorY > 520) {
-                    drawFooterLandscape(doc, pageNum, datos.length);
-                    doc.addPage({ layout: 'landscape' });
-                    pageNum++;
-                    cursorY = drawHeaderLandscape(doc, titulo);
-                    cursorY = drawTableHeaderLandscape(doc, columns, cursorY);
-                }
-                cursorY = drawTableRowLandscape(doc, columns, item, cursorY, idx % 2 === 0);
-            });
-
-            drawFooterLandscape(doc, pageNum, datos.length);
             doc.end();
         } catch (error) {
             reject(error);
