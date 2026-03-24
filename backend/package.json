@@ -10,6 +10,7 @@
     "test": "jest --forceExit --detectOpenHandles",
     "test:coverage": "jest --coverage --forceExit --detectOpenHandles",
     "test:integration": "node_modules\\.bin\\prisma migrate deploy && jest --forceExit --detectOpenHandles tests/integration",
+    "test:integration:verbose": "node_modules\\.bin\\prisma migrate deploy && jest --forceExit --detectOpenHandles --verbose tests/integration",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",

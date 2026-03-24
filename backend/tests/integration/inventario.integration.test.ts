@@ -15,6 +15,8 @@ describe('Inventario Integration Tests', () => {
     let estacionId: string;
     let distribuidorId: string;
     let tanqueId: string;
+    let decretoId: string;
+    let precioId: string;
 
     beforeAll(async () => {
         const passwordHash = await bcrypt.hash('InventarioPassword123!', 10);
@@ -86,6 +88,30 @@ describe('Inventario Integration Tests', () => {
         });
         tanqueId = tanque.id;
 
+        const decreto = await prisma.decretoNormativo.create({
+            data: {
+                numero: `DEC-INV-${suffix}`,
+                titulo: 'Decreto Inventario Test',
+                fechaExpedicion: new Date(),
+                fechaVigencia: new Date(),
+            },
+        });
+        decretoId = decreto.id;
+
+        const precio = await prisma.precioVigente.create({
+            data: {
+                tipoCombustible: 'ACPM',
+                tipoServicio: 'PARTICULAR',
+                zonaId,
+                precioGalon: 11800,
+                subsidioGalon: 0,
+                decretoId: decreto.id,
+                vigenciaDesde: new Date(),
+                activo: true,
+            },
+        });
+        precioId = precio.id;
+
         const loginResponse = await request(app)
             .post('/api/auth/login')
             .send({
@@ -108,17 +134,21 @@ describe('Inventario Integration Tests', () => {
     afterAll(async () => {
         await prisma.transaccionCombustible.deleteMany({ where: { tanqueId } });
         await prisma.entregaDistribuidor.deleteMany({ where: { tanqueId } });
+        await prisma.auditoriaLog.deleteMany({ where: { usuarioId: userId } });
         await prisma.tanque.delete({ where: { id: tanqueId } });
         await prisma.estacionServicio.delete({ where: { id: estacionId } });
         await prisma.distribuidor.delete({ where: { id: distribuidorId } });
+        await prisma.precioVigente.deleteMany({ where: { decretoId } });
+        await prisma.decretoNormativo.delete({ where: { id: decretoId } });
         await prisma.zonaDistribucion.delete({ where: { id: zonaId } });
+        await prisma.sessionToken.deleteMany({ where: { usuarioId: userId } });
         await prisma.usuario.delete({ where: { id: userId } });
         await prisma.rol.delete({ where: { id: roleId } });
         await prisma.$disconnect();
     });
 
-    it('registra una entrega y aumenta el nivel del tanque', async () => {
-        const response = await request(app)
+    it('registra una entrega y aumenta el nivel del tanque tras confirmarla', async () => {
+        const entregaRes = await request(app)
             .post('/api/inventario/entregas')
             .set('Authorization', `Bearer ${token}`)
             .send({
@@ -132,9 +162,18 @@ describe('Inventario Integration Tests', () => {
                 fechaEntrega: new Date().toISOString(),
             });
 
-        expect(response.status).toBe(201);
-        expect(response.body.success).toBe(true);
-        expect(response.body.data.id).toBeDefined();
+        expect(entregaRes.status).toBe(201);
+        expect(entregaRes.body.success).toBe(true);
+        const entregaId = entregaRes.body.data.id;
+        expect(entregaId).toBeDefined();
+
+        // Confirmar la entrega para que actualice el nivel del tanque
+        const confirmRes = await request(app)
+            .post(`/api/inventario/entregas/${entregaId}/confirmar`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({ estacionId, tanqueId, galonesRecibidos: 150 });
+
+        expect(confirmRes.status).toBe(200);
 
         const tanque = await prisma.tanque.findUniqueOrThrow({ where: { id: tanqueId } });
         expect(Number(tanque.nivelActual)).toBe(650);
