@@ -70,6 +70,21 @@ export function InventarioPage() {
 
     const handleTanqueSubmit = async (e: FormEvent) => {
         e.preventDefault();
+        
+        // Validaciones técnicas
+        if (tanqueForm.capacidadGalones! <= 0) {
+            toast.error('La capacidad del tanque debe ser un número positivo.');
+            return;
+        }
+        if (tanqueForm.nivelMinimo! < 0) {
+            toast.error('El nivel mínimo no puede ser negativo.');
+            return;
+        }
+        if (tanqueForm.nivelMinimo! > (tanqueForm.capacidadGalones! * 0.75)) {
+            toast.error(`El nivel de alerta no puede exceder los 3/4 de la capacidad total (${(tanqueForm.capacidadGalones! * 0.75).toLocaleString()} GAL).`);
+            return;
+        }
+
         setSubmitting(true);
         try {
             if (editingTanque) {
@@ -203,49 +218,118 @@ export function InventarioPage() {
                         </button>
                     </div>
 
-                    <form onSubmit={handleTanqueSubmit} className="space-y-4 max-w-2xl">
-                        <InputField
-                            label="Nombre del Tanque"
-                            value={tanqueForm.nombre}
-                            onChange={(e) => setTanqueForm({ ...tanqueForm, nombre: e.target.value })}
-                            placeholder="Ej: Tanque ACPM Principal"
-                            required
-                        />
-                        <SelectField
-                            label="Tipo de Combustible"
-                            value={tanqueForm.tipoCombustible}
-                            onChange={(e) => setTanqueForm({ ...tanqueForm, tipoCombustible: e.target.value as TipoCombustible })}
-                            options={[
-                                { value: 'ACPM', label: 'ACPM' },
-                                { value: 'GASOLINA_CORRIENTE', label: 'Gasolina Corriente' },
-                            ]}
-                            required
-                        />
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        <form onSubmit={handleTanqueSubmit} className="space-y-4">
                             <InputField
-                                label="Capacidad (Galones)"
-                                type="number"
-                                value={tanqueForm.capacidadGalones}
-                                onChange={(e) => setTanqueForm({ ...tanqueForm, capacidadGalones: parseFloat(e.target.value) })}
+                                label="Nombre del Tanque"
+                                value={tanqueForm.nombre}
+                                onChange={(e) => setTanqueForm({ ...tanqueForm, nombre: e.target.value })}
+                                placeholder="Ej: Tanque ACPM Principal"
+                                maxLength={50}
                                 required
                             />
-                            <InputField
-                                label="Nivel Mínimo (Galones)"
-                                type="number"
-                                value={tanqueForm.nivelMinimo}
-                                onChange={(e) => setTanqueForm({ ...tanqueForm, nivelMinimo: parseFloat(e.target.value) })}
+                            <SelectField
+                                label="Tipo de Combustible"
+                                value={tanqueForm.tipoCombustible}
+                                onChange={(e) => setTanqueForm({ ...tanqueForm, tipoCombustible: e.target.value as TipoCombustible })}
+                                options={[
+                                    { value: 'ACPM', label: 'ACPM' },
+                                    { value: 'GASOLINA_CORRIENTE', label: 'Gasolina Corriente' },
+                                ]}
                                 required
                             />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <InputField
+                                    label="Capacidad (Galones)"
+                                    type="number"
+                                    value={tanqueForm.capacidadGalones}
+                                    onChange={(e) => setTanqueForm({ ...tanqueForm, capacidadGalones: parseFloat(e.target.value) })}
+                                    required
+                                />
+                                <InputField
+                                    label="Nivel Mínimo (Galones)"
+                                    type="number"
+                                    value={tanqueForm.nivelMinimo}
+                                    onChange={(e) => setTanqueForm({ ...tanqueForm, nivelMinimo: parseFloat(e.target.value) })}
+                                    required
+                                />
+                            </div>
+                            <div className="flex justify-end gap-3 pt-4 border-t border-border-subtle">
+                                <Button variant="ghost" type="button" onClick={() => setShowTanqueForm(false)}>
+                                    Cancelar
+                                </Button>
+                                <Button type="submit" isLoading={submitting}>
+                                    {editingTanque ? 'Guardar Cambios' : 'Crear Tanque'}
+                                </Button>
+                            </div>
+                        </form>
+
+                        {/* Visual Preview of the Tank */}
+                        <div className="hidden lg:flex flex-col items-center justify-center border-l border-border-subtle pl-10">
+                            <div className="text-center mb-6">
+                                <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-text-muted mb-1">Vista Previa Estructural</p>
+                                <h3 className="text-sm font-bold text-text-primary truncate max-w-[200px]">
+                                    {tanqueForm.nombre || 'Nuevo Tanque'}
+                                </h3>
+                            </div>
+
+                            <div className="relative w-32 h-64 border-2 border-border-strong rounded-t-[40px] rounded-b-[10px] bg-bg-surface shadow-inner overflow-hidden">
+                                 {/* Capacity markers (background lines) */}
+                                 <div className="absolute inset-0 flex flex-col justify-between py-1 px-2 opacity-10 z-0">
+                                     {[...Array(5)].map((_, i) => (
+                                         <div key={i} className="w-full h-[1px] bg-text-muted" />
+                                     ))}
+                                 </div>
+
+                                 {/* Fuel representation: 100% when capacity is entered */}
+                                 {tanqueForm.capacidadGalones! > 0 && (
+                                     <div 
+                                         className={cn(
+                                             "absolute bottom-0 w-full transition-all duration-700 ease-out",
+                                             "bg-amber-500/50"
+                                         )}
+                                         style={{ height: '100%' }}
+                                     >
+                                         <div className="absolute top-0 w-full h-1.5 bg-amber-400 shadow-[0_0_20px_rgba(245,158,11,1)] z-20" />
+                                         
+                                         {/* Capacity number inside/top of the tank */}
+                                         <div className="absolute top-4 w-full text-center">
+                                             <span className="text-[12px] font-bold text-amber-100 font-mono drop-shadow-md">
+                                                 {tanqueForm.capacidadGalones!.toLocaleString()} GAL
+                                             </span>
+                                         </div>
+                                     </div>
+                                 )}
+
+                                 {/* Alarm system: Proportional marker for Nivel Mínimo */}
+                                 {tanqueForm.capacidadGalones! > 0 && tanqueForm.nivelMinimo! > 0 && (
+                                     <div 
+                                         className="absolute w-full border-t-2 border-dashed border-red-500/70 z-30 transition-all duration-500"
+                                         style={{ 
+                                             bottom: `${Math.min(100, (tanqueForm.nivelMinimo! / tanqueForm.capacidadGalones!) * 100)}%`,
+                                         }}
+                                     >
+                                         <div className="absolute -right-16 -top-2 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">
+                                             ALERTA: {tanqueForm.nivelMinimo} GAL
+                                         </div>
+                                     </div>
+                                 )}
+                             </div>
+
+                            <div className="mt-8 grid grid-cols-2 gap-6 w-full max-w-[300px]">
+                                <div className="text-center p-3 rounded-brand bg-bg-elevated border border-border-subtle">
+                                    <p className="text-[9px] font-mono text-text-muted uppercase mb-1">Capacidad</p>
+                                    <p className="text-sm font-bold text-text-primary">{tanqueForm.capacidadGalones || 0} gal</p>
+                                </div>
+                                <div className="text-center p-3 rounded-brand bg-bg-elevated border border-border-subtle">
+                                    <p className="text-[9px] font-mono text-text-muted uppercase mb-1">Combustible</p>
+                                    <Badge variant={tanqueForm.tipoCombustible === 'ACPM' ? 'amber' : 'green'}>
+                                        {tanqueForm.tipoCombustible}
+                                    </Badge>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex justify-end gap-3 pt-4 border-t border-border-subtle">
-                            <Button variant="ghost" type="button" onClick={() => setShowTanqueForm(false)}>
-                                Cancelar
-                            </Button>
-                            <Button type="submit" isLoading={submitting}>
-                                {editingTanque ? 'Guardar Cambios' : 'Crear Tanque'}
-                            </Button>
-                        </div>
-                    </form>
+                    </div>
                 </Card>
             ) : (
                 <DataTable
