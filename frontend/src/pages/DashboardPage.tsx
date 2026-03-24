@@ -166,9 +166,6 @@ export function DashboardPage() {
                                                 {mod.label}
                                             </h3>
                                         </div>
-                                        <span className="text-[9px] font-mono text-text-muted tracking-wider">
-                                            {mod.moduleId}
-                                        </span>
                                     </div>
                                     <p className="text-[12px] text-text-secondary leading-relaxed mb-3">
                                         {mod.description}

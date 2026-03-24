@@ -101,19 +101,9 @@ export function Sidebar() {
                                 />
 
                                 {!collapsed && (
-                                    <>
-                                        <span className="text-[13px] font-sans font-normal truncate">
-                                            {item.label}
-                                        </span>
-                                        <span
-                                            className={cn(
-                                                'ml-auto text-[9px] font-mono tracking-wider',
-                                                isActive ? 'text-amber-500/60' : 'text-text-muted'
-                                            )}
-                                        >
-                                            {item.moduleId}
-                                        </span>
-                                    </>
+                                    <span className="text-[13px] font-sans font-normal truncate">
+                                        {item.label}
+                                    </span>
                                 )}
                             </NavLink>
                         );
