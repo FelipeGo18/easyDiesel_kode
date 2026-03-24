@@ -56,6 +56,8 @@ export const tanquesService = {
         api.post<ApiResponse<Tanque>>('/tanques', data).then(r => r.data.data as Tanque),
     update: (id: string, data: Partial<Tanque>) => 
         api.put<ApiResponse<Tanque>>(`/tanques/${id}`, data).then(r => r.data.data as Tanque),
+    delete: (id: string) => 
+        api.delete<ApiResponse<{ deleted: boolean }>>(`/tanques/${id}`).then(r => r.data.data?.deleted || false),
 };
 
 /* ── Inventario Operaciones ── */

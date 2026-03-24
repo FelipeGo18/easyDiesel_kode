@@ -13,7 +13,6 @@ import { PreciosPage } from '@/pages/admin/PreciosPage';
 import { UsuariosPage } from '@/pages/admin/UsuariosPage';
 import { InventarioPage } from '@/pages/admin/InventarioPage';
 import { ActoresPage } from '@/pages/admin/ActoresPage';
-import { TanquesPage } from '@/pages/admin/TanquesPage';
 import { PerfilPage } from '@/pages/PerfilPage';
 
 export interface AppRouteConfig {
@@ -78,16 +77,6 @@ export const protectedRoutes: AppRouteConfig[] = [
         excludeRoles: ['estacion', 'despachador'],
     },
     {
-        path: '/tanques',
-        element: <TanquesPage />,
-        label: 'Tanques',
-        icon: 'tank',
-        moduleId: 'M2',
-        description: 'Gestión física y niveles de almacenamiento',
-        requiredPermissions: ['tanques:leer', 'tanques:escribir'],
-        showInNavigation: true,
-    },
-    {
         path: '/precios',
         element: <PreciosPage />,
         label: 'Precios',
@@ -122,10 +111,10 @@ export const protectedRoutes: AppRouteConfig[] = [
     {
         path: '/estacion',
         element: <InventarioPage />,
-        label: 'Inventario',
-        icon: 'station',
+        label: 'Inventario y Tanques',
+        icon: 'tank',
         moduleId: 'M3',
-        description: 'Entradas, salidas y cierres operativos',
+        description: 'Gestión de tanques, entradas y salidas de combustible',
         requiredPermissions: ['inventario:leer', 'inventario:escribir'],
         showInNavigation: true,
     },
