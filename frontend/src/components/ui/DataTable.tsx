@@ -19,6 +19,7 @@ interface DataTableProps<T> {
     actions?: (row: T) => ReactNode;
     emptyMessage?: string;
     loading?: boolean;
+    headerContent?: ReactNode;
 }
 
 function getCellValue<T extends object>(row: T, key: string): unknown {
@@ -58,6 +59,7 @@ export function DataTable<T extends object>({
     actions,
     emptyMessage = 'No hay datos disponibles',
     loading = false,
+    headerContent,
 }: DataTableProps<T>) {
     const [search, setSearch] = useState('');
     const [sortKey, setSortKey] = useState<string | null>(null);
@@ -112,17 +114,22 @@ export function DataTable<T extends object>({
 
     return (
         <div className="space-y-3">
-            {/* Search */}
-            {searchable && (
-                <div className="relative max-w-xs">
-                    <Icon name="search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-                        placeholder={searchPlaceholder}
-                        className="w-full pl-9 pr-3 py-2 bg-bg-elevated border border-border-default rounded-brand text-[13px] text-text-primary font-sans placeholder:text-text-muted interactive"
-                    />
+            {/* Header: Search + Actions */}
+            {(searchable || headerContent) && (
+                <div className="flex items-center gap-3">
+                    {searchable && (
+                        <div className="relative max-w-xs flex-1">
+                            <Icon name="search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+                                placeholder={searchPlaceholder}
+                                className="w-full pl-9 pr-3 py-2 bg-bg-elevated border border-border-default rounded-brand text-[13px] text-text-primary font-sans placeholder:text-text-muted interactive"
+                            />
+                        </div>
+                    )}
+                    {headerContent}
                 </div>
             )}
 
@@ -145,7 +152,7 @@ export function DataTable<T extends object>({
                                         </span>
                                     </th>
                                 ))}
-                                {actions && <th className="px-4 py-2.5 text-right text-label text-text-muted w-24">Acciones</th>}
+                                {actions && <th className="px-4 py-2.5 text-right text-label text-text-muted min-w-[120px]">Acciones</th>}
                             </tr>
                         </thead>
                         <tbody>
