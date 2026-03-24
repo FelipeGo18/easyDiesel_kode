@@ -169,6 +169,13 @@ export function InventarioPage() {
 
     const safeTanques = Array.isArray(tanques) ? tanques : [];
     const totalInventario = safeTanques.reduce((acc, t) => acc + (Number(t.nivelActual) || 0), 0);
+    const totalACPM = safeTanques
+        .filter(t => t.tipoCombustible === 'ACPM')
+        .reduce((acc, t) => acc + (Number(t.nivelActual) || 0), 0);
+    const totalCorriente = safeTanques
+        .filter(t => t.tipoCombustible === 'GASOLINA_CORRIENTE')
+        .reduce((acc, t) => acc + (Number(t.nivelActual) || 0), 0);
+        
     const tanquesBajos = safeTanques.filter(t => (Number(t.nivelActual) || 0) <= (Number(t.nivelMinimo) || 0)).length;
 
     return (
@@ -187,8 +194,25 @@ export function InventarioPage() {
                     label="Total Combustible"
                     value={`${totalInventario.toLocaleString()} gal`}
                     icon={<Icon name="tank" size={18} />}
-                    trend={{ direction: 'up', text: 'Capacidad total' }}
-                />
+                    trend={{ direction: 'neutral', text: 'Stock consolidado' }}
+                >
+                    <div className="mt-4 space-y-2 border-t border-border-subtle pt-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-amber-500" />
+                                <span className="text-[11px] text-text-secondary font-mono">ACPM</span>
+                            </div>
+                            <span className="text-[12px] font-bold text-text-primary">{totalACPM.toLocaleString()} gal</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-green-500" />
+                                <span className="text-[11px] text-text-secondary font-mono">CORRIENTE</span>
+                            </div>
+                            <span className="text-[12px] font-bold text-text-primary">{totalCorriente.toLocaleString()} gal</span>
+                        </div>
+                    </div>
+                </KpiCard>
                 <KpiCard
                     label="Alertas de Nivel"
                     value={tanquesBajos.toString()}
