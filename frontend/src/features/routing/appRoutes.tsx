@@ -4,8 +4,8 @@ import { StationsAtlasPage } from '@/pages/StationsAtlasPage';
 import { EconomicRoutePage } from '@/pages/EconomicRoutePage';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
-import { DashboardPage } from '@/pages/DashboardPage';
-import { ReportesPage } from '@/pages/ReportesPage';
+import { PanelPage } from '@/pages/PanelPage';
+import { AnaliticaPage } from '@/pages/AnaliticaPage';
 import { AuditoriaPage } from '@/pages/AuditoriaPage';
 import { ZonasPage } from '@/pages/admin/ZonasPage';
 import { DecretosPage } from '@/pages/admin/DecretosPage';
@@ -46,14 +46,25 @@ export const protectedRoutes: AppRouteConfig[] = [
         showInNavigation: false,
     },
     {
-        path: '/dashboard',
-        element: <DashboardPage />,
-        label: 'Dashboard',
+        path: '/panel',
+        element: <PanelPage />,
+        label: 'Panel principal',
         icon: 'dashboard',
         moduleId: 'M8',
-        description: 'Resumen operativo y alertas del sistema',
-        requiredPermissions: ['dashboard:leer'],
+        description: 'Área de trabajo principal del rol',
+        requiredPermissions: ['panel:leer'],
         showInNavigation: true,
+    },
+    {
+        path: '/analitica',
+        element: <AnaliticaPage />,
+        label: 'Analítica y Reportes',
+        icon: 'activity',
+        moduleId: 'M9',
+        description: 'Métricas clave y centro de reportes',
+        requiredPermissions: ['estadisticas:leer', 'reportes:leer'],
+        showInNavigation: true,
+        excludeRoles: ['distribuidor', 'distribuidor_regulado'],
     },
     {
         path: '/zonas',
@@ -121,17 +132,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         showInNavigation: true,
         excludeRoles: ['distribuidor', 'distribuidor_regulado'],
     },
-    {
-        path: '/reportes',
-        element: <ReportesPage />,
-        label: 'Reportes',
-        icon: 'reports',
-        moduleId: 'M6',
-        description: 'Informes y exportes oficiales',
-        requiredPermissions: ['reportes:leer', 'reportes:generar'],
-        showInNavigation: true,
-        excludeRoles: ['distribuidor', 'distribuidor_regulado'],
-    },
+
     {
         path: '/auditoria',
         element: <AuditoriaPage />,

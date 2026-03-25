@@ -310,7 +310,7 @@ export function HomePage() {
                                                     return (
                                                         <>
                                                             <button
-                                                                onClick={() => { navigate('/dashboard'); setShowProfileMenu(false); }}
+                                                                onClick={() => { navigate('/panel'); setShowProfileMenu(false); }}
                                                                 className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-text-secondary hover:text-text-primary hover:bg-bg-elevated rounded-sm transition-colors"
                                                             >
                                                                 <Icon name="dashboard" size={14} />

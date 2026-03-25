@@ -49,7 +49,7 @@ function ProtectedRoute({ children, requiredPermissions = [] }: { children: Reac
   }
 
   if (requiredPermissions.length && !hasAnyPermission(...requiredPermissions)) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/panel" replace />;
   }
 
   return <>{children}</>;

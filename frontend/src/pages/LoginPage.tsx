@@ -43,7 +43,7 @@ export function LoginPage() {
 
     // Si ya estamos autenticados, redirigir inmediatamente
     if (isAuthenticated) {
-        const redirectTo = (location.state as { from?: string })?.from || searchParams.get('returnTo') || '/dashboard';
+        const redirectTo = (location.state as { from?: string })?.from || searchParams.get('returnTo') || '/panel';
         console.log(`LoginPage: Usuario ya autenticado, redirigiendo a ${redirectTo}`);
         return <Navigate to={redirectTo} replace />;
     }
