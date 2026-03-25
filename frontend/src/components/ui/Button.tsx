@@ -19,24 +19,24 @@ export function Button({
 }: ButtonProps) {
     const base = [
         'inline-flex items-center justify-center gap-2',
-        'font-mono font-semibold uppercase tracking-wider',
-        'rounded-[var(--radius-brand)] border',
+        'font-mono font-bold uppercase tracking-wider',
+        'rounded-[4px] border',
         'interactive cursor-pointer',
         'disabled:opacity-40 disabled:cursor-not-allowed',
     ];
 
     const variants = {
         primary: [
-            'bg-amber-500 text-text-inverted border-amber-500',
-            'hover:bg-amber-600 hover:border-amber-600',
+            'bg-amber-500 text-black border-amber-500',
+            'hover:bg-amber-400 hover:border-amber-400',
         ],
         ghost: [
-            'bg-transparent text-text-secondary border-border-strong',
-            'hover:bg-bg-elevated hover:text-text-primary',
+            'bg-transparent text-text-secondary border-[#444]',
+            'hover:bg-bg-surface hover:text-text-primary hover:border-[#666]',
         ],
         danger: [
-            'bg-transparent text-red-500 border-red-500/30',
-            'hover:bg-red-dim hover:border-red-500',
+            'bg-transparent text-[#E53935] border-[#E53935]',
+            'hover:bg-transparent hover:border-[#EF5350] hover:text-[#EF5350]',
         ],
     };
 

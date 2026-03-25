@@ -198,7 +198,7 @@ export function AnaliticaPage() {
                 </div>
                 
                 {/* Filtros Globales de Fecha */}
-                <div className="flex items-center gap-3 bg-bg-elevated p-2 rounded-brand border border-border-subtle">
+                <div className="flex items-center gap-3 bg-bg-elevated p-2 rounded-[4px] border border-border-subtle">
                     <div className="flex items-center gap-2">
                         <Icon name="calendar" size={14} className="text-text-muted ml-1" />
                         <input
@@ -397,7 +397,7 @@ export function AnaliticaPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Panel de Generación */}
                     <div className="lg:col-span-1 space-y-6">
-                        <Card className="p-6 border-amber-500/20 bg-amber-500/2">
+                        <Card className="p-6 border-border-subtle bg-bg-surface">
                             <h3 className="text-[14px] font-bold text-text-primary mb-4 flex items-center gap-2">
                                 <Icon name="refresh" size={16} className="text-amber-500" />
                                 Generar Nuevo Informe
@@ -412,9 +412,9 @@ export function AnaliticaPage() {
                                             <button
                                                 key={t.id}
                                                 onClick={() => setTipoSeleccionado(t.id)}
-                                                className={`flex items-start gap-3 p-3 rounded-brand border text-left transition-all interactive ${tipoSeleccionado === t.id
-                                                        ? 'bg-amber-dim border-amber-500/40 ring-1 ring-amber-500/20'
-                                                        : 'bg-bg-elevated border-border-subtle hover:border-border-strong'
+                                                className={`flex items-start gap-3 p-3 rounded-[4px] border text-left transition-all interactive ${tipoSeleccionado === t.id
+                                                        ? 'bg-transparent border-amber-500 ring-1 ring-amber-500'
+                                                        : 'bg-bg-elevated border-border-subtle hover:border-[#444]'
                                                     }`}
                                             >
                                                 <Icon name={t.icon} size={18} className={tipoSeleccionado === t.id ? 'text-amber-500' : 'text-text-muted'} />
@@ -433,13 +433,13 @@ export function AnaliticaPage() {
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => setFormato('PDF')}
-                                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-[11px] font-mono border transition-colors ${formato === 'PDF' ? 'bg-amber-500 text-white border-amber-500' : 'bg-bg-elevated border-border-subtle text-text-secondary hover:border-border-strong'}`}
+                                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-[4px] text-[11px] font-mono border transition-colors ${formato === 'PDF' ? 'bg-amber-500 text-black border-amber-500 font-bold' : 'bg-bg-elevated border-border-subtle text-text-secondary hover:border-[#444]'}`}
                                         >
                                             <Icon name="normativa" size={14} /> PDF
                                         </button>
                                         <button
                                             onClick={() => setFormato('EXCEL')}
-                                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-[11px] font-mono border transition-colors ${formato === 'EXCEL' ? 'bg-green-600 text-white border-green-600' : 'bg-bg-elevated border-border-subtle text-text-secondary hover:border-border-strong'}`}
+                                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-[4px] text-[11px] font-mono border transition-colors ${formato === 'EXCEL' ? 'bg-[#10B981] text-black border-[#10B981] font-bold' : 'bg-bg-elevated border-border-subtle text-text-secondary hover:border-[#444]'}`}
                                         >
                                             <Icon name="spreadsheet" size={14} /> EXCEL
                                         </button>

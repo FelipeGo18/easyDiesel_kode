@@ -87,7 +87,7 @@ export function Sidebar() {
                                 key={item.path}
                                 to={item.path}
                                 className={cn(
-                                    'relative flex items-center gap-3 px-3 py-2.5 rounded-brand',
+                                    'relative flex items-center gap-3 px-3 py-2.5 rounded-[4px]',
                                     'interactive group',
                                     isActive
                                         ? 'bg-bg-hover text-text-primary'
@@ -123,7 +123,7 @@ export function Sidebar() {
                     <NavLink
                         to="/"
                         className={cn(
-                            'flex items-center gap-2.5 px-3 py-2.5 rounded-brand',
+                            'flex items-center gap-2.5 px-3 py-2.5 rounded-[4px]',
                             'text-text-muted hover:text-text-primary hover:bg-bg-elevated interactive',
                             collapsed && 'justify-center px-0'
                         )}
@@ -143,8 +143,8 @@ export function Sidebar() {
                 {/* User info */}
                 {user && !collapsed && (
                     <div className="flex items-center gap-2.5 px-2 py-1.5">
-                        <div className="w-7 h-7 rounded-brand bg-amber-dim border border-amber-500/20 flex items-center justify-center shrink-0">
-                            <span className="text-amber-500 text-[10px] font-mono font-semibold uppercase">
+                        <div className="w-7 h-7 rounded-[2px] bg-bg-surface border border-[#333] flex items-center justify-center shrink-0">
+                            <span className="text-text-primary text-[10px] font-mono font-semibold uppercase">
                                 {user.nombre?.charAt(0) || 'U'}
                             </span>
                         </div>
@@ -159,8 +159,8 @@ export function Sidebar() {
                 <button
                     onClick={logout}
                     className={cn(
-                        'flex items-center gap-3 w-full px-3 py-2 rounded-brand',
-                        'text-text-muted hover:text-red-500 hover:bg-red-dim interactive',
+                        'flex items-center gap-3 w-full px-3 py-2 rounded-[4px]',
+                        'text-text-muted hover:text-white hover:bg-[#E53935] interactive',
                         collapsed && 'justify-center'
                     )}
                 >
