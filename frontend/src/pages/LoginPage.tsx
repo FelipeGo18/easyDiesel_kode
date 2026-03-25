@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { Navigate, Link } from 'react-router-dom';
+import { Navigate, Link, useLocation, useSearchParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { useAuth } from '@/context/useAuth';
 import { Button } from '@/components/ui/Button';
@@ -20,6 +20,8 @@ const Alert = Swal.mixin({
 
 export function LoginPage() {
     const { isAuthenticated, isLoading, login, loginWithGoogle, oauthError } = useAuth();
+    const location = useLocation();
+    const [searchParams] = useSearchParams();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -41,8 +43,9 @@ export function LoginPage() {
 
     // Si ya estamos autenticados, redirigir inmediatamente
     if (isAuthenticated) {
-        console.log('LoginPage: Usuario ya autenticado, redirigiendo a /');
-        return <Navigate to="/" replace />;
+        const redirectTo = (location.state as { from?: string })?.from || searchParams.get('returnTo') || '/dashboard';
+        console.log(`LoginPage: Usuario ya autenticado, redirigiendo a ${redirectTo}`);
+        return <Navigate to={redirectTo} replace />;
     }
 
     if (isLoading || isOauthProcessing) {

@@ -82,7 +82,10 @@ api.interceptors.response.use(
                 return api(originalRequest);
             }
 
-            window.location.href = '/login';
+            const returnTo = window.location.pathname;
+            window.location.href = returnTo && returnTo !== '/login'
+              ? `/login?returnTo=${encodeURIComponent(returnTo)}`
+              : '/login';
         }
 
         return Promise.reject(error);
