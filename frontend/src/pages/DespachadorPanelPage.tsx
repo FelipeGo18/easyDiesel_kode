@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { BellRing, ClipboardList, Fuel, Loader2, MapPinned, Minus, Plus, Receipt, ShieldCheck, TimerReset, Truck } from 'lucide-react';
+import { BellRing, ClipboardList, Fuel, Loader2, Minus, Plus, Receipt, ShieldCheck, TimerReset, Truck } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -52,7 +52,7 @@ export function StationOperationsPage() {
     const [submitting, setSubmitting] = useState(false);
     const [pendingDeliveriesLoading, setPendingDeliveriesLoading] = useState(false);
     const [pricePreview, setPricePreview] = useState<PrecioActual | null>(null);
-    const [priceError, setPriceError] = useState<string | null>(null);
+    const [_priceError, setPriceError] = useState<string | null>(null);
     const [pendingDeliveries, setPendingDeliveries] = useState<EntregaDistribuidor[]>([]);
     const [confirmDeliveryOpen, setConfirmDeliveryOpen] = useState(false);
     const [selectedDelivery, setSelectedDelivery] = useState<EntregaDistribuidor | null>(null);
@@ -222,7 +222,6 @@ export function StationOperationsPage() {
     
     const estimatedTotal = gallons * unitPrice; // Lo que realmente paga el cliente
     const lowTanks = tanques.filter((tanque) => Number(tanque.nivelActual) <= Number(tanque.nivelMinimo));
-    const totalFuel = tanques.reduce((total, tanque) => total + Number(tanque.nivelActual), 0);
     const selectedServiceMeta = tipoServicioOptions.find((option) => option.value === form.tipoServicio);
     const totalAsignado = distribuciones.reduce((s, d) => s + (Number(d.galones) || 0), 0);
     const esperado = Number(selectedDelivery?.galones || 0);
@@ -455,77 +454,7 @@ export function StationOperationsPage() {
                     </p>
                 </div>
             )}
-            {/* ── Hero compacto ── */}
-            <section className="relative overflow-hidden rounded-[24px] border border-white/10 bg-white/[0.03] backdrop-blur-xl px-6 py-5">
-                <div className="absolute top-0 left-0 w-64 h-64 rounded-full bg-amber-500/10 blur-[80px] pointer-events-none" />
-                <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    {/* Left: Title + meta */}
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="amber" className="text-[10px] px-2.5 py-0.5">ROL ESTACIÓN</Badge>
-                            <span className="text-[11px] text-white/35 font-mono">{station?.codigoSicom ? `SICOM ${station.codigoSicom}` : ''}</span>
-                        </div>
-                        <h1 className="text-xl font-semibold text-white leading-snug max-w-xl">
-                            Panel de despacho — {station?.nombre || 'Sin estación'}
-                        </h1>
-                        <p className="mt-1 text-[12px] text-white/50 leading-5 max-w-lg">
-                            Captura placa, elige servicio y el sistema aplica la tarifa regulatoria de la zona antes de registrar la salida.
-                        </p>
-                        {/* Stat strip */}
-                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            <div className="flex items-center gap-2 rounded-[10px] border border-white/10 bg-white/[0.04] px-3 py-2">
-                                <Fuel size={13} className="text-amber-400" />
-                                <span className="text-[12px] font-medium text-white">{formatGallons(totalFuel)} gal</span>
-                                <span className="text-[11px] text-white/40">en {tanques.length} tanques</span>
-                            </div>
-                            <div className="flex items-center gap-2 rounded-[10px] border border-white/10 bg-white/[0.04] px-3 py-2">
-                                <MapPinned size={13} className="text-sky-400" />
-                                <span className="text-[12px] text-white/60">{station?.nombre || 'Sin estación'}</span>
-                            </div>
-                            {lowTanks.length > 0 && (
-                                <div className="flex items-center gap-2 rounded-[10px] border border-red-500/25 bg-red-500/[0.07] px-3 py-2">
-                                    <BellRing size={13} className="text-red-400" />
-                                    <span className="text-[12px] font-medium text-red-300">{lowTanks.length} en mínimo</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
 
-                    {/* Right: Pricing card */}
-                    <div className="w-full rounded-[18px] border border-amber-500/20 bg-black/30 p-4 backdrop-blur-sm lg:w-64 xl:w-72">
-                        <div className="flex items-start justify-between gap-2">
-                            <div>
-                                <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-amber-300/60">Tarifa activa</p>
-                                <p className="mt-1.5 text-2xl font-semibold text-white tabular-nums">
-                                    {pricingLoading ? (
-                                        <span className="text-base text-white/45">Consultando…</span>
-                                    ) : unitPrice ? formatCurrency(unitPrice) : (
-                                        <span className="text-base text-white/40">Sin tarifa</span>
-                                    )}
-                                </p>
-                            </div>
-                            <Badge variant={form.tipoServicio === 'PARTICULAR' ? 'red' : 'green'} className="text-[10px] shrink-0">
-                                {form.tipoServicio}
-                            </Badge>
-                        </div>
-                        <div className="mt-3 grid grid-cols-2 gap-2">
-                            <div className="rounded-[10px] bg-white/[0.04] px-3 py-2">
-                                <p className="text-[9px] font-mono uppercase tracking-wider text-white/40">Subsidio</p>
-                                <p className="mt-1 text-[12px] font-medium text-white">{subsidy > 0 ? formatCurrency(subsidy) : 'No aplica'}</p>
-                            </div>
-                            <div className="rounded-[10px] bg-white/[0.04] px-3 py-2">
-                                <p className="text-[9px] font-mono uppercase tracking-wider text-white/40">Decreto</p>
-                                <p className="mt-1 text-[12px] font-medium text-white">{pricePreview?.decreto.numero || '—'}</p>
-                            </div>
-                        </div>
-                        {(priceError || pricePreview?.decreto.titulo) && (
-                            <p className="mt-2.5 text-[10px] leading-4 text-white/40 line-clamp-2">
-                                {priceError || pricePreview?.decreto.titulo}
-                            </p>
-                        )}
-                    </div>
-                </div>
-            </section>
 
             {/* ── Main grid: Form + Sidebar ── */}
             <div className="grid gap-5 lg:grid-cols-1 xl:grid-cols-[1.3fr_0.7fr]">
