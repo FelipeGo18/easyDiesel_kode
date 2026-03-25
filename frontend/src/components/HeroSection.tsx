@@ -248,10 +248,10 @@ export function HeroSection({ onIntroStateChange }: HeroSectionProps) {
     }, []);
 
     const scrollToContent = useCallback(() => {
-        const hero = heroRef.current;
-        if (hero) {
-            const pinEnd = hero.offsetTop + hero.offsetHeight * 3;
-            window.scrollTo({ top: pinEnd + 10, behavior: 'smooth' });
+        const root = heroRef.current?.parentElement;
+        if (root) {
+            const pinEnd = root.offsetTop + root.offsetHeight;
+            window.scrollTo({ top: pinEnd, behavior: 'smooth' });
         }
     }, []);
 
@@ -377,13 +377,11 @@ export function HeroSection({ onIntroStateChange }: HeroSectionProps) {
                 { opacity: 0, duration: 0.3, ease: 'power2.in' },
             0.7);
 
-            /* ── Create the single pinned ScrollTrigger ── */
+            /* ── Create the single hooked ScrollTrigger for sticky element ── */
             ScrollTrigger.create({
-                trigger: hero,
+                trigger: hero.parentElement, // Trigger on the hero-root wrapper
                 start: 'top top',
-                end: '+=250%',
-                pin: true,
-                pinSpacing: true,
+                end: 'bottom bottom', // End when the root wrapper finishes scrolling
                 scrub: 1,
                 animation: scrubTL,
                 onLeave: () => {
@@ -454,10 +452,10 @@ export function HeroSection({ onIntroStateChange }: HeroSectionProps) {
     }, []);
 
     return (
-        <div className="hero-root">
+        <div className="hero-root" style={{ height: '190vh' }}>
             <section
                 ref={heroRef}
-                className="h-screen relative overflow-hidden bg-bg-base flex flex-col items-center justify-center px-6"
+                className="h-screen sticky top-0 overflow-hidden bg-bg-base flex flex-col items-center justify-center px-6"
             >
                 {/* ── Capa -1: Animated canvas background ── */}
                 <canvas
