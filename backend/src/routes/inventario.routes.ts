@@ -1,10 +1,12 @@
 import { Router } from 'express';
-import { obtenerEntregasPendientesHandler, obtenerEntregasPorDistribuidorHandler, registrarEntregaHandler, confirmarEntregaHandler, registrarTransaccionHandler, cierreTurnoHandler, registrarEntradaDirectaHandler, obtenerTransaccionesHandler, cancelarEntregaHandler } from '../controllers/inventario.controller';
+import { obtenerEntregasPendientesHandler, obtenerEntregasPorDistribuidorHandler, registrarEntregaHandler, confirmarEntregaHandler, registrarTransaccionHandler, cierreTurnoHandler, registrarEntradaDirectaHandler, obtenerTransaccionesHandler, cancelarEntregaHandler, obtenerProximaRemisionHandler } from '../controllers/inventario.controller';
 import { can } from '../middleware/auth';
 
 const router = Router();
 
 // Endpoints bajo /api/inventario
+
+router.get('/proxima-remision', can('inventario:escribir'), obtenerProximaRemisionHandler);
 
 /**
  * @swagger

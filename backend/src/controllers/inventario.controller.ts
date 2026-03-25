@@ -166,6 +166,20 @@ export const registrarEntradaDirectaHandler = async (req: Request, res: Response
     }
 };
 
+export const obtenerProximaRemisionHandler = async (req: Request, res: Response) => {
+    try {
+        const distribuidorId = (req.user as any)?.distribuidorId as string | undefined;
+        if (!distribuidorId) {
+            res.status(400).json({ success: false, message: 'Usuario no vinculado a una distribuidora' });
+            return;
+        }
+        const result = await inventarioService.proximaRemision(distribuidorId);
+        res.json({ success: true, data: result });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
 export const registrarTransaccionHandler = async (req: Request, res: Response) => {
     try {
         const validData = registrarTransaccionSchema.parse(req.body);
