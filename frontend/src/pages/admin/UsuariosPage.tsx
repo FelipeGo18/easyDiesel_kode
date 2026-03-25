@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { useToast } from '@/components/ui/useToast';
 import { usuariosService, rolesService, type Usuario, type Rol } from '@/services/admin';
-import { estacionesService } from '@/services/actores';
-import type { EstacionServicio } from '@/types';
+import { estacionesService, distribuidoresService } from '@/services/actores';
+import type { EstacionServicio, Distribuidor } from '@/types';
 import { getErrorMessage } from '@/lib/http';
 
 export function UsuariosPage() {
@@ -30,7 +30,9 @@ export function UsuariosPage() {
     const [password, setPassword] = useState('');
     const [rolId, setRolId] = useState('');
     const [estacionId, setEstacionId] = useState('');
+    const [distribuidorId, setDistribuidorId] = useState('');
     const [estaciones, setEstaciones] = useState<EstacionServicio[]>([]);
+    const [distribuidores, setDistribuidores] = useState<Distribuidor[]>([]);
     const [submitting, setSubmitting] = useState(false);
 
     const fetchUsers = useCallback(async (searchTerm: string, pg: number) => {
@@ -46,10 +48,18 @@ export function UsuariosPage() {
         }
     }, []); // toast excluded — stable ref
 
-    // Fetch roles and estaciones once on mount
+    // Fetch roles, estaciones, and distribuidores once on mount
     useEffect(() => {
         rolesService.getAll().then(r => setRoles(r)).catch(() => {});
-        estacionesService.getAll().then(r => setEstaciones(r.data ?? [])).catch(() => {});
+        estacionesService.getAll().then(res => {
+            console.log('Estaciones fetched:', res);
+            setEstaciones(res.data || []);
+        }).catch(err => console.error('Error fetching estaciones:', err));
+        
+        distribuidoresService.getAll({ limit: 1000 }).then(res => {
+            console.log('Distribuidores fetched:', res);
+            setDistribuidores(res.data || []);
+        }).catch(err => console.error('Error fetching distribuidores:', err));
     }, []);
 
     // Debounced re-fetch on search/page change
@@ -68,6 +78,7 @@ export function UsuariosPage() {
         setEmail(''); setNombre(''); setPassword('');
         setRolId(roles[0]?.id || '');
         setEstacionId('');
+        setDistribuidorId('');
         setModalOpen(true);
     };
 
@@ -78,6 +89,7 @@ export function UsuariosPage() {
         setPassword('');
         setRolId(u.rol?.id || '');
         setEstacionId(u.estacionGestionada?.id || '');
+        setDistribuidorId(u.distribuidorGestionado?.id || '');
         setModalOpen(true);
     };
 
@@ -102,11 +114,13 @@ export function UsuariosPage() {
                 if (password) payload.password = password;
                 if (rolId) payload.rolId = rolId;
                 if (selectedRoleName === 'estacion') payload.estacionId = estacionId || null;
+                if (selectedRoleName === 'distribuidor') payload.distribuidorId = distribuidorId || null;
                 await usuariosService.update(editing.id, payload);
                 toast.success('Usuario actualizado');
             } else {
                 const createPayload: Record<string, unknown> = { email, nombre, password: password || undefined, rolId };
                 if (selectedRoleName === 'estacion' && estacionId) createPayload.estacionId = estacionId;
+                if (selectedRoleName === 'distribuidor' && distribuidorId) createPayload.distribuidorId = distribuidorId;
                 await usuariosService.create(createPayload);
                 toast.success('Usuario creado correctamente');
             }
@@ -303,6 +317,15 @@ export function UsuariosPage() {
                             value={estacionId}
                             onChange={(e) => setEstacionId(e.target.value)}
                             options={[{ value: '', label: '— Sin estación —' }, ...estaciones.map(e => ({ value: e.id, label: e.nombre }))]}
+                        />
+                    )}
+                    {roles.find(r => r.id === rolId)?.nombre === 'distribuidor' && (
+                        <SelectField
+                            label="Distribuidora asignada"
+                            id="user-distribuidor"
+                            value={distribuidorId}
+                            onChange={(e) => setDistribuidorId(e.target.value)}
+                            options={[{ value: '', label: '— Sin distribuidora —' }, ...distribuidores.map(d => ({ value: d.id, label: d.nombre }))]}
                         />
                     )}
                     <div className="flex justify-end gap-2 pt-2">
