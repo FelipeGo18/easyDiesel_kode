@@ -9,6 +9,7 @@ import { KpiCard } from '@/components/ui/KpiCard';
 import { useToast } from '@/components/ui/useToast';
 import { useAuth } from '@/context/useAuth';
 import { getErrorMessage } from '@/lib/http';
+import { api } from '@/services/api';
 import { inventarioService, type RegistrarEntregaData } from '@/services/inventario';
 import { estacionesService } from '@/services/actores';
 import type { AuthenticatedUser, EntregaDistribuidor, EstacionServicio, TipoCombustible } from '@/types';
@@ -59,8 +60,47 @@ export function DistribuidorPanelPage() {
         fechaEntrega: new Date().toISOString().slice(0, 16),
     });
 
-    const setField = (field: string, value: string) =>
+    const setField = (field: string, value: string | number) =>
         setForm(prev => ({ ...prev, [field]: value }));
+
+    // Fetch automatic price and remission when station or fuel type changes
+    useEffect(() => {
+        const fetchMeta = async () => {
+            if (!form.estacionId || !form.tipoCombustible) return;
+            try {
+                // 1. Get next remission
+                const remRes = await api.get(`/inventario/proxima-remision`);
+                const proximaRemision = remRes.data?.data?.proxima;
+
+                // 2. Get zona price
+                const selectedEstacion = estaciones.find(e => e.id === form.estacionId);
+                const zonaId = selectedEstacion?.zonaId;
+                let precioUnitario = 0;
+
+                if (zonaId) {
+                    const priceRes = await api.get(`/precios/consultar`, {
+                        params: {
+                            zonaId,
+                            tipoCombustible: form.tipoCombustible,
+                            tipoServicio: 'CARGA'
+                        }
+                    });
+                    precioUnitario = priceRes.data?.data?.precioGalon || 0;
+                }
+
+                setForm(prev => ({
+                    ...prev,
+                    numeroRemision: proximaRemision || prev.numeroRemision,
+                    precioUnitario: precioUnitario ? String(precioUnitario) : '0'
+                }));
+
+            } catch (error) {
+                console.error('Error fetching delivery meta:', error);
+                setField('precioUnitario', '0');
+            }
+        };
+        fetchMeta();
+    }, [form.estacionId, form.tipoCombustible, estaciones]);
 
     // ── Data loading ────────────────────────────────────────────────────────
 
@@ -105,6 +145,26 @@ export function DistribuidorPanelPage() {
             toast.error('Selecciona una estación destino');
             return;
         }
+
+        // ── Validation: Available space check ──────────────────────────────────────
+        const galonesADespachar = Number(form.galones);
+        const tanquesCompatibles = (estacion.tanques || []).filter(t => t.tipoCombustible === form.tipoCombustible);
+        
+        if (tanquesCompatibles.length === 0) {
+            toast.error(`La estación ${estacion.nombre} no tiene tanques registrados para ${form.tipoCombustible}`);
+            return;
+        }
+
+        const espacioDisponibleTipo = tanquesCompatibles.reduce((acc, t) => {
+            const disponible = Number(t.capacidadGalones) - Number(t.nivelActual || 0);
+            return acc + Math.max(0, disponible);
+        }, 0);
+        
+        if (galonesADespachar > espacioDisponibleTipo) {
+            toast.error(`Exceso de capacidad: La estación solo tiene ${formatGallons(espacioDisponibleTipo)} gal de espacio libre para ${form.tipoCombustible}.`);
+            return;
+        }
+        // ────────────────────────────────────────────────────────────────────
 
         setSubmitting(true);
         try {
@@ -308,37 +368,56 @@ export function DistribuidorPanelPage() {
                         onChange={e => setField('tipoCombustible', e.target.value as TipoCombustible)}
                         options={tipoCombustibleOptions}
                     />
-                    <div className="grid grid-cols-2 gap-3">
-                        <InputField
-                            label="Galones"
-                            id="entrega-galones"
-                            type="number"
-                            min="1"
-                            step="0.01"
-                            value={form.galones}
-                            onChange={e => setField('galones', e.target.value)}
-                            placeholder="500"
-                            required
-                        />
-                        <InputField
-                            label="Precio por galón (COP)"
-                            id="entrega-precio"
-                            type="number"
-                            min="1"
-                            value={form.precioUnitario}
-                            onChange={e => setField('precioUnitario', e.target.value)}
-                            placeholder="10000"
-                            required
-                        />
-                    </div>
                     <InputField
-                        label="Número de remisión"
-                        id="entrega-remision"
-                        value={form.numeroRemision}
-                        onChange={e => setField('numeroRemision', e.target.value)}
-                        placeholder="REM-2026-001"
+                        label="Galones"
+                        id="entrega-galones"
+                        type="number"
+                        min="1"
+                        step="0.01"
+                        value={form.galones}
+                        onChange={e => setField('galones', e.target.value)}
+                        placeholder="500"
                         required
                     />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-medium text-text-secondary uppercase tracking-wider">
+                                Número de Remisión
+                            </label>
+                            <div className="h-10 px-3 flex items-center bg-bg-surface border border-border-subtle rounded-brand font-mono text-amber-500 font-bold text-[13px]">
+                                {form.numeroRemision || 'Generando...'}
+                            </div>
+                            <p className="text-[10px] text-text-muted">Asignado automáticamente</p>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-[11px] font-medium text-text-secondary uppercase tracking-wider">
+                                Precio por Galón
+                            </label>
+                            <div className="h-10 px-3 flex items-center bg-bg-surface border border-border-subtle rounded-brand font-mono text-green-500 font-bold text-[13px]">
+                                {form.precioUnitario && form.precioUnitario !== '0' ? formatCurrency(Number(form.precioUnitario)) : 'Consultando...'}
+                            </div>
+                            <p className="text-[10px] text-text-muted">Precio de zona vigente</p>
+                        </div>
+                    </div>
+
+                    {form.galones && form.precioUnitario && form.precioUnitario !== '0' && (
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-brand p-4 flex flex-col gap-1">
+                            <div className="flex justify-between items-center">
+                                <span className="text-[11px] font-medium text-text-secondary uppercase tracking-wider">Total de la entrega</span>
+                                <span className="text-[16px] font-bold text-green-400 font-mono tracking-tight">
+                                    {formatCurrency(Number(form.galones) * Number(form.precioUnitario))}
+                                </span>
+                            </div>
+                            <div className="h-px bg-green-500/20 my-1" />
+                            <div className="flex justify-between text-[10px] text-green-500/70">
+                                <span>{formatGallons(Number(form.galones))} galones</span>
+                                <span>×</span>
+                                <span>{formatCurrency(Number(form.precioUnitario))} / gal</span>
+                            </div>
+                        </div>
+                    )}
+
                     <InputField
                         label="Fecha de entrega"
                         id="entrega-fecha"
@@ -348,15 +427,21 @@ export function DistribuidorPanelPage() {
                         required
                     />
 
-                    {/* Price summary */}
-                    {form.galones && form.precioUnitario && (
-                        <div className="bg-bg-elevated rounded-brand p-3 text-[12px] text-text-secondary border border-border-subtle">
-                            Total estimado:{' '}
-                            <span className="text-amber-400 font-mono font-medium">
-                                {formatCurrency(Number(form.galones) * Number(form.precioUnitario))}
-                            </span>
-                        </div>
-                    )}
+                    {/* Capacity info */}
+                    {(() => {
+                        const s = estaciones.find(x => x.id === form.estacionId);
+                        if (!s) return null;
+                        const tks = (s.tanques || []).filter(t => t.tipoCombustible === form.tipoCombustible);
+                        const disponible = tks.reduce((acc, t) => acc + (Number(t.capacidadGalones) - Number(t.nivelActual || 0)), 0);
+                        return (
+                            <div className="bg-bg-elevated rounded-brand p-3 text-[11px] text-text-muted border border-border-subtle flex items-center gap-2">
+                                <Building2 className="w-3.5 h-3.5 text-amber-500/70" />
+                                <span>Espacio disponible en {s.nombre} para {form.tipoCombustible}: <b>{formatGallons(Math.max(0, disponible))} gal</b></span>
+                            </div>
+                        );
+                    })()}
+
+                    {/* Price summary removed as it's redundant with the price field above */}
 
                     <div className="flex justify-end gap-2 pt-2">
                         <Button variant="ghost" type="button" onClick={() => setModalOpen(false)}>

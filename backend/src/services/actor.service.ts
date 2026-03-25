@@ -34,6 +34,7 @@ export class ActorService {
                     zona: true,
                     distribuidor: { select: { id: true, nombre: true } },
                     usuario: { select: { id: true, nombre: true, email: true } },
+                    tanques: true,
                 },
                 orderBy: { createdAt: 'desc' },
                 skip,
@@ -201,7 +202,7 @@ export class ActorService {
                 direccion: data.direccion,
                 ciudad: data.ciudad,
                 departamento: data.departamento,
-                usuarioId: data.usuarioId,
+                usuario: { connect: { id: data.usuarioId } },
             },
             include: { usuario: true }
         });
@@ -216,16 +217,17 @@ export class ActorService {
             if (existeNit) throw new Error('El nuevo NIT ya está registrado');
         }
 
+        const { usuarioId, ...updateData } = data;
+        const updatePayload: any = { ...updateData };
+
+        if (usuarioId) {
+            updatePayload.usuario = { connect: { id: usuarioId } };
+        }
+
         return prisma.distribuidor.update({
             where: { id },
-            data: {
-                ...(data.nombre && { nombre: data.nombre }),
-                ...(data.nit && { nit: data.nit }),
-                ...(data.tipo && { tipo: data.tipo }),
-                ...(data.direccion && { direccion: data.direccion }),
-                ...(data.ciudad && { ciudad: data.ciudad }),
-                ...(data.departamento && { departamento: data.departamento }),
-            }
+            data: updatePayload,
+            include: { usuario: true }
         });
     }
 }

@@ -149,6 +149,7 @@ export interface EstacionServicio {
     zona?: { id: string; nombre: string };
     distribuidor?: { id: string; nombre: string };
     usuario?: { id: string; nombre: string; email: string };
+    tanques?: Tanque[];
     createdAt: string;
 }
 

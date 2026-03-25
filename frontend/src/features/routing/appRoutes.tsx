@@ -64,6 +64,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         description: 'Configuración territorial y cobertura regulatoria',
         requiredPermissions: ['zonas:leer', 'zonas:escribir'],
         showInNavigation: true,
+        excludeRoles: ['distribuidor', 'distribuidor_regulado', 'estacion', 'despachador'],
     },
     {
         path: '/actores',
@@ -74,7 +75,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         description: 'Estaciones y distribuidores registrados',
         requiredPermissions: ['actores:leer', 'actores:escribir'],
         showInNavigation: true,
-        excludeRoles: ['estacion', 'despachador'],
+        excludeRoles: ['distribuidor', 'distribuidor_regulado', 'estacion', 'despachador'],
     },
     {
         path: '/precios',
@@ -85,7 +86,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         description: 'Tarifas vigentes por zona y tipo de servicio',
         requiredPermissions: ['precios:leer', 'precios:escribir'],
         showInNavigation: true,
-        excludeRoles: ['estacion', 'despachador'],
+        excludeRoles: ['distribuidor', 'distribuidor_regulado', 'estacion', 'despachador'],
     },
     {
         path: '/normativa',
@@ -96,7 +97,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         description: 'Decretos y reglas regulatorias aplicables',
         requiredPermissions: ['decretos:leer', 'decretos:escribir'],
         showInNavigation: true,
-        excludeRoles: ['estacion', 'despachador'],
+        excludeRoles: ['distribuidor', 'distribuidor_regulado', 'estacion', 'despachador'],
     },
     {
         path: '/usuarios',
@@ -107,6 +108,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         description: 'Accesos, roles y gobierno de usuarios',
         requiredPermissions: ['usuarios:leer', 'usuarios:escribir'],
         showInNavigation: true,
+        excludeRoles: ['distribuidor', 'distribuidor_regulado', 'estacion', 'despachador'],
     },
     {
         path: '/estacion',
@@ -117,6 +119,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         description: 'Gestión de tanques, entradas y salidas de combustible',
         requiredPermissions: ['inventario:leer', 'inventario:escribir'],
         showInNavigation: true,
+        excludeRoles: ['distribuidor', 'distribuidor_regulado'],
     },
     {
         path: '/reportes',
@@ -127,6 +130,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         description: 'Informes y exportes oficiales',
         requiredPermissions: ['reportes:leer', 'reportes:generar'],
         showInNavigation: true,
+        excludeRoles: ['distribuidor', 'distribuidor_regulado'],
     },
     {
         path: '/auditoria',
@@ -137,6 +141,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         description: 'Trazabilidad de operaciones y cambios',
         requiredPermissions: ['auditoria:leer'],
         showInNavigation: true,
+        excludeRoles: ['distribuidor', 'distribuidor_regulado', 'estacion', 'despachador'],
     },
 ];
 

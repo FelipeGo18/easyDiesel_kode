@@ -89,6 +89,35 @@ export class InventarioService {
      * Registra una entrega mayorista o distribuidor regulado, sumando el volumen al tanque.
      */
     async registrarEntrega(data: RegistrarEntregaInput, options?: { usuarioId?: string; ip?: string; userAgent?: string }) {
+        // 1. Obtener información de la estación para el precio
+        const estacion = await prisma.estacionServicio.findUnique({
+            where: { id: data.estacionId },
+            include: { zona: true }
+        });
+        if (!estacion) throw new Error('Estación no encontrada');
+
+        // 2. Obtener precio automático por zona
+        const precioAplicado = await pricingEngineService.resolveCurrentFuelPrice({
+            estacionId: data.estacionId,
+            tipoCombustible: data.tipoCombustible,
+            tipoServicio: 'CARGA', // Las entregas de distribuidor son tipo CARGA
+        });
+
+        // 3. Generar número de remisión automático correlativo por distribuidor
+        const ultimaEntrega = await prisma.entregaDistribuidor.findFirst({
+            where: { distribuidorId: data.distribuidorId },
+            orderBy: { createdAt: 'desc' },
+            select: { numeroRemision: true }
+        });
+
+        let nuevoNumeroRemision = '000001';
+        if (ultimaEntrega && ultimaEntrega.numeroRemision) {
+            const ultimoNum = parseInt(ultimaEntrega.numeroRemision, 10);
+            if (!isNaN(ultimoNum)) {
+                nuevoNumeroRemision = (ultimoNum + 1).toString().padStart(6, '0');
+            }
+        }
+
         if (data.tanqueId) {
             const tanque = await prisma.tanque.findUnique({ where: { id: data.tanqueId } });
             if (!tanque) throw new Error('Tanque no encontrado');
@@ -107,7 +136,8 @@ export class InventarioService {
             }
         }
 
-        const precioTotal = Number((data.galones * data.precioUnitario).toFixed(2));
+        const precioUnitario = precioAplicado.precioUnitario;
+        const precioTotal = Number((data.galones * precioUnitario).toFixed(2));
 
         // Transacción Atómica: el distribuidor registra la entrega como pendiente.
         return prisma.$transaction(async (tx: any) => {
@@ -118,9 +148,9 @@ export class InventarioService {
                     tanqueId: data.tanqueId ?? null,
                     tipoCombustible: data.tipoCombustible,
                     galones: data.galones,
-                    precioUnitario: data.precioUnitario,
+                    precioUnitario: precioUnitario,
                     precioTotal: precioTotal,
-                    numeroRemision: data.numeroRemision,
+                    numeroRemision: nuevoNumeroRemision,
                     fechaEntrega: new Date(data.fechaEntrega),
                     confirmada: false
                 }
@@ -140,9 +170,9 @@ export class InventarioService {
                             tanqueId: data.tanqueId,
                             tipoCombustible: data.tipoCombustible,
                             galones: data.galones,
-                            precioUnitario: data.precioUnitario,
+                            precioUnitario: precioUnitario,
                             precioTotal,
-                            numeroRemision: data.numeroRemision,
+                            numeroRemision: nuevoNumeroRemision,
                             fechaEntrega: data.fechaEntrega,
                             confirmada: false,
                         },
@@ -152,7 +182,7 @@ export class InventarioService {
                 });
             }
 
-            return entrega;
+            return { ...entrega, _precioDetalle: precioAplicado };
         });
     }
 
@@ -524,6 +554,27 @@ export class InventarioService {
         ]);
 
         return { data, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
+    }
+
+    /**
+     * Cancela (elimina) una entrega pendiente de confirmación.
+     * Solo el distribuidor que la registró puede cancelarla y solo si no está confirmada.
+     */
+    async proximaRemision(distribuidorId: string) {
+        const ultimaEntrega = await prisma.entregaDistribuidor.findFirst({
+            where: { distribuidorId },
+            orderBy: { createdAt: 'desc' },
+            select: { numeroRemision: true }
+        });
+
+        let proxima = '000001';
+        if (ultimaEntrega && ultimaEntrega.numeroRemision) {
+            const ultimoNum = parseInt(ultimaEntrega.numeroRemision, 10);
+            if (!isNaN(ultimoNum)) {
+                proxima = (ultimoNum + 1).toString().padStart(6, '0');
+            }
+        }
+        return { proxima };
     }
 
     /**
