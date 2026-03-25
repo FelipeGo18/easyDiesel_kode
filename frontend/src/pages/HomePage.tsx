@@ -439,17 +439,13 @@ export function HomePage() {
                     </div>
                 </div>
 
-                {/* ═══ 3 Result Cards — Page Shrinks to Corner ═══ */}
-                {/* prices-pin-wrap provides the scroll distance for the pinned animation.
-                    prices-pin-scene is CSS-sticky and stays at top:0 while scrolling,
-                    giving GSAP a 300vh window to drive the sequential reveal. */}
-                <div className="prices-pin-wrap">
-                    <div className="prices-pin-scene">
+                {/* ═══ 3 Result Cards ═══ */}
+                <div className="max-w-6xl mx-auto px-8 md:px-16 pb-24">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                         {/* ── Card 0 — Precio Vigente + Gauge ── */}
-                        <div className="pcard pcard-0">
-                            <div className="pcard-inner">
-                                <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-amber-500/60 via-amber-500/20 to-transparent" />
+                        <div className="price-card relative overflow-hidden rounded-[4px] border border-[#222] bg-[#0c0c0c] p-6 lg:p-8">
+                            <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-amber-500/60 via-amber-500/20 to-transparent" />
 
                                 <span className="font-mono text-[9px] text-amber-500/60 tracking-[0.25em] uppercase block mb-4">Precio vigente</span>
 
@@ -523,13 +519,11 @@ export function HomePage() {
                             {!loadingPublicData && !precioActual && (
                                 <p className="text-[11px] text-amber-300/70 font-mono mt-4 text-center">Sin precio vigente</p>
                             )}
-                            </div>
                         </div>
 
                         {/* ── Card 1 — Detalle Regulatorio ── */}
-                        <div className="pcard pcard-1">
-                            <div className="pcard-inner">
-                                <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-green-500/60 via-green-500/20 to-transparent" />
+                        <div className="price-card relative overflow-hidden rounded-[4px] border border-[#222] bg-[#0c0c0c] p-6 lg:p-8">
+                            <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-green-500/60 via-green-500/20 to-transparent" />
 
                             <span className="font-mono text-[9px] text-amber-500/60 tracking-[0.25em] uppercase block mb-6">Detalle regulatorio</span>
 
@@ -576,13 +570,11 @@ export function HomePage() {
                                     <span className="font-mono text-[10px] text-text-muted uppercase tracking-[0.2em]">Sin datos</span>
                                 </div>
                             )}
-                            </div>
                         </div>
 
                         {/* ── Card 2 — Comparativa ACPM vs Gasolina ── */}
-                        <div className="pcard pcard-2">
-                            <div className="pcard-inner">
-                                <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
+                        <div className="price-card relative overflow-hidden rounded-[4px] border border-[#222] bg-[#0c0c0c] p-6 lg:p-8">
+                            <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
 
                             <span className="font-mono text-[9px] text-amber-500/60 tracking-[0.25em] uppercase block mb-4">Comparativa</span>
                             <h3 className="font-display text-[28px] text-text-primary leading-none mb-6">
@@ -634,11 +626,10 @@ export function HomePage() {
                                 Ver tabla completa por zona
                                 <Icon name="arrow-right" size={11} />
                             </button>
-                            </div>
                         </div>
 
-                    </div>{/* prices-pin-scene */}
-                </div>{/* prices-pin-wrap */}
+                    </div>
+                </div>
             </section>
 
                     {/* ══════════════════════════════════════════
