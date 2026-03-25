@@ -240,7 +240,7 @@ export function DistribuidorPanelPage() {
     return (
         <div className="space-y-6 animate-enter">
             {/* ── Header ── */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                     <h1 className="text-h1 text-text-primary">
                         {distribuidor?.nombre ?? 'Distribuidor'}
@@ -249,14 +249,14 @@ export function DistribuidorPanelPage() {
                         Panel de operaciones · Registro y seguimiento de entregas
                     </p>
                 </div>
-                <Button onClick={() => setModalOpen(true)}>
+                <Button onClick={() => setModalOpen(true)} className="w-full sm:w-auto">
                     <PackagePlus className="w-4 h-4" />
                     Nueva entrega
                 </Button>
             </div>
 
             {/* ── KPIs ── */}
-            <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 <KpiCard
                     label="Total entregas"
                     value={String(kpis.totalEntregas)}
@@ -385,7 +385,7 @@ export function DistribuidorPanelPage() {
                         placeholder="500"
                         required
                     />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-medium text-text-secondary uppercase tracking-wider">
                                 Número de Remisión

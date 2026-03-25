@@ -1149,7 +1149,7 @@ export function StationOperationsPage() {
                     <div className="space-y-4">
                         <div className="rounded-brand border border-emerald-500/25 bg-emerald-500/[0.07] p-4">
                             <p className="text-[11px] font-mono uppercase tracking-wider text-emerald-300/70 mb-3">Resultado del cierre</p>
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div>
                                     <p className="text-[10px] text-white/45 uppercase tracking-wider">Teórico</p>
                                     <p className="mt-1 text-lg font-semibold text-white">{formatGallons(cierreResult.nivelTeorico)} gal</p>

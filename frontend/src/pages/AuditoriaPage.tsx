@@ -147,7 +147,7 @@ export function AuditoriaPage() {
 
     return (
         <div className="space-y-6 animate-enter">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                     <h1 className="text-h1 text-text-primary mb-1 flex items-center gap-2">
                         <Icon name="audit" size={24} className="text-amber-500" />
@@ -277,7 +277,7 @@ export function AuditoriaPage() {
             >
                 {selectedLog && (
                     <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-1">
                                 <span className="text-[10px] font-mono text-text-muted uppercase">ID Transacción</span>
                                 <p className="text-[12px] text-text-primary font-mono bg-bg-elevated p-2 rounded border border-border-default">{selectedLog.id}</p>
@@ -288,7 +288,7 @@ export function AuditoriaPage() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div className="bg-bg-elevated p-3 rounded-brand border border-border-subtle">
                                 <div className="flex items-center gap-2 text-amber-500 mb-1">
                                     <Icon name="activity" size={14} />

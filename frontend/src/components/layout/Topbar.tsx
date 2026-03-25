@@ -31,16 +31,16 @@ export function Topbar() {
     };
 
     return (
-        <header className="h-14 flex items-center justify-between px-4 sm:px-6 border-b border-border-subtle bg-bg-surface shrink-0">
+        <header className="h-14 flex items-center justify-between px-3 sm:px-4 md:px-6 border-b border-border-subtle bg-bg-surface shrink-0">
             {/* Left — Page title */}
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-                <h1 className="font-display text-lg sm:text-2xl lg:text-[28px] text-text-primary truncate">{pageTitle}</h1>
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <h1 className="font-display text-base sm:text-xl md:text-2xl lg:text-[26px] xl:text-[28px] text-text-primary truncate">{pageTitle}</h1>
             </div>
 
             {/* Right */}
-            <div className="flex items-center gap-3 sm:gap-5">
-                {/* System status - hide on small screens */}
-                <div className="hidden sm:flex items-center gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-5">
+                {/* System status — visible md+ */}
+                <div className="hidden md:flex items-center gap-2">
                     <span className="relative flex h-2 w-2">
                         <span className="status-live absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
@@ -50,21 +50,21 @@ export function Topbar() {
                     </span>
                 </div>
 
-                {/* Separator */}
-                <span className="w-px h-5 bg-border-subtle" />
+                {/* Separator — visible md+ */}
+                <span className="hidden md:block w-px h-5 bg-border-subtle" />
 
-                {/* Date/Time - hide date on small screens */}
+                {/* Date/Time — time always, date sm+ */}
                 <div className="flex flex-col items-end">
                     <span className="text-[11px] font-mono text-text-secondary tracking-wider">
                         {time}
                     </span>
-                    <span className="text-[9px] font-mono text-text-muted uppercase tracking-wider hidden sm:block">
+                    <span className="hidden sm:block text-[9px] font-mono text-text-muted uppercase tracking-wider">
                         {formatted}
                     </span>
                 </div>
 
-                {/* Separator */}
-                <span className="w-px h-5 bg-border-subtle" />
+                {/* Separator — visible sm+ */}
+                <span className="hidden sm:block w-px h-5 bg-border-subtle" />
 
                 {/* User avatar - clickable */}
                 {user && (

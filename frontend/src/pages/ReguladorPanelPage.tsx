@@ -95,7 +95,7 @@ export function ReguladorPanelPage() {
             </section>
 
             {/* ── KPIs ── */}
-            <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 <KpiCard
                     label="Zonas regulatorias"
                     value={String(zonas.length)}
@@ -119,7 +119,7 @@ export function ReguladorPanelPage() {
             </div>
 
             {/* ── Main content ── */}
-            <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+            <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
                 {/* Precios vigentes table */}
                 <Card className="p-0 overflow-hidden">
                     <div className="flex items-center gap-3 border-b border-border-subtle px-5 py-4">

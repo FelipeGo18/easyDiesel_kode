@@ -196,14 +196,14 @@ export function UsuariosPage() {
 
     return (
         <div className="animate-enter">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                 <div>
                     <h1 className="text-h1 text-text-primary">Usuarios</h1>
                     <p className="text-small text-text-secondary mt-1">
                         Gestiona los usuarios del sistema y asigna roles.
                     </p>
                 </div>
-                <Button onClick={openCreate}>
+                <Button onClick={openCreate} className="w-full sm:w-auto">
                     <Icon name="plus" size={14} />
                     Nuevo usuario
                 </Button>

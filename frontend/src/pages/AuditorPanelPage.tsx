@@ -130,7 +130,7 @@ export function AuditorPanelPage() {
             </section>
 
             {/* ── KPIs ── */}
-            <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 <KpiCard
                     label="Eventos registrados"
                     value={loading ? '…' : total.toLocaleString('es-CO')}
@@ -153,7 +153,7 @@ export function AuditorPanelPage() {
                 />
             </div>
 
-            <div className="grid gap-6 xl:grid-cols-[1fr_0.38fr]">
+            <div className="grid gap-6 lg:grid-cols-[1fr_0.38fr]">
                 {/* ── Tabla de logs recientes ── */}
                 <Card className="rounded-[28px] border-white/5 bg-[linear-gradient(180deg,rgba(20,20,18,0.98),rgba(12,12,10,0.98))] p-0 overflow-hidden">
                     <div className="flex items-center justify-between border-b border-white/6 px-6 py-5">

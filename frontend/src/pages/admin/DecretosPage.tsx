@@ -129,14 +129,14 @@ export function DecretosPage() {
 
     return (
         <div className="animate-enter">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                 <div>
                     <h1 className="text-h1 text-text-primary">Decretos normativos</h1>
                     <p className="text-small text-text-secondary mt-1">
                         Gestiona los decretos que regulan los precios de combustibles.
                     </p>
                 </div>
-                <Button onClick={openCreate}>
+                <Button onClick={openCreate} className="w-full sm:w-auto">
                     <Icon name="plus" size={14} />
                     Nuevo decreto
                 </Button>
@@ -167,7 +167,7 @@ export function DecretosPage() {
                 maxWidth="520px"
             >
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <InputField
                             label="Número"
                             id="decreto-numero"
@@ -199,7 +199,7 @@ export function DecretosPage() {
                         onChange={(e) => setDescripcion(e.target.value)}
                         placeholder="Descripción del contenido del decreto"
                     />
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <InputField
                             label="Fecha expedición"
                             id="decreto-fexp"

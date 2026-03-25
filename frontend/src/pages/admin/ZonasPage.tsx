@@ -146,13 +146,13 @@ export function ZonasPage() {
 
     return (
         <div className="animate-enter">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                 <div>
                     <h1 className="text-h1 text-text-primary mb-1">Zonas de distribución</h1>
                     <p className="text-small text-text-secondary">Configuración de regiones y departamentos regulados</p>
                 </div>
                 {canWrite && (
-                    <Button onClick={openCreate} size="sm">
+                    <Button onClick={openCreate} size="sm" className="w-full sm:w-auto">
                         <Icon name="plus" size={16} className="shrink-0" />
                         Nueva zona
                     </Button>

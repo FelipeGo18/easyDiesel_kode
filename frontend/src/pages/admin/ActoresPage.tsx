@@ -252,14 +252,14 @@ export function ActoresPage() {
 
     return (
         <div className="animate-enter">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                 <div>
                     <h1 className="text-h1 text-text-primary">Gestión de Actores</h1>
                     <p className="text-small text-text-secondary mt-1">
                         Administra las estaciones de servicio y distribuidores mayoristas.
                     </p>
                 </div>
-                <Button onClick={openCreate}>
+                <Button onClick={openCreate} className="w-full sm:w-auto">
                     <Icon name="plus" size={14} className="mr-1" />
                     {activeTab === 'estaciones' ? 'Nueva Estación' : 'Nuevo Distribuidor'}
                 </Button>
@@ -401,7 +401,7 @@ export function ActoresPage() {
                 title={editing ? `Editar ${activeTab === 'estaciones' ? 'Estación' : 'Distribuidor'}` : `Nueva ${activeTab === 'estaciones' ? 'Estación' : 'Distribuidor'}`}
             >
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <InputField
                             label="Nombre"
                             value={formData.nombre}
@@ -428,7 +428,7 @@ export function ActoresPage() {
                         />
                     )}
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <InputField
                             label="Dirección"
                             value={formData.direccion}
@@ -443,7 +443,7 @@ export function ActoresPage() {
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <InputField
                             label="Departamento"
                             value={formData.departamento}
@@ -460,7 +460,7 @@ export function ActoresPage() {
                         )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {activeTab === 'estaciones' && (
                             <SelectField
                                 label="Zona"
@@ -480,7 +480,7 @@ export function ActoresPage() {
                         )}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <SelectField
                             label={activeTab === 'estaciones' ? "Administrador" : "Responsable"}
                             value={formData.usuarioId}

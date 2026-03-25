@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/useAuth';
@@ -7,7 +7,15 @@ import { navigationRoutes } from '@/features/routing/appRoutes';
 import { useAccess } from '@/hooks/useAccess';
 
 export function Sidebar() {
-    const [collapsed, setCollapsed] = useState(false);
+    const [collapsed, setCollapsed] = useState(() => window.innerWidth < 1024);
+
+    useEffect(() => {
+        const onResize = () => {
+            if (window.innerWidth < 1024) setCollapsed(true);
+        };
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
     const { user, logout } = useAuth();
     const { hasAnyPermission } = useAccess();
     const location = useLocation();
@@ -25,7 +33,7 @@ export function Sidebar() {
                 'h-screen flex flex-col',
                 'bg-bg-surface border-r border-border-subtle',
                 'transition-all duration-200 ease-out',
-                collapsed ? 'w-[68px]' : 'w-[240px]'
+                collapsed ? 'w-[52px] md:w-[68px]' : 'w-[200px] md:w-[240px]'
             )}
         >
             {/* ── Logo ── */}

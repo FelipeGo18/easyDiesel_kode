@@ -177,7 +177,7 @@ export function PreciosPage() {
 
     return (
         <div className="animate-enter">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                 <div>
                     <h1 className="text-h1 text-text-primary">Precios vigentes</h1>
                     <p className="text-small text-text-secondary mt-1">
@@ -185,7 +185,7 @@ export function PreciosPage() {
                         Al crear un precio nuevo, el anterior se desactiva automáticamente.
                     </p>
                 </div>
-                <Button onClick={openCreate} disabled={zonas.length === 0 || decretos.length === 0 || !hasAnyPermission('precios:escribir')}>
+                <Button onClick={openCreate} disabled={zonas.length === 0 || decretos.length === 0 || !hasAnyPermission('precios:escribir')} className="w-full sm:w-auto">
                     <Icon name="plus" size={14} className="mr-2" />
                     Nuevo precio
                 </Button>
@@ -226,7 +226,7 @@ export function PreciosPage() {
                 maxWidth="520px"
             >
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <SelectField
                             label="Combustible"
                             id="precio-combustible"
@@ -251,7 +251,7 @@ export function PreciosPage() {
                         placeholder="Selecciona una zona"
                         required
                     />
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <InputField
                             label="Precio por galón (COP)"
                             id="precio-galon"
@@ -279,7 +279,7 @@ export function PreciosPage() {
                         placeholder="Selecciona decreto"
                         required
                     />
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <InputField
                             label="Vigencia desde"
                             id="precio-desde"

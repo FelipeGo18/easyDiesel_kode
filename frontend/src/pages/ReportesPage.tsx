@@ -188,7 +188,7 @@ export function ReportesPage() {
                             </div>
 
                             {/* Rango de Fechas */}
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div className="space-y-1.5">
                                     <label className="text-label text-text-secondary flex items-center gap-1.5">
                                         <Icon name="calendar" size={12} /> Inicio
@@ -246,7 +246,7 @@ export function ReportesPage() {
 
                 {/* Historial de Reportes */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <h3 className="text-[14px] font-bold text-text-primary flex items-center gap-2">
                             <Icon name="history" size={16} className="text-text-muted" />
                             Historial de Actividad

@@ -87,7 +87,7 @@ export function ParticularPanelPage() {
                     </div>
                 </div>
 
-                <form onSubmit={handleSearch} className="flex gap-3">
+                <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
                     <InputField
                         label="Placa del vehículo"
                         placeholder="ABC123"
@@ -96,7 +96,7 @@ export function ParticularPanelPage() {
                         className="flex-1 font-mono tracking-widest"
                         maxLength={10}
                     />
-                    <Button type="submit" isLoading={loading}>
+                    <Button type="submit" isLoading={loading} className="w-full sm:w-auto">
                         Consultar
                     </Button>
                 </form>
