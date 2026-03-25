@@ -32,6 +32,7 @@ export class ActorService {
                 where,
                 include: {
                     zona: true,
+                    distribuidor: { select: { id: true, nombre: true } },
                     usuario: { select: { id: true, nombre: true, email: true } },
                 },
                 orderBy: { createdAt: 'desc' },
@@ -77,10 +78,11 @@ export class ActorService {
                 codigoSicom: data.codigoSicom,
                 latitud: data.latitud ?? null,
                 longitud: data.longitud ?? null,
-                zonaId: data.zonaId,
-                usuarioId: data.usuarioId,
+                zona: { connect: { id: data.zonaId } },
+                usuario: { connect: { id: data.usuarioId } },
+                ...(data.distribuidorId && { distribuidor: { connect: { id: data.distribuidorId } } }),
             },
-            include: { zona: true, usuario: true }
+            include: { zona: true, usuario: true, distribuidor: true }
         });
     }
 
@@ -112,17 +114,29 @@ export class ActorService {
             if (existeSicom) throw new Error('El nuevo Código SICOM ya está registrado');
         }
 
-        const { zonaId, ...updateData } = data;
+        const { zonaId, distribuidorId, usuarioId, ...updateData } = data;
         const updatePayload: any = { ...updateData };
 
         if (zonaId) {
             updatePayload.zona = { connect: { id: zonaId } };
         }
 
+        if (usuarioId) {
+            updatePayload.usuario = { connect: { id: usuarioId } };
+        }
+
+        if (distribuidorId !== undefined) {
+            if (distribuidorId) {
+                updatePayload.distribuidor = { connect: { id: distribuidorId } };
+            } else {
+                updatePayload.distribuidor = { disconnect: true };
+            }
+        }
+
         return prisma.estacionServicio.update({
             where: { id },
             data: updatePayload,
-            include: { zona: true }
+            include: { zona: true, distribuidor: true }
         });
     }
 

@@ -20,6 +20,7 @@ type ActorFormData = {
     ciudad: string;
     departamento: string;
     usuarioId: string;
+    distribuidorId?: string;
     codigoSicom?: string;
     zonaId?: string;
     tipo?: 'MAYORISTA' | 'REGULADO';
@@ -55,10 +56,18 @@ export function ActoresPage() {
     const [zoneChangeVal, setZoneChangeVal] = useState('');
     const [changingZone, setChangingZone] = useState(false);
 
-    // Fetch meta (zones + users for the modal) once on mount
+    // Fetch meta (zones + users + distributors for the modal) once on mount
     useEffect(() => {
-        Promise.all([zonasService.getAll(), usuariosService.getAll({ limit: 500 })])
-            .then(([z, u]) => { setZonas(z); setUsuarios(u.data); })
+        Promise.all([
+            zonasService.getAll(), 
+            usuariosService.getAll({ limit: 500 }),
+            distribuidoresService.getAll({ limit: 1000 })
+        ])
+            .then(([z, u, d]) => { 
+                setZonas(z); 
+                setUsuarios(u.data); 
+                setDistribuidores(d.data || []);
+            })
             .catch(() => {});
     }, []);
 
@@ -96,7 +105,7 @@ export function ActoresPage() {
     const openCreate = () => {
         setEditing(null);
         setFormData(activeTab === 'estaciones' ? {
-            nombre: '', nit: '', direccion: '', ciudad: '', departamento: '', codigoSicom: '', zonaId: '', usuarioId: ''
+            nombre: '', nit: '', direccion: '', ciudad: '', departamento: '', codigoSicom: '', zonaId: '', usuarioId: '', distribuidorId: ''
         } : {
             nombre: '', nit: '', tipo: 'MAYORISTA', direccion: '', ciudad: '', departamento: '', usuarioId: ''
         });
@@ -112,6 +121,7 @@ export function ActoresPage() {
             ciudad: actor.ciudad,
             departamento: actor.departamento,
             usuarioId: actor.usuarioId || '',
+            distribuidorId: 'distribuidorId' in actor ? (actor.distribuidorId || '') : '',
             codigoSicom: 'codigoSicom' in actor ? actor.codigoSicom : '',
             zonaId: 'zonaId' in actor ? actor.zonaId : '',
             tipo: 'tipo' in actor ? actor.tipo : undefined,
@@ -183,6 +193,16 @@ export function ActoresPage() {
             key: 'zona',
             header: 'Zona',
             render: (e) => <Badge variant="blue">{e.zona?.nombre || '—'}</Badge>
+        },
+        {
+            key: 'distribuidor',
+            header: 'Distribuidora',
+            render: (e) => (
+                <div className="flex items-center gap-1.5 text-[12px]">
+                    <Icon name="truck" size={12} className="text-green-500" />
+                    <span>{e.distribuidor?.nombre || '—'}</span>
+                </div>
+            )
         },
         {
             key: 'usuario',
@@ -450,6 +470,17 @@ export function ActoresPage() {
                                 required
                             />
                         )}
+                        {activeTab === 'estaciones' && (
+                            <SelectField
+                                label="Distribuidora (Marca)"
+                                value={formData.distribuidorId}
+                                onChange={(e) => setFormData({ ...formData, distribuidorId: e.target.value })}
+                                options={[{ value: '', label: '— Sin distribuidora —' }, ...distribuidores.map(d => ({ value: d.id, label: d.nombre }))]}
+                            />
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
                         <SelectField
                             label={activeTab === 'estaciones' ? "Administrador" : "Responsable"}
                             value={formData.usuarioId}

@@ -12,6 +12,7 @@ export const crearEstacionSchema = z.object({
     longitud: z.number().optional().nullable(),
     zonaId: z.string().uuid('ID de zona inválido'),
     usuarioId: z.string().uuid('ID de usuario administrador requerido'),
+    distribuidorId: z.string().uuid('ID de distribuidor inválido').optional().nullable(),
 });
 
 export const actualizarEstacionSchema = crearEstacionSchema.partial();

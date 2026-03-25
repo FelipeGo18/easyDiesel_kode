@@ -144,8 +144,10 @@ export interface EstacionServicio {
     latitud?: number;
     longitud?: number;
     zonaId: string;
+    distribuidorId?: string | null;
     usuarioId?: string | null;
     zona?: { id: string; nombre: string };
+    distribuidor?: { id: string; nombre: string };
     usuario?: { id: string; nombre: string; email: string };
     createdAt: string;
 }

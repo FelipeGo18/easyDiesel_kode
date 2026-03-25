@@ -72,12 +72,14 @@ model EstacionServicio {
   latitud       Decimal?                 @db.Decimal(9, 6)
   longitud      Decimal?                 @db.Decimal(9, 6)
   zonaId        String                   @map("zona_id")
+  distribuidorId String?                 @map("distribuidor_id")
   activa        Boolean                  @default(true)
   createdAt     DateTime                 @default(now()) @map("created_at")
   updatedAt     DateTime                 @updatedAt @map("updated_at")
   entregas      EntregaDistribuidor[]
   usuario       Usuario?                 @relation(fields: [usuarioId], references: [id])
   zona          ZonaDistribucion         @relation(fields: [zonaId], references: [id])
+  distribuidor  Distribuidor?            @relation(fields: [distribuidorId], references: [id])
   tanques       Tanque[]
   transacciones TransaccionCombustible[]
 
@@ -100,6 +102,7 @@ model Distribuidor {
   updatedAt     DateTime                 @updatedAt @map("updated_at")
   usuario       Usuario?                 @relation(fields: [usuarioId], references: [id])
   entregas      EntregaDistribuidor[]
+  estaciones    EstacionServicio[]
   transacciones TransaccionCombustible[]
 
   @@map("distribuidores")

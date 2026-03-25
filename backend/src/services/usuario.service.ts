@@ -72,7 +72,7 @@ export class UsuarioService {
             throw new Error('El correo electrónico ya está registrado');
         }
 
-        let { rolId, password, estacionId: newEstacionId, ...restData } = data;
+        let { rolId, password, estacionId: newEstacionId, distribuidorId: newDistribuidorId, ...restData } = data;
 
         // Si no se envía un rol (por algún motivo), asignar rol 'particular'
         if (!rolId) {
@@ -101,6 +101,13 @@ export class UsuarioService {
         if (newEstacionId) {
             await prisma.estacionServicio.update({
                 where: { id: newEstacionId },
+                data: { usuarioId: usuario.id },
+            });
+        }
+
+        if (newDistribuidorId) {
+            await prisma.distribuidor.update({
+                where: { id: newDistribuidorId },
                 data: { usuarioId: usuario.id },
             });
         }
@@ -153,6 +160,19 @@ export class UsuarioService {
             if (data.estacionId) {
                 await prisma.estacionServicio.update({
                     where: { id: data.estacionId as string },
+                    data: { usuarioId: id },
+                });
+            }
+        }
+
+        if ('distribuidorId' in data) {
+            await prisma.distribuidor.updateMany({
+                where: { usuarioId: id },
+                data: { usuarioId: null },
+            });
+            if (data.distribuidorId) {
+                await prisma.distribuidor.update({
+                    where: { id: data.distribuidorId as string },
                     data: { usuarioId: id },
                 });
             }

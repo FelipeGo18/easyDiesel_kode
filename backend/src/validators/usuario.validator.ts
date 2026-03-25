@@ -7,6 +7,7 @@ export const crearUsuarioSchema = z.object({
     nombre: z.string().min(2, 'El nombre completo debe tener al menos 2 caracteres'),
     rolId: z.string().uuid('ID de rol inválido').optional(),
     estacionId: z.union([z.string().uuid('ID de estación inválido'), z.literal(null)]).optional(),
+    distribuidorId: z.union([z.string().uuid('ID de distribuidor inválido'), z.literal(null)]).optional(),
 });
 
 export const actualizarUsuarioSchema = crearUsuarioSchema.partial();
