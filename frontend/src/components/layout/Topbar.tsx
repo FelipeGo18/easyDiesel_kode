@@ -23,7 +23,8 @@ export function Topbar() {
         hour12: false,
     });
 
-    const pageTitle = roleName === 'estacion' ? 'Panel de estación' : 'Dashboard';
+    const stationName = user?.estacion?.nombre;
+    const pageTitle = roleName === 'estacion' ? (stationName || 'Panel de estación') : 'Dashboard';
 
     const handleLogout = () => {
         logout();
