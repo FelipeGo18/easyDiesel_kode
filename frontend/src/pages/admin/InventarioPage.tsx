@@ -1,60 +1,39 @@
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { Icon } from '@/components/ui/Icon';
+import { cn } from '@/lib/utils';
 import { DataTable, type Column } from '@/components/ui/DataTable';
-import { Modal } from '@/components/ui/Modal';
-import { InputField, SelectField, TextAreaField } from '@/components/ui/FormFields';
+import { InputField, SelectField } from '@/components/ui/FormFields';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { Card } from '@/components/ui/Card';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { useToast } from '@/components/ui/useToast';
 import { useAuth } from '@/context/useAuth';
-import { tanquesService, inventarioService, type RegistrarEntregaData, type RegistrarTransaccionData, type CierreTurnoData } from '@/services/inventario';
+import { tanquesService } from '@/services/inventario';
 import { getErrorMessage } from '@/lib/http';
-import { type AuthenticatedUser, type Tanque, type TipoServicio } from '@/types';
-
-const tipoServicioOptions = [
-    { value: 'PARTICULAR', label: 'Particular' },
-    { value: 'PUBLICO', label: 'Público' },
-    { value: 'DIPLOMATICO', label: 'Diplomático' },
-    { value: 'OFICIAL', label: 'Oficial' },
-    { value: 'CARGA', label: 'Carga' },
-];
+import { type AuthenticatedUser, type Tanque, type TipoCombustible } from '@/types';
 
 export function InventarioPage() {
     const { user } = useAuth();
+    const currentUser = user as AuthenticatedUser | null;
     const toast = useToast();
     const [tanques, setTanques] = useState<Tanque[]>([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [showTanqueForm, setShowTanqueForm] = useState(false);
 
-    // Modals state
-    const [entregaModalOpen, setEntregaModalOpen] = useState(false);
-    const [transaccionModalOpen, setTransaccionModalOpen] = useState(false);
-    const [cierreModalOpen, setCierreModalOpen] = useState(false);
-    const [selectedTanque, setSelectedTanque] = useState<Tanque | null>(null);
+    // Form state
+    const [editingTanque, setEditingTanque] = useState<Tanque | null>(null);
 
-    // Form states
-    const [entregaForm, setEntregaForm] = useState<Partial<RegistrarEntregaData>>({
-        galones: 0,
-        precioUnitario: 0,
-        numeroRemision: '',
-        fechaEntrega: new Date().toISOString().slice(0, 16),
-    });
-
-    const [transaccionForm, setTransaccionForm] = useState<Partial<RegistrarTransaccionData>>({
-        tipo: 'SALIDA',
-        tipoServicio: 'PARTICULAR',
-        galones: 0,
-        placaVehiculo: '',
-    });
-
-    const [cierreForm, setCierreForm] = useState<Partial<CierreTurnoData>>({
-        nivelFisico: 0,
-        observaciones: '',
+    const [tanqueForm, setTanqueForm] = useState<Partial<Tanque>>({
+        nombre: '',
+        capacidadGalones: 0,
+        nivelMinimo: 0,
+        tipoCombustible: 'ACPM',
+        estacionId: currentUser?.estacion?.id ?? '',
     });
 
     const fetchTanques = useCallback(async () => {
-        const currentUser = user as AuthenticatedUser | null;
         if (!currentUser?.estacion?.id) return;
         try {
             setLoading(true);
@@ -65,87 +44,73 @@ export function InventarioPage() {
         } finally {
             setLoading(false);
         }
-    }, [toast, user]);
+    }, [toast, currentUser?.estacion?.id]);
 
     useEffect(() => {
         fetchTanques();
     }, [fetchTanques]);
 
-    const handleEntregaSubmit = async (e: FormEvent) => {
+    const openCreateTanque = () => {
+        setEditingTanque(null);
+        setTanqueForm({
+            nombre: '',
+            capacidadGalones: 0,
+            nivelMinimo: 0,
+            tipoCombustible: 'ACPM',
+            estacionId: currentUser?.estacion?.id ?? '',
+        });
+        setShowTanqueForm(true);
+    };
+
+    const openEditTanque = (tanque: Tanque) => {
+        setEditingTanque(tanque);
+        setTanqueForm({ ...tanque });
+        setShowTanqueForm(true);
+    };
+
+    const handleTanqueSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        const currentUser = user as AuthenticatedUser | null;
-        if (!selectedTanque || !currentUser?.estacion?.id) return;
+        
+        // Validaciones técnicas
+        if (tanqueForm.capacidadGalones! <= 0) {
+            toast.error('La capacidad del tanque debe ser un número positivo.');
+            return;
+        }
+        if (tanqueForm.nivelMinimo! < 0) {
+            toast.error('El nivel mínimo no puede ser negativo.');
+            return;
+        }
+        if (tanqueForm.nivelMinimo! > (tanqueForm.capacidadGalones! * 0.75)) {
+            toast.error(`El nivel de alerta no puede exceder los 3/4 de la capacidad total (${(tanqueForm.capacidadGalones! * 0.75).toLocaleString()} GAL).`);
+            return;
+        }
+
         setSubmitting(true);
         try {
-            await inventarioService.registrarEntrega({
-                ...entregaForm as RegistrarEntregaData,
-                tanqueId: selectedTanque.id,
-                estacionId: currentUser.estacion.id,
-                tipoCombustible: selectedTanque.tipoCombustible,
-                distribuidorId: currentUser.distribuidor?.id || '',
-            });
-            toast.success('Entrega registrada correctamente');
-            setEntregaModalOpen(false);
+            if (editingTanque) {
+                await tanquesService.update(editingTanque.id, tanqueForm);
+                toast.success('Tanque actualizado correctamente');
+            } else {
+                await tanquesService.create(tanqueForm);
+                toast.success('Tanque creado correctamente');
+            }
+            setShowTanqueForm(false);
             fetchTanques();
         } catch (error: unknown) {
-            toast.error(getErrorMessage(error, 'Error al registrar entrega'));
+            toast.error(getErrorMessage(error, 'Error al guardar tanque'));
         } finally {
             setSubmitting(false);
         }
     };
 
-    const handleTransaccionSubmit = async (e: FormEvent) => {
-        e.preventDefault();
-        const currentUser = user as AuthenticatedUser | null;
-        if (!selectedTanque || !currentUser?.estacion?.id) return;
-        setSubmitting(true);
+    const handleDeleteTanque = async (id: string) => {
+        if (!window.confirm('¿Estás seguro de eliminar este tanque? Esta acción no se puede deshacer.')) return;
         try {
-            if (!transaccionForm.galones || Number(transaccionForm.galones) <= 0) {
-                throw new Error('La cantidad de galones debe ser mayor a 0');
-            }
-
-            const result = await inventarioService.registrarTransaccion({
-                ...transaccionForm as RegistrarTransaccionData,
-                tanqueId: selectedTanque.id,
-                estacionId: currentUser.estacion.id,
-                tipoCombustible: selectedTanque.tipoCombustible,
-            });
-            const precioAplicado = result.pricing?.precioUnitario;
-            toast.success(
-                precioAplicado
-                    ? `Transacción registrada a ${Math.round(precioAplicado).toLocaleString('es-CO')} COP/galón`
-                    : 'Transacción registrada correctamente'
-            );
-            if (result.alerta) {
-                toast.error(result.alerta);
-            }
-            setTransaccionModalOpen(false);
+            await tanquesService.delete(id);
+            toast.success('Tanque eliminado correctamente');
             fetchTanques();
         } catch (error: unknown) {
-            toast.error(getErrorMessage(error, 'Error al registrar transacción'));
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    const handleCierreSubmit = async (e: FormEvent) => {
-        e.preventDefault();
-        const currentUser = user as AuthenticatedUser | null;
-        if (!selectedTanque || !currentUser?.estacion?.id) return;
-        setSubmitting(true);
-        try {
-            const result = await inventarioService.cierreTurno({
-                ...cierreForm as CierreTurnoData,
-                tanqueId: selectedTanque.id,
-                estacionId: currentUser.estacion.id,
-            });
-            toast.success(`Cierre completado. Diferencia: ${result.diferencia.toFixed(2)} gal.`);
-            setCierreModalOpen(false);
-            fetchTanques();
-        } catch (error: unknown) {
-            toast.error(getErrorMessage(error, 'Error al realizar cierre'));
-        } finally {
-            setSubmitting(false);
+            toast.error(getErrorMessage(error, 'Error al eliminar tanque'));
         }
     };
 
@@ -204,22 +169,23 @@ export function InventarioPage() {
 
     const safeTanques = Array.isArray(tanques) ? tanques : [];
     const totalInventario = safeTanques.reduce((acc, t) => acc + (Number(t.nivelActual) || 0), 0);
+    const totalACPM = safeTanques
+        .filter(t => t.tipoCombustible === 'ACPM')
+        .reduce((acc, t) => acc + (Number(t.nivelActual) || 0), 0);
+    const totalCorriente = safeTanques
+        .filter(t => t.tipoCombustible === 'GASOLINA_CORRIENTE')
+        .reduce((acc, t) => acc + (Number(t.nivelActual) || 0), 0);
+        
     const tanquesBajos = safeTanques.filter(t => (Number(t.nivelActual) || 0) <= (Number(t.nivelMinimo) || 0)).length;
 
     return (
         <div className="animate-enter">
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-h1 text-text-primary">Control de Inventario</h1>
+                    <h1 className="text-h1 text-text-primary">Gestión de Tanques</h1>
                     <p className="text-small text-text-secondary mt-1">
-                        Monitorea niveles de tanques y registra movimientos de combustible.
+                        Administra la capacidad y parámetros técnicos de tus tanques de combustible.
                     </p>
-                </div>
-                <div className="flex gap-2">
-                    <Button variant="ghost" size="sm">
-                        <Icon name="history" size={14} className="mr-1" />
-                        Historial
-                    </Button>
                 </div>
             </div>
 
@@ -228,8 +194,25 @@ export function InventarioPage() {
                     label="Total Combustible"
                     value={`${totalInventario.toLocaleString()} gal`}
                     icon={<Icon name="tank" size={18} />}
-                    trend={{ direction: 'up', text: 'Capacidad total' }}
-                />
+                    trend={{ direction: 'neutral', text: 'Stock consolidado' }}
+                >
+                    <div className="mt-4 space-y-2 border-t border-border-subtle pt-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-amber-500" />
+                                <span className="text-[11px] text-text-secondary font-mono">ACPM</span>
+                            </div>
+                            <span className="text-[12px] font-bold text-text-primary">{totalACPM.toLocaleString()} gal</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-green-500" />
+                                <span className="text-[11px] text-text-secondary font-mono">CORRIENTE</span>
+                            </div>
+                            <span className="text-[12px] font-bold text-text-primary">{totalCorriente.toLocaleString()} gal</span>
+                        </div>
+                    </div>
+                </KpiCard>
                 <KpiCard
                     label="Alertas de Nivel"
                     value={tanquesBajos.toString()}
@@ -245,167 +228,165 @@ export function InventarioPage() {
                 />
             </div>
 
-            <DataTable
-                columns={columns}
-                data={tanques}
-                loading={loading}
-                searchPlaceholder="Buscar tanque..."
-                actions={(tanque) => (
-                    <div className="flex gap-1">
+            {showTanqueForm ? (
+                <Card className="p-6 mb-6 animate-enter">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-h2 text-text-primary">
+                            {editingTanque ? 'Editar Tanque' : 'Nuevo Tanque'}
+                        </h2>
                         <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedTanque(tanque);
-                                setTransaccionModalOpen(true);
-                            }}
-                            className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-red-500"
-                            title="Registrar Venta (Salida)"
+                            onClick={() => setShowTanqueForm(false)}
+                            className="p-2 text-text-muted hover:text-text-primary transition-colors"
                         >
-                            <Icon name="arrow-up-right" size={14} />
-                        </button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedTanque(tanque);
-                                setEntregaModalOpen(true);
-                            }}
-                            className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-green-500"
-                            title="Registrar Entrega (Entrada)"
-                        >
-                            <Icon name="arrow-down-left" size={14} />
-                        </button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedTanque(tanque);
-                                setCierreModalOpen(true);
-                            }}
-                            className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-blue-500"
-                            title="Cierre de Turno / Ajuste"
-                        >
-                            <Icon name="clipboard-check" size={14} />
+                            <Icon name="close" size={20} />
                         </button>
                     </div>
-                )}
-            />
 
-            {/* Modal Entrega (Entrada) */}
-            <Modal
-                open={entregaModalOpen}
-                onClose={() => setEntregaModalOpen(false)}
-                title={`Registrar Entrega - ${selectedTanque?.nombre}`}
-            >
-                <form onSubmit={handleEntregaSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <InputField
-                            label="Galones"
-                            type="number"
-                            value={entregaForm.galones}
-                            onChange={(e) => setEntregaForm({ ...entregaForm, galones: parseFloat(e.target.value) })}
-                            required
-                        />
-                        <InputField
-                            label="Precio Unitario"
-                            type="number"
-                            value={entregaForm.precioUnitario}
-                            onChange={(e) => setEntregaForm({ ...entregaForm, precioUnitario: parseFloat(e.target.value) })}
-                            required
-                        />
-                    </div>
-                    <InputField
-                        label="Número de Remisión"
-                        value={entregaForm.numeroRemision}
-                        onChange={(e) => setEntregaForm({ ...entregaForm, numeroRemision: e.target.value })}
-                        required
-                    />
-                    <InputField
-                        label="Fecha de Entrega"
-                        type="datetime-local"
-                        value={entregaForm.fechaEntrega}
-                        onChange={(e) => setEntregaForm({ ...entregaForm, fechaEntrega: e.target.value })}
-                        required
-                    />
-                    <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="ghost" type="button" onClick={() => setEntregaModalOpen(false)}>Cancelar</Button>
-                        <Button type="submit" isLoading={submitting} className="bg-green-600 hover:bg-green-700">
-                            Registrar Entrada
-                        </Button>
-                    </div>
-                </form>
-            </Modal>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        <form onSubmit={handleTanqueSubmit} className="space-y-4">
+                            <InputField
+                                label="Nombre del Tanque"
+                                value={tanqueForm.nombre}
+                                onChange={(e) => setTanqueForm({ ...tanqueForm, nombre: e.target.value })}
+                                placeholder="Ej: Tanque ACPM Principal"
+                                maxLength={50}
+                                required
+                            />
+                            <SelectField
+                                label="Tipo de Combustible"
+                                value={tanqueForm.tipoCombustible}
+                                onChange={(e) => setTanqueForm({ ...tanqueForm, tipoCombustible: e.target.value as TipoCombustible })}
+                                options={[
+                                    { value: 'ACPM', label: 'ACPM' },
+                                    { value: 'GASOLINA_CORRIENTE', label: 'Gasolina Corriente' },
+                                ]}
+                                required
+                            />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <InputField
+                                    label="Capacidad (Galones)"
+                                    type="number"
+                                    value={tanqueForm.capacidadGalones}
+                                    onChange={(e) => setTanqueForm({ ...tanqueForm, capacidadGalones: parseFloat(e.target.value) })}
+                                    required
+                                />
+                                <InputField
+                                    label="Nivel Mínimo (Galones)"
+                                    type="number"
+                                    value={tanqueForm.nivelMinimo}
+                                    onChange={(e) => setTanqueForm({ ...tanqueForm, nivelMinimo: parseFloat(e.target.value) })}
+                                    required
+                                />
+                            </div>
+                            <div className="flex justify-end gap-3 pt-4 border-t border-border-subtle">
+                                <Button variant="ghost" type="button" onClick={() => setShowTanqueForm(false)}>
+                                    Cancelar
+                                </Button>
+                                <Button type="submit" isLoading={submitting}>
+                                    {editingTanque ? 'Guardar Cambios' : 'Crear Tanque'}
+                                </Button>
+                            </div>
+                        </form>
 
-            {/* Modal Transacción (Salida) */}
-            <Modal
-                open={transaccionModalOpen}
-                onClose={() => setTransaccionModalOpen(false)}
-                title={`Registrar Venta - ${selectedTanque?.nombre}`}
-            >
-                <form onSubmit={handleTransaccionSubmit} className="space-y-4">
-                    <SelectField
-                        label="Tipo de Servicio"
-                        value={transaccionForm.tipoServicio}
-                        onChange={(e) => setTransaccionForm({ ...transaccionForm, tipoServicio: e.target.value as TipoServicio })}
-                        options={tipoServicioOptions}
-                    />
-                    <div className="grid grid-cols-1 gap-4">
-                        <InputField
-                            label="Galones"
-                            type="number"
-                            value={transaccionForm.galones}
-                            onChange={(e) => setTransaccionForm({ ...transaccionForm, galones: parseFloat(e.target.value) })}
-                            required
-                        />
-                    </div>
-                    <div className="rounded-brand border border-border-subtle bg-bg-elevated px-3 py-2 text-[12px] text-text-secondary">
-                        El precio y el subsidio se calculan automáticamente desde el backend según zona, combustible y tipo de servicio.
-                    </div>
-                    <InputField
-                        label="Placa Vehículo (Opcional)"
-                        value={transaccionForm.placaVehiculo}
-                        onChange={(e) => setTransaccionForm({ ...transaccionForm, placaVehiculo: e.target.value })}
-                    />
-                    <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="ghost" type="button" onClick={() => setTransaccionModalOpen(false)}>Cancelar</Button>
-                        <Button type="submit" isLoading={submitting} className="bg-red-600 hover:bg-red-700">
-                            Registrar Salida
-                        </Button>
-                    </div>
-                </form>
-            </Modal>
+                        {/* Visual Preview of the Tank */}
+                        <div className="hidden lg:flex flex-col items-center justify-center border-l border-border-subtle pl-10">
+                            <div className="text-center mb-6">
+                                <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-text-muted mb-1">Vista Previa Estructural</p>
+                                <h3 className="text-sm font-bold text-text-primary truncate max-w-[200px]">
+                                    {tanqueForm.nombre || 'Nuevo Tanque'}
+                                </h3>
+                            </div>
 
-            {/* Modal Cierre / Ajuste */}
-            <Modal
-                open={cierreModalOpen}
-                onClose={() => setCierreModalOpen(false)}
-                title={`Cierre de Turno - ${selectedTanque?.nombre}`}
-            >
-                <form onSubmit={handleCierreSubmit} className="space-y-4">
-                    <div className="bg-bg-elevated p-3 rounded-brand mb-4">
-                        <p className="text-small text-text-secondary">
-                            Nivel Teórico Actual: <span className="font-bold text-text-primary">{selectedTanque?.nivelActual.toLocaleString()} gal</span>
-                        </p>
+                            <div className="relative w-32 h-64 border-2 border-border-strong rounded-t-[40px] rounded-b-[10px] bg-bg-surface shadow-inner overflow-hidden">
+                                 {/* Capacity markers (background lines) */}
+                                 <div className="absolute inset-0 flex flex-col justify-between py-1 px-2 opacity-10 z-0">
+                                     {[...Array(5)].map((_, i) => (
+                                         <div key={i} className="w-full h-[1px] bg-text-muted" />
+                                     ))}
+                                 </div>
+
+                                 {/* Fuel representation: 100% when capacity is entered */}
+                                 {tanqueForm.capacidadGalones! > 0 && (
+                                     <div 
+                                         className={cn(
+                                             "absolute bottom-0 w-full transition-all duration-700 ease-out",
+                                             "bg-amber-500/50"
+                                         )}
+                                         style={{ height: '100%' }}
+                                     >
+                                         <div className="absolute top-0 w-full h-1.5 bg-amber-400 shadow-[0_0_20px_rgba(245,158,11,1)] z-20" />
+                                         
+                                         {/* Capacity number inside/top of the tank */}
+                                         <div className="absolute top-4 w-full text-center">
+                                             <span className="text-[12px] font-bold text-amber-100 font-mono drop-shadow-md">
+                                                 {tanqueForm.capacidadGalones!.toLocaleString()} GAL
+                                             </span>
+                                         </div>
+                                     </div>
+                                 )}
+
+                                 {/* Alarm system: Proportional marker for Nivel Mínimo */}
+                                 {tanqueForm.capacidadGalones! > 0 && tanqueForm.nivelMinimo! > 0 && (
+                                     <div 
+                                         className="absolute w-full border-t-2 border-dashed border-red-500/70 z-30 transition-all duration-500"
+                                         style={{ 
+                                             bottom: `${Math.min(100, (tanqueForm.nivelMinimo! / tanqueForm.capacidadGalones!) * 100)}%`,
+                                         }}
+                                     >
+                                         <div className="absolute -right-16 -top-2 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">
+                                             ALERTA: {tanqueForm.nivelMinimo} GAL
+                                         </div>
+                                     </div>
+                                 )}
+                             </div>
+
+                            <div className="mt-8 grid grid-cols-2 gap-6 w-full max-w-[300px]">
+                                <div className="text-center p-3 rounded-brand bg-bg-elevated border border-border-subtle">
+                                    <p className="text-[9px] font-mono text-text-muted uppercase mb-1">Capacidad</p>
+                                    <p className="text-sm font-bold text-text-primary">{tanqueForm.capacidadGalones || 0} gal</p>
+                                </div>
+                                <div className="text-center p-3 rounded-brand bg-bg-elevated border border-border-subtle">
+                                    <p className="text-[9px] font-mono text-text-muted uppercase mb-1">Combustible</p>
+                                    <Badge variant={tanqueForm.tipoCombustible === 'ACPM' ? 'amber' : 'green'}>
+                                        {tanqueForm.tipoCombustible}
+                                    </Badge>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <InputField
-                        label="Nivel Físico (Lectura de vara)"
-                        type="number"
-                        value={cierreForm.nivelFisico}
-                        onChange={(e) => setCierreForm({ ...cierreForm, nivelFisico: parseFloat(e.target.value) })}
-                        required
-                    />
-                    <TextAreaField
-                        label="Observaciones"
-                        value={cierreForm.observaciones}
-                        onChange={(e) => setCierreForm({ ...cierreForm, observaciones: e.target.value })}
-                        placeholder="Motivo del ajuste si hay diferencia..."
-                    />
-                    <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="ghost" type="button" onClick={() => setCierreModalOpen(false)}>Cancelar</Button>
-                        <Button type="submit" isLoading={submitting}>
-                            Completar Cierre
+                </Card>
+            ) : (
+                <DataTable
+                    columns={columns}
+                    data={tanques}
+                    loading={loading}
+                    searchPlaceholder="Buscar tanque..."
+                    headerContent={
+                        <Button onClick={openCreateTanque} size="sm" className="shrink-0">
+                            <Icon name="plus" size={16} className="mr-1" />
+                            Crear Nuevo Tanque
                         </Button>
-                    </div>
-                </form>
-            </Modal>
+                    }
+                    actions={(tanque) => (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); openEditTanque(tanque); }}
+                                className="p-2 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-amber-500 flex items-center justify-center"
+                                title="Editar Tanque"
+                            >
+                                <Icon name="pencil" size={21} />
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteTanque(tanque.id); }}
+                                className="p-2 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-red-600 flex items-center justify-center"
+                                title="Eliminar Tanque"
+                            >
+                                <Icon name="close" size={21} />
+                            </button>
+                        </div>
+                    )}
+                />
+            )}
         </div>
     );
 }

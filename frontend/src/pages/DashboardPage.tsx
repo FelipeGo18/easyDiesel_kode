@@ -18,7 +18,7 @@ import { StationOperationsPage } from '@/pages/DespachadorPanelPage';
 import { DistribuidorPanelPage } from '@/pages/DistribuidorPanelPage';
 import { ParticularPanelPage } from '@/pages/ParticularPanelPage';
 import { ReguladorPanelPage } from '@/pages/ReguladorPanelPage';
-import { AuditorPanelPage } from '@/pages/AuditorPanelPage';
+import { AuditoriaPage } from '@/pages/AuditoriaPage';
 
 export function DashboardPage() {
     const { user } = useAuth();
@@ -63,7 +63,7 @@ export function DashboardPage() {
     }
 
     if (roleName === 'auditor') {
-        return <AuditorPanelPage />;
+        return <AuditoriaPage />;
     }
 // prueba logica dashbotd
     // Lógica de visualización condicional basada en roles
@@ -166,9 +166,6 @@ export function DashboardPage() {
                                                 {mod.label}
                                             </h3>
                                         </div>
-                                        <span className="text-[9px] font-mono text-text-muted tracking-wider">
-                                            {mod.moduleId}
-                                        </span>
                                     </div>
                                     <p className="text-[12px] text-text-secondary leading-relaxed mb-3">
                                         {mod.description}

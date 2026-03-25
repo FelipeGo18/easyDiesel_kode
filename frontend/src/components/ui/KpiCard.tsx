@@ -9,9 +9,10 @@ interface KpiCardProps {
     icon?: ReactNode;
     className?: string;
     delay?: number;
+    children?: ReactNode;
 }
 
-export function KpiCard({ label, value, trend, icon, className, delay = 0 }: KpiCardProps) {
+export function KpiCard({ label, value, trend, icon, className, delay = 0, children }: KpiCardProps) {
     const trendColors = {
         up: 'text-green-500',
         down: 'text-red-500',
@@ -54,6 +55,8 @@ export function KpiCard({ label, value, trend, icon, className, delay = 0 }: Kpi
                     <span className="font-mono text-[10px] tracking-wider">{trend.text}</span>
                 </div>
             )}
+
+            {children}
         </div>
     );
 }

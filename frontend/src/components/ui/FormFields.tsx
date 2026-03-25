@@ -2,10 +2,33 @@ import { type InputHTMLAttributes, type SelectHTMLAttributes, type TextareaHTMLA
 import { Icon } from '@/components/ui/Icon';
 
 /* ── Shared wrapper ── */
-function FieldWrapper({ label, error, children, htmlFor }: { label: string; error?: string; children: ReactNode; htmlFor?: string }) {
+function FieldWrapper({ 
+    label, 
+    error, 
+    children, 
+    htmlFor, 
+    maxLength, 
+    currentLength 
+}: { 
+    label: string; 
+    error?: string; 
+    children: ReactNode; 
+    htmlFor?: string;
+    maxLength?: number;
+    currentLength?: number;
+}) {
     return (
         <div className="space-y-1.5">
-            <label htmlFor={htmlFor} className="text-label text-text-secondary">{label}</label>
+            <div className="flex justify-between items-end">
+                <label htmlFor={htmlFor} className="text-label text-text-secondary">{label}</label>
+                {maxLength && (
+                    <span className={`text-[10px] font-mono tracking-wider ${
+                        currentLength && currentLength >= maxLength ? 'text-red-500 font-bold' : 'text-text-muted'
+                    }`}>
+                        {currentLength ?? 0}/{maxLength}
+                    </span>
+                )}
+            </div>
             {children}
             {error && <p className="text-[11px] font-mono text-red-500">{error}</p>}
         </div>
@@ -21,8 +44,16 @@ interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export function InputField({ label, error, id, ...props }: InputFieldProps) {
+    const currentLength = typeof props.value === 'string' ? props.value.length : 0;
+    
     return (
-        <FieldWrapper label={label} error={error} htmlFor={id}>
+        <FieldWrapper 
+            label={label} 
+            error={error} 
+            htmlFor={id} 
+            maxLength={props.maxLength}
+            currentLength={currentLength}
+        >
             <input id={id} className={`${baseInput} ${error ? 'border-red-500/50' : ''}`} {...props} />
         </FieldWrapper>
     );
@@ -35,8 +66,16 @@ interface TextAreaFieldProps extends TextareaHTMLAttributes<HTMLTextAreaElement>
 }
 
 export function TextAreaField({ label, error, id, ...props }: TextAreaFieldProps) {
+    const currentLength = typeof props.value === 'string' ? props.value.length : 0;
+
     return (
-        <FieldWrapper label={label} error={error} htmlFor={id}>
+        <FieldWrapper 
+            label={label} 
+            error={error} 
+            htmlFor={id}
+            maxLength={props.maxLength}
+            currentLength={currentLength}
+        >
             <textarea id={id} className={`${baseInput} min-h-[80px] resize-y ${error ? 'border-red-500/50' : ''}`} {...props} />
         </FieldWrapper>
     );
