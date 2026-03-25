@@ -360,79 +360,83 @@ export function HomePage() {
                 </div>
 
                 {/* ── Header + Config ── */}
-                <div className="relative z-10 max-w-6xl mx-auto w-full px-8 md:px-16 pt-24 pb-12">
-                    <div className="grid md:grid-cols-2 gap-16 items-center">
-                        {/* Left: editorial copy */}
-                        <div className="prices-header-block">
-                            <span className="font-mono text-[10px] text-amber-500/60 tracking-[0.25em] uppercase block mb-6">Consulta de precios</span>
-                            <h2 className="font-display text-[64px] md:text-[80px] leading-none text-text-primary mb-4 tracking-wide">
-                                PRECIOS<br />
-                                <span className="text-amber-500">REGULADOS</span>
+                <div className="relative z-10 max-w-6xl mx-auto w-full px-8 md:px-16 pt-10 lg:pt-14 pb-4">
+                    <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-6 lg:gap-10">
+                        {/* Title block */}
+                        <div className="prices-header-block flex-1 max-w-2xl pt-2">
+                            <span className="font-mono text-[9px] text-amber-500/60 tracking-[0.25em] uppercase block mb-3">Consulta de precios</span>
+                            <h2 className="font-display text-[44px] lg:text-[56px] leading-tight text-text-primary mb-3 tracking-wide">
+                                PRECIOS <span className="text-amber-500">REGULADOS</span>
                             </h2>
-                            <p className="text-[14px] text-text-secondary font-sans leading-relaxed max-w-xs">
-                                Selecciona tu zona geográfica, el tipo de combustible y la categoría de tu vehículo para consultar el precio oficial vigente.
+                            <p className="text-[12px] text-text-secondary font-sans leading-relaxed max-w-sm">
+                                Selecciona zona, combustible y vehículo para ver el precio vigente.
                             </p>
+                            
                             {publicDataError && (
-                                <div className="mt-6 flex items-start gap-3 rounded-[4px] border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+                                <div className="mt-4 flex items-start gap-3 rounded-[4px] border border-amber-500/20 bg-amber-500/5 px-4 py-3 max-w-sm">
                                     <Icon name="alert" size={14} className="text-amber-500 mt-0.5 shrink-0" />
-                                    <p className="text-[12px] text-amber-300/80 font-sans leading-relaxed">{publicDataError}</p>
+                                    <p className="text-[11px] text-amber-300/80 font-sans leading-relaxed">{publicDataError}</p>
                                 </div>
                             )}
                         </div>
 
-                        {/* Right: filter card */}
-                        <div className="config-card bg-bg-surface border border-[#222] rounded-[4px] p-6 space-y-6">
-                            {/* Zona */}
-                            <div>
-                                <label htmlFor="select-zona" className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">
-                                    Zona de distribución
-                                </label>
-                                <div className="relative">
-                                    <select
-                                        id="select-zona"
-                                        value={zonaSeleccionada}
-                                        onChange={(e) => setZonaSeleccionada(e.target.value)}
-                                        disabled={!zonas.length}
-                                        className="w-full px-4 py-3 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[13px] font-sans appearance-none cursor-pointer interactive pr-10 focus:border-amber-500/40 focus:outline-none transition-colors"
-                                    >
-                                        {!zonas.length ? <option value="">Sin zonas disponibles</option> : null}
-                                        {zonas.map(z => <option key={z.id} value={z.id}>{z.nombre}</option>)}
-                                    </select>
-                                    <Icon name="chevron-down" size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
-                                </div>
-                            </div>
-                            {/* Combustible */}
-                            <div>
-                                <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">Tipo de combustible</span>
-                                <div className="flex gap-2">
-                                    {tiposCombustible.map(tc => (
-                                        <button key={tc.id} onClick={() => setCombustibleSeleccionado(tc.id)}
-                                            className={`flex-1 py-2.5 px-3 rounded-[4px] text-[11px] font-mono uppercase tracking-wider interactive border cursor-pointer transition-all duration-200 ${
-                                                combustibleSeleccionado === tc.id
-                                                    ? 'bg-amber-500 border-amber-500 text-black font-bold'
-                                                    : 'bg-bg-elevated border-border-subtle text-text-muted hover:border-text-secondary hover:text-text-primary'
-                                            }`}
+                        {/* Right: Config Form */}
+                        <div className="config-card w-full xl:max-w-[480px] shrink-0 bg-[#0c0c0c] border border-[#222] rounded-[4px] p-4 lg:p-5">
+                            <div className="space-y-4">
+                                {/* Zona */}
+                                <div>
+                                    <label htmlFor="select-zona" className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">
+                                        Zona de distribución
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            id="select-zona"
+                                            value={zonaSeleccionada}
+                                            onChange={(e) => setZonaSeleccionada(e.target.value)}
+                                            disabled={!zonas.length}
+                                            className="w-full px-3 py-2.5 bg-[#111] border border-[#333] rounded-[4px] text-text-primary text-[11px] font-sans appearance-none cursor-pointer pr-8 focus:border-amber-500/40 focus:outline-none transition-colors"
                                         >
-                                            {tc.id === 'ACPM' ? 'ACPM' : 'Gasolina'}
-                                        </button>
-                                    ))}
+                                            {!zonas.length ? <option value="">Sin zonas</option> : null}
+                                            {zonas.map(z => <option key={z.id} value={z.id}>{z.nombre}</option>)}
+                                        </select>
+                                        <Icon name="chevron-down" size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+                                    </div>
                                 </div>
-                            </div>
-                            {/* Servicio */}
-                            <div>
-                                <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">Categoría de vehículo</span>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {tiposServicio.map(ts => (
-                                        <button key={ts.id} onClick={() => setServicioSeleccionado(ts.id)}
-                                            className={`py-2.5 px-3 rounded-[4px] text-[10px] font-mono uppercase tracking-wider interactive border cursor-pointer text-center transition-all duration-200 ${
-                                                servicioSeleccionado === ts.id
-                                                    ? 'bg-amber-500 border-amber-500 text-black font-bold'
-                                                    : 'bg-bg-elevated border-border-subtle text-text-muted hover:border-text-secondary hover:text-text-primary'
-                                            }`}
-                                        >
-                                            {ts.label}
-                                        </button>
-                                    ))}
+
+                                {/* Combustible */}
+                                <div>
+                                    <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">Tipo de combustible</span>
+                                    <div className="flex gap-2 h-[38px]">
+                                        {tiposCombustible.map(tc => (
+                                            <button key={tc.id} onClick={() => setCombustibleSeleccionado(tc.id)}
+                                                className={`flex-1 rounded-[4px] text-[10px] font-mono uppercase tracking-wider cursor-pointer transition-colors border ${
+                                                    combustibleSeleccionado === tc.id
+                                                        ? 'bg-amber-500 border-amber-500 text-black font-bold'
+                                                        : 'bg-[#111] border-[#333] text-text-muted hover:border-[#555] hover:text-text-primary'
+                                                }`}
+                                            >
+                                                {tc.id === 'ACPM' ? 'ACPM' : 'Gasolina'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Servicio */}
+                                <div>
+                                    <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">Categoría de vehículo</span>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {tiposServicio.map(ts => (
+                                            <button key={ts.id} onClick={() => setServicioSeleccionado(ts.id)}
+                                                className={`py-2 px-1 rounded-[4px] text-[9px] font-mono uppercase tracking-wider cursor-pointer border text-center transition-colors h-[32px] ${
+                                                    servicioSeleccionado === ts.id
+                                                        ? 'bg-amber-500 border-amber-500 text-black font-bold'
+                                                        : 'bg-[#111] border-[#333] text-text-muted hover:border-[#555] hover:text-text-primary'
+                                                }`}
+                                            >
+                                                {ts.label}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -440,11 +444,11 @@ export function HomePage() {
                 </div>
 
                 {/* ═══ 3 Result Cards ═══ */}
-                <div className="max-w-6xl mx-auto px-8 md:px-16 pb-24">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="max-w-6xl mx-auto px-8 md:px-16 pb-12 lg:pb-16 flex-1">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 h-full">
 
                         {/* ── Card 0 — Precio Vigente + Gauge ── */}
-                        <div className="price-card relative overflow-hidden rounded-[4px] border border-[#222] bg-[#0c0c0c] p-6 lg:p-8">
+                        <div className="price-card relative overflow-hidden rounded-[4px] border border-[#222] bg-[#0c0c0c] p-5 lg:p-6 flex flex-col justify-between">
                             <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-amber-500/60 via-amber-500/20 to-transparent" />
 
                                 <span className="font-mono text-[9px] text-amber-500/60 tracking-[0.25em] uppercase block mb-4">Precio vigente</span>
@@ -522,18 +526,18 @@ export function HomePage() {
                         </div>
 
                         {/* ── Card 1 — Detalle Regulatorio ── */}
-                        <div className="price-card relative overflow-hidden rounded-[4px] border border-[#222] bg-[#0c0c0c] p-6 lg:p-8">
+                        <div className="price-card relative overflow-hidden rounded-[4px] border border-[#222] bg-[#0c0c0c] p-5 lg:p-6 flex flex-col justify-between">
                             <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-green-500/60 via-green-500/20 to-transparent" />
 
                             <span className="font-mono text-[9px] text-amber-500/60 tracking-[0.25em] uppercase block mb-6">Detalle regulatorio</span>
 
                             {precioActual ? (
-                                <div className="space-y-6">
+                                <div className="space-y-4 lg:space-y-5">
                                     {/* Subsidio big number */}
                                     <div>
-                                        <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">Subsidio por galón</span>
+                                        <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-1">Subsidio por galón</span>
                                         <div className="flex items-end justify-between gap-3">
-                                            <span className={`font-display text-[40px] leading-none ${Number(precioActual.subsidioGalon) > 0 ? 'text-green-500' : 'text-text-muted'}`}>
+                                            <span className={`font-display text-[32px] lg:text-[40px] leading-none ${Number(precioActual.subsidioGalon) > 0 ? 'text-green-500' : 'text-text-muted'}`}>
                                                 {Number(precioActual.subsidioGalon) > 0 ? formatCOP(Number(precioActual.subsidioGalon)) : 'N/A'}
                                             </span>
                                             {Number(precioActual.subsidioGalon) > 0 && (
@@ -573,15 +577,15 @@ export function HomePage() {
                         </div>
 
                         {/* ── Card 2 — Comparativa ACPM vs Gasolina ── */}
-                        <div className="price-card relative overflow-hidden rounded-[4px] border border-[#222] bg-[#0c0c0c] p-6 lg:p-8">
+                        <div className="price-card relative overflow-hidden rounded-[4px] border border-[#222] bg-[#0c0c0c] p-5 lg:p-6 flex flex-col justify-between">
                             <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
 
-                            <span className="font-mono text-[9px] text-amber-500/60 tracking-[0.25em] uppercase block mb-4">Comparativa</span>
-                            <h3 className="font-display text-[28px] text-text-primary leading-none mb-6">
-                                ACPM <span className="text-text-muted text-[20px]">vs</span> GASOLINA
+                            <span className="font-mono text-[9px] text-amber-500/60 tracking-[0.25em] uppercase block mb-3">Comparativa</span>
+                            <h3 className="font-display text-[24px] lg:text-[28px] text-text-primary leading-none mb-4">
+                                ACPM <span className="text-text-muted text-[16px] lg:text-[20px]">vs</span> GASOLINA
                             </h3>
 
-                            <div className="space-y-3">
+                            <div className="space-y-2">
                                 {tiposCombustible.map((tc) => {
                                     const p = precios.find(pr => pr.zonaId === zonaSeleccionada && pr.tipoCombustible === tc.id && pr.tipoServicio === servicioSeleccionado);
                                     const isActive = tc.id === combustibleSeleccionado;
@@ -590,7 +594,7 @@ export function HomePage() {
                                         <button
                                             key={tc.id}
                                             onClick={() => setCombustibleSeleccionado(tc.id)}
-                                            className={`group relative w-full text-left rounded-[8px] p-5 interactive cursor-pointer border transition-all duration-300 overflow-hidden ${
+                                            className={`group relative w-full text-left rounded-[8px] p-4 interactive cursor-pointer border transition-all duration-300 overflow-hidden ${
                                                 isActive
                                                     ? 'border-amber-500/30 bg-bg-elevated'
                                                     : 'border-border-subtle bg-bg-elevated/50 hover:border-border-strong'
