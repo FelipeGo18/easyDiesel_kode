@@ -242,3 +242,26 @@ export const registrarTransaccionHandler = async (req: Request, res: Response) =
         res.status(400).json({ success: false, message: error.message });
     }
 };
+
+export const obtenerConsumoPlacaHandler = async (req: Request, res: Response) => {
+    try {
+        const placaVehiculo = req.params.placa as string;
+        if (!placaVehiculo) {
+            res.status(400).json({ success: false, message: 'Se requiere la placa del vehículo' });
+            return;
+        }
+
+        const consumoAcumuladoMes = await inventarioService.calcularConsumoMensualPlaca(placaVehiculo);
+        
+        res.json({
+            success: true,
+            data: {
+                placaVehiculo: placaVehiculo.toUpperCase(),
+                consumoMensual: consumoAcumuladoMes,
+                esGranConsumidor: consumoAcumuladoMes >= 20000
+            }
+        });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};

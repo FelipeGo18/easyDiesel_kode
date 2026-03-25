@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { obtenerEntregasPendientesHandler, obtenerEntregasPorDistribuidorHandler, registrarEntregaHandler, confirmarEntregaHandler, confirmarEntregaMultiTanqueHandler, registrarTransaccionHandler, cierreTurnoHandler, registrarEntradaDirectaHandler, obtenerTransaccionesHandler, cancelarEntregaHandler, obtenerProximaRemisionHandler } from '../controllers/inventario.controller';
+import { obtenerEntregasPendientesHandler, obtenerEntregasPorDistribuidorHandler, registrarEntregaHandler, confirmarEntregaHandler, confirmarEntregaMultiTanqueHandler, registrarTransaccionHandler, cierreTurnoHandler, registrarEntradaDirectaHandler, obtenerTransaccionesHandler, cancelarEntregaHandler, obtenerProximaRemisionHandler, obtenerConsumoPlacaHandler } from '../controllers/inventario.controller';
 import { can } from '../middleware/auth';
 
 const router = Router();
@@ -7,6 +7,8 @@ const router = Router();
 // Endpoints bajo /api/inventario
 
 router.get('/proxima-remision', can('inventario:escribir'), obtenerProximaRemisionHandler);
+
+router.get('/vehiculo/:placa/consumo-mes', obtenerConsumoPlacaHandler);
 
 /**
  * @swagger

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { BellRing, ClipboardList, Fuel, MapPinned, Minus, Plus, Receipt, ShieldCheck, TimerReset, Truck } from 'lucide-react';
+import { BellRing, ClipboardList, Fuel, Loader2, MapPinned, Minus, Plus, Receipt, ShieldCheck, TimerReset, Truck } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -69,10 +69,13 @@ export function StationOperationsPage() {
     const [cierreModalOpen, setCierreModalOpen] = useState(false);
     const [cierreForm, setCierreForm] = useState({ tanqueId: '', nivelFisico: '0', observaciones: '' });
     const [cierreResult, setCierreResult] = useState<CierreTurnoResult | null>(null);
+    const [verificandoConsumo, setVerificandoConsumo] = useState(false);
+    const [inputMode, setInputMode] = useState<'PRECIO' | 'GALONES'>('PRECIO');
     const [form, setForm] = useState({
         tanqueId: '',
         tipoServicio: 'PARTICULAR' as TipoServicio,
-        galones: '0',
+        galones: '',
+        precioTotalInput: '',
         placaVehiculo: '',
         esGranConsumidor: false,
     });
@@ -135,6 +138,34 @@ export function StationOperationsPage() {
     useEffect(() => { fetchPendingDeliveries(); }, [fetchPendingDeliveries]);
     useEffect(() => { fetchVentas(); }, [fetchVentas]);
 
+    useEffect(() => {
+        const placa = normalizePlate(form.placaVehiculo);
+        if (placa.length < 5) {
+            if (form.esGranConsumidor) {
+                setForm(prev => ({ ...prev, esGranConsumidor: false }));
+            }
+            return;
+        }
+
+        const timeoutId = setTimeout(async () => {
+            try {
+                setVerificandoConsumo(true);
+                const result = await inventarioService.verificarConsumoMes(placa);
+                if (result?.esGranConsumidor) {
+                    setForm(prev => ({ ...prev, esGranConsumidor: true }));
+                } else {
+                    setForm(prev => ({ ...prev, esGranConsumidor: false }));
+                }
+            } catch (error) {
+                console.error('Error verificando consumo mensual', error);
+            } finally {
+                setVerificandoConsumo(false);
+            }
+        }, 500);
+
+        return () => clearTimeout(timeoutId);
+    }, [form.placaVehiculo]);
+
     const selectedTanque = useMemo(
         () => tanques.find((tanque) => tanque.id === form.tanqueId) ?? tanques[0] ?? null,
         [form.tanqueId, tanques]
@@ -181,10 +212,14 @@ export function StationOperationsPage() {
         };
     }, [form.tipoServicio, selectedTanque, zoneId]);
 
-    const gallons = Number(form.galones) || 0;
     const unitPrice = Number(pricePreview?.precioGalon ?? 0);
     const subsidy = Number(pricePreview?.subsidioGalon ?? 0);
-    const estimatedTotal = gallons * unitPrice;
+    const gallons = inputMode === 'PRECIO' 
+        ? (unitPrice > 0 ? (Number(form.precioTotalInput) || 0) / unitPrice : 0)
+        : (Number(form.galones) || 0);
+    const estimatedTotal = inputMode === 'PRECIO'
+        ? (Number(form.precioTotalInput) || 0)
+        : (gallons * unitPrice);
     const lowTanks = tanques.filter((tanque) => Number(tanque.nivelActual) <= Number(tanque.nivelMinimo));
     const totalFuel = tanques.reduce((total, tanque) => total + Number(tanque.nivelActual), 0);
     const selectedServiceMeta = tipoServicioOptions.find((option) => option.value === form.tipoServicio);
@@ -226,7 +261,8 @@ export function StationOperationsPage() {
 
             setForm((current) => ({
                 ...current,
-                galones: '0',
+                galones: '',
+                precioTotalInput: '',
                 placaVehiculo: '',
                 esGranConsumidor: false,
             }));
@@ -406,120 +442,114 @@ export function StationOperationsPage() {
     };
 
     return (
-        <div className="space-y-6 animate-enter">
-            {/* ── Alerta de niveles críticos (Decreto 318/2003) ── */}
+        <div className="space-y-5 animate-enter">
+            {/* ── Alerta de niveles críticos ── */}
             {lowTanks.length > 0 && (
-                <div className="rounded-[18px] border border-red-500/30 bg-red-500/[0.07] px-5 py-4">
-                    <div className="flex items-start gap-3">
-                        <BellRing size={16} className="mt-0.5 shrink-0 text-red-400" />
-                        <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-semibold text-red-300">
-                                {lowTanks.length === 1 ? '1 tanque por debajo del nivel mínimo operativo' : `${lowTanks.length} tanques por debajo del nivel mínimo operativo`}
-                                <span className="ml-2 font-mono text-[10px] text-red-400/70 font-normal">Decreto 318/2003</span>
-                            </p>
-                            <div className="mt-2 flex flex-wrap gap-2">
-                                {lowTanks.map((t) => (
-                                    <span key={t.id} className="inline-flex items-center gap-1.5 rounded-[6px] border border-red-500/25 bg-red-500/10 px-2.5 py-1 text-[11px] text-red-300">
-                                        <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-                                        {t.nombre} · {formatGallons(Number(t.nivelActual))} / {formatGallons(Number(t.nivelMinimo))} gal
-                                        <span className="font-mono text-[9px] text-red-400/60">{t.tipoCombustible}</span>
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
+                <div className="flex items-center gap-3 rounded-[14px] border border-red-500/25 bg-red-500/[0.06] px-4 py-3">
+                    <BellRing size={14} className="shrink-0 text-red-400" />
+                    <p className="text-[12px] font-medium text-red-300 flex-1">
+                        {lowTanks.length === 1 ? '1 tanque en nivel crítico' : `${lowTanks.length} tanques en nivel crítico`}
+                        {' · '}{lowTanks.map(t => t.nombre).join(', ')}
+                        <span className="ml-2 font-mono text-[10px] text-red-400/60">Decreto 318/2003</span>
+                    </p>
                 </div>
             )}
-            <section className="relative overflow-hidden rounded-[28px] border border-amber-500/20 bg-[radial-gradient(circle_at_top_left,_rgba(245,166,35,0.18),_transparent_30%),linear-gradient(135deg,_rgba(18,18,16,1)_0%,_rgba(12,12,10,1)_55%,_rgba(36,21,2,1)_100%)] p-6 sm:p-8">
-                <div className="absolute inset-y-0 right-0 w-[38%] bg-[linear-gradient(135deg,transparent_0%,rgba(245,166,35,0.08)_45%,transparent_100%)]" />
-                <div className="relative grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
-                    <div>
-                        <Badge variant="amber" className="mb-4">ROL OPERATIVO · ESTACIÓN</Badge>
-                        <h1 className="max-w-3xl font-display text-3xl leading-tight text-white sm:text-4xl">
-                            Venta asistida por regla regulatoria, tanque y estación.
+            {/* ── Hero compacto ── */}
+            <section className="relative overflow-hidden rounded-[24px] border border-amber-500/15 bg-[linear-gradient(135deg,rgba(18,18,16,1)_0%,rgba(14,12,8,1)_60%,rgba(30,18,2,1)_100%)] px-6 py-5">
+                <div className="absolute top-0 left-0 w-64 h-64 rounded-full bg-amber-500/10 blur-[80px] pointer-events-none" />
+                <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    {/* Left: Title + meta */}
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="amber" className="text-[10px] px-2.5 py-0.5">ROL ESTACIÓN</Badge>
+                            <span className="text-[11px] text-white/35 font-mono">{station?.codigoSicom ? `SICOM ${station.codigoSicom}` : ''}</span>
+                        </div>
+                        <h1 className="text-xl font-semibold text-white leading-snug max-w-xl">
+                            Panel de despacho — {station?.nombre || 'Sin estación'}
                         </h1>
-                        <p className="mt-3 max-w-2xl text-sm leading-6 text-white/72">
-                            Este panel está pensado para operación de pista: capturas placa, eliges el servicio y el sistema trae la tarifa vigente de la zona antes de registrar la salida del tanque.
+                        <p className="mt-1 text-[12px] text-white/50 leading-5 max-w-lg">
+                            Captura placa, elige servicio y el sistema aplica la tarifa regulatoria de la zona antes de registrar la salida.
                         </p>
-
-                        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                            <div className="rounded-[20px] border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-                                <div className="flex items-center gap-2 text-white/60">
-                                    <MapPinned size={15} />
-                                    <span className="text-[11px] font-mono uppercase tracking-[0.18em]">Estación</span>
-                                </div>
-                                <p className="mt-3 text-lg font-semibold text-white">{station?.nombre || 'Sin estación'}</p>
-                                <p className="mt-1 text-xs text-white/50">SICOM {station?.codigoSicom || 'pendiente'}</p>
+                        {/* Stat strip */}
+                        <div className="mt-4 flex flex-wrap gap-3">
+                            <div className="flex items-center gap-2 rounded-[10px] border border-white/10 bg-white/[0.04] px-3 py-2">
+                                <Fuel size={13} className="text-amber-400" />
+                                <span className="text-[12px] font-medium text-white">{formatGallons(totalFuel)} gal</span>
+                                <span className="text-[11px] text-white/40">en {tanques.length} tanques</span>
                             </div>
-                            <div className="rounded-[20px] border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-                                <div className="flex items-center gap-2 text-white/60">
-                                    <Fuel size={15} />
-                                    <span className="text-[11px] font-mono uppercase tracking-[0.18em]">Inventario</span>
-                                </div>
-                                <p className="mt-3 text-lg font-semibold text-white">{formatGallons(totalFuel)} gal</p>
-                                <p className="mt-1 text-xs text-white/50">Disponible entre {tanques.length || 0} tanques</p>
+                            <div className="flex items-center gap-2 rounded-[10px] border border-white/10 bg-white/[0.04] px-3 py-2">
+                                <MapPinned size={13} className="text-sky-400" />
+                                <span className="text-[12px] text-white/60">{station?.nombre || 'Sin estación'}</span>
                             </div>
-                            <div className="rounded-[20px] border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-                                <div className="flex items-center gap-2 text-white/60">
-                                    <BellRing size={15} />
-                                    <span className="text-[11px] font-mono uppercase tracking-[0.18em]">Alertas</span>
+                            {lowTanks.length > 0 && (
+                                <div className="flex items-center gap-2 rounded-[10px] border border-red-500/25 bg-red-500/[0.07] px-3 py-2">
+                                    <BellRing size={13} className="text-red-400" />
+                                    <span className="text-[12px] font-medium text-red-300">{lowTanks.length} en mínimo</span>
                                 </div>
-                                <p className="mt-3 text-lg font-semibold text-white">{lowTanks.length}</p>
-                                <p className="mt-1 text-xs text-white/50">Tanques en mínimo operativo</p>
-                            </div>
+                            )}
                         </div>
                     </div>
 
-                    <div className="rounded-[24px] border border-amber-500/20 bg-black/25 p-5 shadow-[0_30px_80px_rgba(0,0,0,0.35)] backdrop-blur-md">
-                        <div className="flex items-center justify-between gap-3">
+                    {/* Right: Pricing card */}
+                    <div className="w-full rounded-[18px] border border-amber-500/20 bg-black/30 p-4 backdrop-blur-sm lg:w-64 xl:w-72">
+                        <div className="flex items-start justify-between gap-2">
                             <div>
-                                <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-amber-300/70">Tarifa activa</p>
-                                <p className="mt-2 text-3xl font-semibold text-white">
-                                    {pricingLoading ? 'Consultando...' : unitPrice ? formatCurrency(unitPrice) : 'Sin tarifa'}
+                                <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-amber-300/60">Tarifa activa</p>
+                                <p className="mt-1.5 text-2xl font-semibold text-white tabular-nums">
+                                    {pricingLoading ? (
+                                        <span className="text-base text-white/45">Consultando…</span>
+                                    ) : unitPrice ? formatCurrency(unitPrice) : (
+                                        <span className="text-base text-white/40">Sin tarifa</span>
+                                    )}
                                 </p>
                             </div>
-                            <Badge variant={form.tipoServicio === 'PARTICULAR' ? 'red' : 'green'} className="px-3 py-1 text-[10px]">
+                            <Badge variant={form.tipoServicio === 'PARTICULAR' ? 'red' : 'green'} className="text-[10px] shrink-0">
                                 {form.tipoServicio}
                             </Badge>
                         </div>
-                        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                            <div className="rounded-[18px] border border-white/8 bg-white/5 p-3">
-                                <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/48">Subsidio</p>
-                                <p className="mt-2 text-sm text-white">{subsidy > 0 ? formatCurrency(subsidy) : 'No aplica'}</p>
+                        <div className="mt-3 grid grid-cols-2 gap-2">
+                            <div className="rounded-[10px] bg-white/[0.04] px-3 py-2">
+                                <p className="text-[9px] font-mono uppercase tracking-wider text-white/40">Subsidio</p>
+                                <p className="mt-1 text-[12px] font-medium text-white">{subsidy > 0 ? formatCurrency(subsidy) : 'No aplica'}</p>
                             </div>
-                            <div className="rounded-[18px] border border-white/8 bg-white/5 p-3">
-                                <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/48">Decreto base</p>
-                                <p className="mt-2 text-sm text-white">{pricePreview?.decreto.numero || 'Sin referencia'}</p>
+                            <div className="rounded-[10px] bg-white/[0.04] px-3 py-2">
+                                <p className="text-[9px] font-mono uppercase tracking-wider text-white/40">Decreto</p>
+                                <p className="mt-1 text-[12px] font-medium text-white">{pricePreview?.decreto.numero || '—'}</p>
                             </div>
                         </div>
-                        <p className="mt-4 text-xs leading-5 text-white/55">
-                            {priceError || pricePreview?.decreto.titulo || 'El valor definitivo se valida nuevamente en backend al confirmar la venta.'}
-                        </p>
+                        {(priceError || pricePreview?.decreto.titulo) && (
+                            <p className="mt-2.5 text-[10px] leading-4 text-white/40 line-clamp-2">
+                                {priceError || pricePreview?.decreto.titulo}
+                            </p>
+                        )}
                     </div>
                 </div>
             </section>
 
-            <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
-                <Card className="rounded-[28px] border-white/5 bg-[linear-gradient(180deg,rgba(20,20,18,0.98),rgba(12,12,10,0.98))] p-0 overflow-hidden">
-                    <div className="border-b border-white/6 px-6 py-5">
-                        <div className="flex items-start justify-between gap-4">
-                            <div>
-                                <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-amber-500/70">Cabina de despacho</p>
-                                <h2 className="mt-2 text-2xl font-semibold text-white">Registrar venta</h2>
-                                <p className="mt-2 max-w-xl text-sm leading-6 text-white/60">
-                                    Captura rápida para surtidor. El precio se previsualiza y se recalcula en servidor al guardar para que no dependa del navegador.
-                                </p>
-                            </div>
-                            <div className="hidden rounded-[18px] border border-white/8 bg-white/5 px-4 py-3 text-right sm:block">
-                                <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-white/42">Meta del ticket</p>
-                                <p className="mt-1 text-xl font-semibold text-white">{estimatedTotal > 0 ? formatCurrency(estimatedTotal) : '$ 0'}</p>
-                            </div>
+            {/* ── Main grid: Form + Sidebar ── */}
+            <div className="grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
+
+                {/* Form card */}
+                <Card className="rounded-[22px] border-white/5 bg-[linear-gradient(180deg,rgba(20,20,18,0.98),rgba(13,13,11,0.98))] p-0 overflow-hidden">
+                    {/* Card header */}
+                    <div className="flex items-center justify-between gap-4 border-b border-white/5 px-5 py-4">
+                        <div>
+                            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-amber-500/60">Cabina de despacho</p>
+                            <h2 className="mt-1 text-lg font-semibold text-white">Registrar venta</h2>
+                        </div>
+                        <div className="rounded-[12px] border border-white/8 bg-white/4 px-4 py-2 text-right">
+                            <p className="text-[10px] font-mono uppercase tracking-wider text-white/35">Total estimado</p>
+                            <p className="mt-0.5 text-[18px] font-semibold text-white tabular-nums">
+                                {estimatedTotal > 0 ? formatCurrency(estimatedTotal) : '—'}
+                            </p>
                         </div>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="grid gap-6 px-6 py-6 lg:grid-cols-[0.95fr_1.05fr]">
-                        <div className="space-y-4">
-                            <div className="grid gap-3 md:grid-cols-2">
+                    <form onSubmit={handleSubmit} className="p-5 space-y-5">
+                        {/* Section: Tank picker */}
+                        <div>
+                            <p className="mb-2.5 text-[10px] font-mono uppercase tracking-[0.2em] text-white/35">Seleccionar tanque</p>
+                            <div className="grid gap-2.5 sm:grid-cols-2">
                                 {tanques.map((tanque) => {
                                     const percentage = ((Number(tanque.nivelActual) || 0) / (Number(tanque.capacidadGalones) || 1)) * 100;
                                     const isSelected = tanque.id === selectedTanque?.id;
@@ -531,25 +561,29 @@ export function StationOperationsPage() {
                                             type="button"
                                             onClick={() => setForm((current) => ({ ...current, tanqueId: tanque.id }))}
                                             className={[
-                                                'rounded-[22px] border p-4 text-left transition-all',
-                                                isSelected ? 'border-amber-500/45 bg-amber-500/10 shadow-[0_18px_50px_rgba(245,166,35,0.12)]' : 'border-white/8 bg-white/[0.03] hover:border-white/16 hover:bg-white/[0.05]',
+                                                'rounded-[16px] border p-3.5 text-left transition-all cursor-pointer',
+                                                isSelected
+                                                    ? 'border-amber-500/40 bg-amber-500/8 ring-1 ring-amber-500/20'
+                                                    : 'border-white/8 bg-white/[0.02] hover:border-white/14 hover:bg-white/4',
                                             ].join(' ')}
                                         >
-                                            <div className="flex items-center justify-between gap-3">
-                                                <div>
-                                                    <p className="text-sm font-semibold text-white">{tanque.nombre}</p>
-                                                    <p className="mt-1 text-[11px] font-mono uppercase tracking-[0.16em] text-white/42">{tanque.tipoCombustible}</p>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="min-w-0">
+                                                    <p className="text-[13px] font-semibold text-white truncate">{tanque.nombre}</p>
+                                                    <p className="text-[10px] font-mono text-white/40 mt-0.5">{tanque.tipoCombustible}</p>
                                                 </div>
-                                                <Badge variant={isLow ? 'red' : 'blue'}>{Math.round(percentage)}%</Badge>
+                                                <Badge variant={isLow ? 'red' : isSelected ? 'amber' : 'blue'} className="text-[10px] shrink-0">
+                                                    {Math.round(percentage)}%
+                                                </Badge>
                                             </div>
-                                            <div className="mt-4 h-2 rounded-full bg-white/8">
+                                            <div className="mt-3 h-1.5 rounded-full bg-white/8">
                                                 <div
-                                                    className={isLow ? 'h-2 rounded-full bg-red-500' : 'h-2 rounded-full bg-amber-500'}
+                                                    className={`h-1.5 rounded-full transition-all ${isLow ? 'bg-red-500' : 'bg-amber-500'}`}
                                                     style={{ width: `${Math.min(100, Math.max(0, percentage))}%` }}
                                                 />
                                             </div>
-                                            <p className="mt-3 text-xs text-white/60">
-                                                {formatGallons(Number(tanque.nivelActual))} gal disponibles de {formatGallons(Number(tanque.capacidadGalones))} gal.
+                                            <p className="mt-2 text-[11px] text-white/45">
+                                                {formatGallons(Number(tanque.nivelActual))} / {formatGallons(Number(tanque.capacidadGalones))} gal
                                             </p>
                                         </button>
                                     );
@@ -557,13 +591,19 @@ export function StationOperationsPage() {
                             </div>
 
                             {!loading && tanques.length === 0 && (
-                                <div className="rounded-[22px] border border-dashed border-white/10 bg-white/[0.03] p-6 text-sm text-white/60">
-                                    No hay tanques configurados para esta estación. Debes crear al menos uno antes de usar el panel operativo.
+                                <div className="rounded-[16px] border border-dashed border-white/10 bg-white/[0.02] p-5 text-[13px] text-white/50">
+                                    No hay tanques configurados. Crea al menos uno para operar el panel.
                                 </div>
                             )}
                         </div>
 
-                        <div className="space-y-4">
+                        {/* Divider */}
+                        <div className="border-t border-white/5" />
+
+                        {/* Section: Service + fields */}
+                        <div className="space-y-3.5">
+                            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/35">Datos del despacho</p>
+
                             <SelectField
                                 label="Tipo de servicio"
                                 value={form.tipoServicio}
@@ -571,99 +611,140 @@ export function StationOperationsPage() {
                                 options={tipoServicioOptions.map((option) => ({ value: option.value, label: option.label }))}
                             />
 
-                            {selectedTanque?.tipoCombustible === 'ACPM' && (
-                                <label className="flex cursor-pointer items-center gap-3 rounded-[18px] border border-amber-500/20 bg-amber-500/[0.05] px-4 py-3 hover:bg-amber-500/[0.09] transition-colors">
-                                    <input
-                                        type="checkbox"
-                                        checked={form.esGranConsumidor}
-                                        onChange={(e) => setForm((current) => ({ ...current, esGranConsumidor: e.target.checked }))}
-                                        className="h-4 w-4 rounded border-amber-500/40 bg-transparent accent-amber-500"
-                                    />
-                                    <div>
-                                        <p className="text-[13px] font-medium text-white">Gran Consumidor <span className="ml-1 font-mono text-[10px] text-amber-400/80">Decreto 763/2024</span></p>
-                                        <p className="text-[11px] text-white/50 mt-0.5">Distribuidor REGULADO (&gt;20.000 gal/mes) · Precio paridad internacional</p>
-                                    </div>
-                                </label>
+                            {selectedServiceMeta && (
+                                <p className="text-[11px] text-white/45 leading-4 pl-1">{selectedServiceMeta.helper}</p>
                             )}
 
-                            <div className="rounded-[20px] border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-white/68">
-                                {selectedServiceMeta?.helper}
-                            </div>
-
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                <InputField
-                                    label="Galones a despachar"
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={form.galones}
-                                    onChange={(event) => setForm((current) => ({ ...current, galones: event.target.value }))}
-                                    required
-                                />
-                                <InputField
-                                    label="Placa del vehículo"
-                                    placeholder="ABC123"
-                                    value={form.placaVehiculo}
-                                    onChange={(event) => setForm((current) => ({ ...current, placaVehiculo: normalizePlate(event.target.value) }))}
-                                />
-                            </div>
-
-                            <div className="grid gap-3 rounded-[24px] border border-amber-500/16 bg-amber-500/[0.06] p-4 md:grid-cols-3">
-                                <div>
-                                    <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-amber-200/62">Precio galón</p>
-                                    <p className="mt-2 text-lg font-semibold text-white">{unitPrice ? formatCurrency(unitPrice) : 'Pendiente'}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-amber-200/62">Subsidio</p>
-                                    <p className="mt-2 text-lg font-semibold text-white">{subsidy > 0 ? formatCurrency(subsidy) : 'No aplica'}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-amber-200/62">Total estimado</p>
-                                    <p className="mt-2 text-lg font-semibold text-white">{estimatedTotal > 0 ? formatCurrency(estimatedTotal) : '$ 0'}</p>
-                                </div>
-                            </div>
-
-                            <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
-                                <div className="flex items-center justify-between gap-4">
+                            {/* Auto-detected Gran Consumidor Badge */}
+                            {form.esGranConsumidor && (
+                                <div className="flex items-center gap-3 rounded-[14px] border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 animate-in fade-in slide-in-from-top-1">
+                                    <ShieldCheck size={18} className="text-red-400 shrink-0" />
                                     <div>
-                                        <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-white/45">Cumplimiento</p>
-                                        <p className="mt-2 text-sm text-white">Validación por zona, combustible y tipo de servicio.</p>
+                                        <p className="text-[12px] font-medium text-white">
+                                            Gran Consumidor Autodetectado
+                                            <span className="ml-1.5 font-mono text-[9px] text-red-400/70">Decreto 763/2024</span>
+                                        </p>
+                                        <p className="text-[11px] text-red-200/60 mt-0.5">&gt;20.000 gal/mes (Aplica tarifa plena sin subsidio).</p>
                                     </div>
-                                    <ShieldCheck size={18} className="text-emerald-400" />
                                 </div>
-                                <p className="mt-3 text-xs leading-5 text-white/58">
-                                    {pricePreview
-                                        ? `Tarifa ${pricePreview.zona.nombre} · Decreto ${pricePreview.decreto.numero}.`
-                                        : 'El backend seguirá validando la tarifa aunque falle la previsualización en pantalla.'}
-                                </p>
+                            )}
+
+                            {/* Input Mode Toggle */}
+                            <div className="flex rounded-[14px] border border-white/10 bg-white/[0.02] p-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setInputMode('PRECIO')}
+                                    className={`flex-1 rounded-[10px] px-3 py-2 text-[12px] font-medium transition-all ${
+                                        inputMode === 'PRECIO' ? 'bg-amber-500/15 text-amber-400 shadow-sm' : 'text-white/45 hover:text-white/75'
+                                    }`}
+                                >
+                                    Por Valor ($)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setInputMode('GALONES')}
+                                    className={`flex-1 rounded-[10px] px-3 py-2 text-[12px] font-medium transition-all ${
+                                        inputMode === 'GALONES' ? 'bg-amber-500/15 text-amber-400 shadow-sm' : 'text-white/45 hover:text-white/75'
+                                    }`}
+                                >
+                                    Por Galones
+                                </button>
                             </div>
 
-                            <div className="flex flex-wrap justify-end gap-3 pt-2">
-                                <Button type="button" variant="ghost" onClick={fetchTanques}>
-                                    Actualizar niveles
-                                </Button>
-                                <Button 
-                                    type="submit" 
-                                    isLoading={submitting || loading || pricingLoading} 
-                                    disabled={!selectedTanque || tanques.length === 0 || !form.placaVehiculo || Number(form.galones) <= 0}
-                                >
-                                    Confirmar despacho
-                                </Button>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                {inputMode === 'PRECIO' ? (
+                                    <InputField
+                                        label="Valor a tanquear ($)"
+                                        type="number"
+                                        min="0"
+                                        step="1"
+                                        value={form.precioTotalInput}
+                                        onChange={(event) => setForm((current) => ({ ...current, precioTotalInput: event.target.value }))}
+                                        required
+                                    />
+                                ) : (
+                                    <InputField
+                                        label="Galones a despachar"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={form.galones}
+                                        onChange={(event) => setForm((current) => ({ ...current, galones: event.target.value }))}
+                                        required
+                                    />
+                                )}
+                                <div className="relative">
+                                    <InputField
+                                        label="Placa del vehículo"
+                                        placeholder="ABC123"
+                                        value={form.placaVehiculo}
+                                        onChange={(event) => setForm((current) => ({ ...current, placaVehiculo: normalizePlate(event.target.value) }))}
+                                    />
+                                    {verificandoConsumo && (
+                                        <div className="absolute right-3 top-[34px]">
+                                            <Loader2 size={16} className="animate-spin text-amber-500/60" />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
+                        </div>
+
+                        {/* Price summary strip */}
+                        <div className={`grid ${subsidy > 0 ? 'grid-cols-4' : 'grid-cols-3'} divide-x divide-amber-500/10 rounded-[14px] border border-amber-500/12 bg-amber-500/[0.04] overflow-hidden`}>
+                            {[
+                                { label: 'Precio/gal', value: unitPrice ? formatCurrency(unitPrice) : '—', show: true },
+                                { label: 'Subsidio', value: subsidy > 0 ? formatCurrency(subsidy) : '—', show: subsidy > 0 },
+                                { label: 'Galones', value: gallons > 0 ? formatGallons(gallons) : '0', show: true },
+                                { label: 'Total', value: estimatedTotal > 0 ? formatCurrency(estimatedTotal) : '$ 0', show: true },
+                            ]
+                                .filter(item => item.show)
+                                .map(({ label, value }) => (
+                                    <div key={label} className="px-2 py-3 text-center">
+                                        <p className="text-[9px] font-mono uppercase tracking-wider text-amber-200/50">{label}</p>
+                                        <p className="mt-1 px-1 h-5 overflow-hidden text-ellipsis whitespace-nowrap text-[12px] sm:text-[13px] font-semibold text-white tabular-nums">{value}</p>
+                                    </div>
+                                ))}
+                        </div>
+
+                        {/* Compliance note */}
+                        <div className="flex items-center gap-2.5 rounded-[12px] border border-white/6 bg-white/[0.02] px-3.5 py-2.5">
+                            <ShieldCheck size={14} className="shrink-0 text-emerald-400" />
+                            <p className="text-[11px] text-white/45 leading-4">
+                                {pricePreview
+                                    ? `Tarifa ${pricePreview.zona.nombre} · Decreto ${pricePreview.decreto.numero}`
+                                    : 'El backend revalida la tarifa al confirmar. La previsualización es referencial.'}
+                            </p>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex flex-wrap justify-end gap-2.5 pt-1">
+                            <Button type="button" variant="ghost" onClick={fetchTanques}>
+                                Actualizar niveles
+                            </Button>
+                            <Button
+                                type="submit"
+                                isLoading={submitting || loading || pricingLoading}
+                                disabled={!selectedTanque || tanques.length === 0 || !form.placaVehiculo || Number(form.galones) <= 0}
+                            >
+                                Confirmar despacho
+                            </Button>
                         </div>
                     </form>
                 </Card>
 
-                <div className="space-y-6">
-                    <Card className="rounded-[28px] border-white/6 bg-[linear-gradient(180deg,rgba(16,16,14,0.98),rgba(10,10,9,0.98))]">
+                {/* Sidebar */}
+                <div className="space-y-4">
+
+                    {/* Entregas pendientes */}
+                    <Card className="rounded-[22px] border-white/5 bg-[linear-gradient(180deg,rgba(16,16,14,0.98),rgba(11,11,10,0.98))]">
                         <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                                <div className="rounded-[16px] border border-white/8 bg-white/[0.04] p-3 text-emerald-400">
-                                    <Truck size={18} />
+                            <div className="flex items-center gap-2.5">
+                                <div className="rounded-[12px] border border-emerald-500/20 bg-emerald-500/8 p-2.5 text-emerald-400">
+                                    <Truck size={15} />
                                 </div>
                                 <div>
-                                    <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-white/42">Recepción</p>
-                                    <h3 className="mt-1 text-lg font-semibold text-white">Entregas pendientes</h3>
+                                    <p className="text-[10px] font-mono uppercase tracking-wider text-white/35">Recepción</p>
+                                    <h3 className="text-[14px] font-semibold text-white">Entregas pendientes</h3>
                                 </div>
                             </div>
                             <button
@@ -672,43 +753,41 @@ export function StationOperationsPage() {
                                     setDirectEntryForm({ tanqueId: tanques[0]?.id ?? '', galones: '0', precioUnitario: '0', observaciones: '' });
                                     setDirectEntryOpen(true);
                                 }}
-                                className="flex items-center gap-1.5 rounded-[12px] border border-emerald-500/25 bg-emerald-500/[0.08] px-3 py-1.5 text-[12px] font-medium text-emerald-300 transition-colors hover:bg-emerald-500/[0.14]"
+                                className="flex items-center gap-1 rounded-[10px] border border-emerald-500/22 bg-emerald-500/[0.06] px-2.5 py-1.5 text-[11px] font-medium text-emerald-300 transition-colors hover:bg-emerald-500/12 cursor-pointer"
                             >
-                                <Plus size={13} />
+                                <Plus size={12} />
                                 Entrada directa
                             </button>
                         </div>
 
-                        <div className="mt-5 space-y-3">
+                        <div className="mt-4 space-y-2.5">
                             {pendingDeliveriesLoading && (
-                                <div className="rounded-[18px] border border-white/8 bg-white/[0.03] px-4 py-4 text-sm text-white/55">
-                                    Cargando entregas pendientes...
+                                <div className="rounded-[12px] bg-white/[0.03] px-4 py-4 text-[12px] text-white/45 animate-pulse">
+                                    Cargando entregas…
                                 </div>
                             )}
-
                             {!pendingDeliveriesLoading && pendingDeliveries.length === 0 && (
-                                <div className="rounded-[18px] border border-emerald-500/20 bg-emerald-500/[0.06] px-4 py-4 text-sm text-emerald-100/85">
-                                    No hay entregas pendientes por confirmar para esta estación.
+                                <div className="rounded-[12px] border border-emerald-500/15 bg-emerald-500/[0.04] px-4 py-3 text-[12px] text-emerald-200/70">
+                                    Sin entregas pendientes para confirmar.
                                 </div>
                             )}
-
                             {pendingDeliveries.map((delivery) => (
-                                <div key={delivery.id} className="rounded-[18px] border border-white/8 bg-white/[0.03] px-4 py-4">
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div>
-                                            <p className="text-sm font-semibold text-white">Remisión {delivery.numeroRemision}</p>
-                                            <p className="mt-1 text-xs text-white/58">
+                                <div key={delivery.id} className="rounded-[14px] border border-white/7 bg-white/[0.02] px-4 py-3.5">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0">
+                                            <p className="text-[13px] font-semibold text-white truncate">Rem. {delivery.numeroRemision}</p>
+                                            <p className="mt-0.5 text-[11px] text-white/45 truncate">
                                                 {delivery.distribuidor?.nombre || 'Distribuidor'} · {delivery.tipoCombustible} · {formatGallons(Number(delivery.galones))} gal
                                             </p>
                                         </div>
-                                        <Badge variant="blue">Pendiente</Badge>
+                                        <Badge variant="blue" className="text-[10px] shrink-0">Pendiente</Badge>
                                     </div>
-                                    <p className="mt-3 text-xs text-white/58">
-                                        Tanque sugerido: {delivery.tanque?.nombre || 'Sin tanque'} · {new Date(delivery.fechaEntrega).toLocaleString('es-CO')}
-                                    </p>
-                                    <div className="mt-4 flex justify-end">
-                                        <Button type="button" variant="ghost" onClick={() => openConfirmDelivery(delivery)}>
-                                            Confirmar recepción
+                                    <div className="mt-3 flex items-center justify-between gap-2">
+                                        <p className="text-[10px] text-white/35">
+                                            {new Date(delivery.fechaEntrega).toLocaleDateString('es-CO')}
+                                        </p>
+                                        <Button type="button" variant="ghost" onClick={() => openConfirmDelivery(delivery)} className="text-[11px] px-2.5 py-1">
+                                            Confirmar
                                         </Button>
                                     </div>
                                 </div>
@@ -716,95 +795,98 @@ export function StationOperationsPage() {
                         </div>
                     </Card>
 
-                    <Card className="rounded-[28px] border-white/6 bg-[linear-gradient(180deg,rgba(16,16,14,0.98),rgba(10,10,9,0.98))]">
-                        <div className="flex items-center gap-3">
-                            <div className="rounded-[16px] border border-white/8 bg-white/[0.04] p-3 text-amber-400">
-                                <TimerReset size={18} />
+                    {/* Checklist + Cierre (merged card) */}
+                    <Card className="rounded-[22px] border-white/5 bg-[linear-gradient(180deg,rgba(16,16,14,0.98),rgba(11,11,10,0.98))]">
+                        <div className="flex items-center gap-2.5 mb-4">
+                            <div className="rounded-[12px] border border-white/8 bg-white/4 p-2.5 text-amber-400">
+                                <TimerReset size={15} />
                             </div>
                             <div>
-                                <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-white/42">Foco operativo</p>
-                                <h3 className="mt-1 text-lg font-semibold text-white">Checklist de turno</h3>
+                                <p className="text-[10px] font-mono uppercase tracking-wider text-white/35">Foco operativo</p>
+                                <h3 className="text-[14px] font-semibold text-white">Checklist de turno</h3>
                             </div>
                         </div>
-                        <div className="mt-5 space-y-3 text-sm text-white/65">
-                            <div className="rounded-[18px] border border-white/8 bg-white/[0.03] px-4 py-3">Verificar placa y tipo de servicio antes de confirmar.</div>
-                            <div className="rounded-[18px] border border-white/8 bg-white/[0.03] px-4 py-3">Despachar solo desde el tanque correcto para el combustible seleccionado.</div>
-                            <div className="rounded-[18px] border border-white/8 bg-white/[0.03] px-4 py-3">Escalar de inmediato si un tanque cae por debajo del mínimo operativo.</div>
+                        <ul className="space-y-2">
+                            {[
+                                'Verificar placa y tipo de servicio antes de confirmar.',
+                                'Despachar solo desde el tanque correcto.',
+                                'Escalar si un tanque cae por debajo del mínimo.',
+                            ].map((item, i) => (
+                                <li key={i} className="flex items-start gap-2.5 text-[12px] text-white/55">
+                                    <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500/50 mt-1.5" />
+                                    {item}
+                                </li>
+                            ))}
+                        </ul>
+
+                        <div className="mt-4 border-t border-white/5 pt-4">
+                            <div className="flex items-center gap-2.5 mb-2">
+                                <div className="rounded-[12px] border border-amber-500/18 bg-amber-500/6 p-2.5 text-amber-400">
+                                    <ClipboardList size={15} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-mono uppercase tracking-wider text-amber-500/50">Operativo</p>
+                                    <h3 className="text-[14px] font-semibold text-white">Cierre de turno</h3>
+                                </div>
+                            </div>
+                            <p className="text-[11px] text-white/40 leading-4 mb-3">
+                                Compara nivel físico vs. inventario teórico y registra la diferencia.
+                            </p>
+                            <button
+                                type="button"
+                                className="w-full rounded-[12px] border border-amber-500/22 bg-amber-500/[0.06] px-4 py-2.5 text-[12px] font-medium text-amber-300 transition-colors hover:bg-amber-500/12 cursor-pointer"
+                                onClick={() => {
+                                    setCierreResult(null);
+                                    setCierreForm({
+                                        tanqueId: tanques[0]?.id ?? '',
+                                        nivelFisico: String(Number(tanques[0]?.nivelActual ?? '0').toFixed(2)),
+                                        observaciones: '',
+                                    });
+                                    setCierreModalOpen(true);
+                                }}
+                            >
+                                Iniciar cierre de turno
+                            </button>
                         </div>
                     </Card>
 
-                    <Card className="rounded-[28px] border-amber-500/15 bg-[linear-gradient(180deg,rgba(16,16,12,0.98),rgba(10,10,8,0.98))]">
-                        <div className="flex items-center gap-3">
-                            <div className="rounded-[16px] border border-amber-500/20 bg-amber-500/[0.08] p-3 text-amber-400">
-                                <ClipboardList size={18} />
+                    {/* Tank status */}
+                    <Card className="rounded-[22px] border-white/5 bg-[linear-gradient(180deg,rgba(16,16,14,0.98),rgba(11,11,10,0.98))]">
+                        <div className="flex items-center gap-2.5 mb-4">
+                            <div className="rounded-[12px] border border-sky-500/18 bg-sky-500/6 p-2.5 text-sky-400">
+                                <Fuel size={15} />
                             </div>
                             <div>
-                                <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-amber-500/60">Operativo</p>
-                                <h3 className="mt-1 text-lg font-semibold text-white">Cierre de turno</h3>
+                                <p className="text-[10px] font-mono uppercase tracking-wider text-white/35">Señales de riesgo</p>
+                                <h3 className="text-[14px] font-semibold text-white">Estado de tanques</h3>
                             </div>
                         </div>
-                        <p className="mt-3 text-xs leading-5 text-white/55">
-                            Compara el nivel físico del tanque con el cálculo teórico y registra la diferencia en auditoría.
-                        </p>
-                        <button
-                            type="button"
-                            className="mt-4 w-full rounded-[14px] border border-amber-500/25 bg-amber-500/[0.08] px-4 py-2.5 text-[13px] font-medium text-amber-300 transition-colors hover:bg-amber-500/[0.14]"
-                            onClick={() => {
-                                setCierreResult(null);
-                                setCierreForm({
-                                    tanqueId: tanques[0]?.id ?? '',
-                                    nivelFisico: String(Number(tanques[0]?.nivelActual ?? '0').toFixed(2)),
-                                    observaciones: '',
-                                });
-                                setCierreModalOpen(true);
-                            }}
-                        >
-                            Iniciar cierre de turno
-                        </button>
-                    </Card>
-
-                    <Card className="rounded-[28px] border-white/6 bg-[linear-gradient(180deg,rgba(16,16,14,0.98),rgba(10,10,9,0.98))]">
-                        <div className="flex items-center gap-3">
-                            <div className="rounded-[16px] border border-white/8 bg-white/[0.04] p-3 text-sky-400">
-                                <TimerReset size={18} />
-                            </div>
-                            <div>
-                                <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-white/42">Señales de riesgo</p>
-                                <h3 className="mt-1 text-lg font-semibold text-white">Estado de tanques</h3>
-                            </div>
-                        </div>
-
-                        <div className="mt-5 space-y-3">
+                        <div className="space-y-2">
                             {loading && (
-                                <div className="rounded-[18px] border border-white/8 bg-white/[0.03] px-4 py-4 text-sm text-white/55">
-                                    Cargando estado de tanques...
-                                </div>
+                                <div className="rounded-[12px] bg-white/[0.03] px-4 py-3 text-[12px] text-white/40 animate-pulse">Cargando…</div>
                             )}
-
                             {!loading && lowTanks.length === 0 && (
-                                <div className="rounded-[18px] border border-emerald-500/20 bg-emerald-500/[0.06] px-4 py-4 text-sm text-emerald-100/85">
-                                    Sin alertas activas. Todos los tanques están por encima del nivel mínimo.
+                                <div className="rounded-[12px] border border-emerald-500/15 bg-emerald-500/[0.04] px-3.5 py-2.5 text-[12px] text-emerald-200/70">
+                                    Todos los tanques sobre el mínimo operativo.
                                 </div>
                             )}
-
                             {lowTanks.map((tanque) => (
-                                <div key={tanque.id} className="rounded-[18px] border border-red-500/20 bg-red-500/[0.06] px-4 py-4">
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div>
-                                            <p className="text-sm font-semibold text-white">{tanque.nombre}</p>
-                                            <p className="mt-1 text-xs text-white/58">{tanque.tipoCombustible}</p>
-                                        </div>
-                                        <Badge variant="red">Mínimo</Badge>
+                                <div key={tanque.id} className="flex items-center justify-between gap-3 rounded-[12px] border border-red-500/18 bg-red-500/[0.04] px-3.5 py-2.5">
+                                    <div>
+                                        <p className="text-[12px] font-semibold text-white">{tanque.nombre}</p>
+                                        <p className="text-[10px] text-white/40 mt-0.5">{formatGallons(Number(tanque.nivelActual))} / {formatGallons(Number(tanque.nivelMinimo))} gal mín.</p>
                                     </div>
-                                    <p className="mt-3 text-xs text-white/65">
-                                        Actual {formatGallons(Number(tanque.nivelActual))} gal de mínimo {formatGallons(Number(tanque.nivelMinimo))} gal.
-                                    </p>
+                                    <Badge variant="red" className="text-[10px] shrink-0">Crítico</Badge>
                                 </div>
                             ))}
                         </div>
                     </Card>
                 </div>
             </div>
+
+
+
+
 
             {/* ── Ventas del turno ── */}
             <Card className="rounded-[28px] border-white/5 bg-[linear-gradient(180deg,rgba(20,20,18,0.98),rgba(12,12,10,0.98))] p-0 overflow-hidden">

@@ -171,4 +171,8 @@ export const inventarioService = {
     cancelarEntrega: (entregaId: string) =>
         api.delete<ApiResponse<{ cancelada: boolean; entregaId: string }>>(`/inventario/entregas/${entregaId}`)
             .then(r => r.data.data as { cancelada: boolean; entregaId: string }),
+
+    verificarConsumoMes: (placa: string) =>
+        api.get<ApiResponse<{ placaVehiculo: string; consumoMensual: number; esGranConsumidor: boolean }>>(`/inventario/vehiculo/${placa}/consumo-mes`)
+            .then(r => r.data.data),
 };

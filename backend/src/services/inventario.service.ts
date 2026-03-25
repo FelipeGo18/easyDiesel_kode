@@ -5,6 +5,33 @@ import { pricingEngineService } from './pricing-engine.service';
 export class InventarioService {
 
     /**
+     * Calcula los galones de combustible despachados a un vehículo (por placa)
+     * durante el mes calendario actual en todas las estaciones.
+     */
+    async calcularConsumoMensualPlaca(placaVehiculo: string): Promise<number> {
+        if (!placaVehiculo) return 0;
+        const normalizedPlaca = placaVehiculo.trim().toUpperCase().replace(/\s+/g, '').replace(/[^A-Z0-9-]/g, '');
+        if (!normalizedPlaca) return 0;
+
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+        const result = await prisma.transaccionCombustible.aggregate({
+            _sum: { galones: true },
+            where: {
+                placaVehiculo: normalizedPlaca,
+                tipo: 'SALIDA',
+                estado: 'COMPLETADA',
+                createdAt: {
+                    gte: startOfMonth,
+                }
+            }
+        });
+
+        return Number(result._sum.galones || 0);
+    }
+
+    /**
      * Realiza un cierre de turno comparando el nivel teórico vs el físico reportado.
      * Ajusta el inventario al nivel físico y retorna la diferencia.
      */
@@ -372,11 +399,20 @@ export class InventarioService {
         // Advertencia si cae debajo del mínimo operativo
         const alertaMinimo = nuevoNivel <= nivelMinimo;
 
+        // Verificar consumo mensual automático para Forzar Gran Consumidor
+        let esGranConsumidorFinal = data.esGranConsumidor ?? false;
+        if (data.placaVehiculo) {
+            const consumoAcumuladoMes = await this.calcularConsumoMensualPlaca(data.placaVehiculo);
+            if ((consumoAcumuladoMes + data.galones) > 20000) {
+                esGranConsumidorFinal = true;
+            }
+        }
+
         const precioAplicado = await pricingEngineService.resolveCurrentFuelPrice({
             estacionId: data.estacionId,
             tipoCombustible: data.tipoCombustible,
             tipoServicio: data.tipoServicio,
-            esGranConsumidor: data.esGranConsumidor,
+            esGranConsumidor: esGranConsumidorFinal,
         });
 
         const precioUnitario = precioAplicado.precioUnitario;
