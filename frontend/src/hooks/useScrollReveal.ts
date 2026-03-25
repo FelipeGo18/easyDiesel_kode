@@ -71,7 +71,7 @@ export function useScrollReveal(refs: SectionRefs, enabled: boolean) {
                     const tlEnter = gsap.timeline({
                         scrollTrigger: {
                             trigger: section,
-                            start: 'top 85%',
+                            start: 'top 100%',
                             end: 'bottom 15%', // Exits when the bottom of the section reaches 15% from the top
                             toggleActions: 'play reverse play reverse',
                         }
