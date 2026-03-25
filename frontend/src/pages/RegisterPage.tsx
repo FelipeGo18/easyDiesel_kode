@@ -57,16 +57,17 @@ export function RegisterPage() {
             {/* ── Left: Hero panel ── */}
             <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden items-center justify-center border-r border-border-subtle">
                 <div
-                    className="absolute inset-0 opacity-[0.03]"
+                    className="absolute inset-0 opacity-[0.2]"
                     style={{
                         backgroundImage: `
-              linear-gradient(var(--color-amber-500) 1px, transparent 1px),
-              linear-gradient(90deg, var(--color-amber-500) 1px, transparent 1px)
+              linear-gradient(#222 1px, transparent 1px),
+              linear-gradient(90deg, #222 1px, transparent 1px)
             `,
                         backgroundSize: '60px 60px',
+                        mask: 'radial-gradient(ellipse at center, black 0%, transparent 70%)',
+                        WebkitMask: 'radial-gradient(ellipse at center, black 0%, transparent 70%)',
                     }}
                 />
-                <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(245,166,35,0.06) 0%, transparent 70%)' }} />
 
                 <div className="relative z-10 max-w-md px-12 animate-enter">
                     <div className="w-20 h-20 mb-8">
@@ -106,15 +107,15 @@ export function RegisterPage() {
 
                     {success ? (
                         <div className="space-y-6">
-                            <div className="bg-green-500/10 border border-green-500/30 rounded-brand p-6">
-                                <div className="w-12 h-12 bg-green-500/15 text-green-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <div className="bg-transparent border border-[#10B981] rounded-[4px] p-6">
+                                <div className="w-12 h-12 bg-transparent text-[#10B981] rounded-full flex items-center justify-center mx-auto mb-4 border border-[#10B981]">
                                     <Icon name="check" size={24} />
                                 </div>
                                 <h3 className="text-text-primary font-semibold text-center text-[16px] mb-1">¡Bienvenido, {nombre}!</h3>
                                 <p className="text-[13px] text-text-secondary text-center mb-4">
                                     Tu cuenta ha sido creada con el rol <span className="text-amber-400 font-medium">Particular</span>.
                                 </p>
-                                <div className="rounded-[10px] border border-border-subtle bg-bg-elevated px-4 py-3 text-[12px] text-text-secondary leading-relaxed">
+                                <div className="rounded-[4px] border border-[#333] bg-bg-elevated px-4 py-3 text-[12px] text-text-secondary leading-relaxed">
                                     <p className="font-medium text-text-primary mb-1">¿Eres operador o distribuidor?</p>
                                     Un administrador del sistema debe asignarte el rol de <strong>Estación</strong> o <strong>Distribuidor</strong> una vez ingreses. Mientras tanto, puedes consultar precios públicos y rutas económicas.
                                 </div>
@@ -140,7 +141,7 @@ export function RegisterPage() {
                                         onChange={(e) => setNombre(e.target.value)}
                                         placeholder="Juan Pérez"
                                         required
-                                        className="w-full pl-10 pr-3.5 py-2.5 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive"
+                                        className="w-full pl-10 pr-3.5 py-2.5 bg-bg-elevated border border-border-default rounded-[4px] text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive focus:border-amber-500 focus:outline-none transition-colors"
                                     />
                                 </div>
                             </div>
@@ -155,7 +156,7 @@ export function RegisterPage() {
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder="usuario@correo.com"
                                         required
-                                        className="w-full pl-10 pr-3.5 py-2.5 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive"
+                                        className="w-full pl-10 pr-3.5 py-2.5 bg-bg-elevated border border-border-default rounded-[4px] text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive focus:border-amber-500 focus:outline-none transition-colors"
                                     />
                                 </div>
                             </div>
@@ -171,7 +172,7 @@ export function RegisterPage() {
                                         placeholder="••••••••"
                                         required
                                         minLength={8}
-                                        className="w-full pl-10 pr-10 py-2.5 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive"
+                                        className="w-full pl-10 pr-10 py-2.5 bg-bg-elevated border border-border-default rounded-[4px] text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive focus:border-amber-500 focus:outline-none transition-colors"
                                     />
                                     <button
                                         type="button"
@@ -186,8 +187,8 @@ export function RegisterPage() {
                             </div>
 
                             {(error || oauthError) && (
-                                <div className="px-3 py-2 bg-red-dim border border-red-500/30 rounded-brand">
-                                    <p className="text-[12px] font-mono text-red-500">{error || oauthError}</p>
+                                <div className="px-3 py-2 bg-transparent border border-[#E53935] rounded-[4px]">
+                                    <p className="text-[12px] font-mono text-[#E53935]">{error || oauthError}</p>
                                 </div>
                             )}
 
