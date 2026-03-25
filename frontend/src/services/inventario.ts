@@ -41,6 +41,18 @@ export interface ConfirmarEntregaResult {
     alerta?: string;
 }
 
+export interface ConfirmarEntregaMultiData {
+    estacionId: string;
+    distribuciones: { tanqueId: string; galones: number }[];
+}
+
+export interface ConfirmarEntregaMultiResult {
+    entrega: EntregaDistribuidor;
+    transacciones: { transaccion: TransaccionCombustible; tanqueNombre: string; galones: number }[];
+    totalGalonesRecibidos: number;
+    alerta?: string;
+}
+
 export interface PaginatedResult<T> {
     data: T[];
     pagination: { page: number; limit: number; total: number; totalPages: number };
@@ -126,6 +138,13 @@ export const inventarioService = {
                 ...(r.data.data as ConfirmarEntregaResult),
                 alerta: r.data.alerta ?? r.data.data?.alerta,
             } as ConfirmarEntregaResult)),
+
+    confirmarEntregaMulti: (entregaId: string, data: ConfirmarEntregaMultiData) =>
+        api.post<ApiResponse<ConfirmarEntregaMultiResult>>(`/inventario/entregas/${entregaId}/confirmar-multi`, data)
+            .then(r => ({
+                ...(r.data.data as ConfirmarEntregaMultiResult),
+                alerta: (r.data as any).alerta ?? r.data.data?.alerta,
+            } as ConfirmarEntregaMultiResult)),
 
     registrarEntradaDirecta: (data: EntradaDirectaData) =>
         api.post<ApiResponse<EntradaDirectaResult>>('/inventario/entregas/directa', data)

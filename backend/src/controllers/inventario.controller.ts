@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { inventarioService } from '../services/inventario.service';
-import { registrarEntregaSchema, confirmarEntregaSchema, registrarTransaccionSchema, cierreTurnoSchema, entradaDirectaSchema } from '../validators/inventario.validator';
+import { prisma } from '../utils/prisma';
+import { registrarEntregaSchema, confirmarEntregaSchema, confirmarEntregaMultiTanqueSchema, registrarTransaccionSchema, cierreTurnoSchema, entradaDirectaSchema } from '../validators/inventario.validator';
 import { ZodError } from 'zod';
 
 export const obtenerTransaccionesHandler = async (req: Request, res: Response) => {
@@ -168,7 +169,17 @@ export const registrarEntradaDirectaHandler = async (req: Request, res: Response
 
 export const obtenerProximaRemisionHandler = async (req: Request, res: Response) => {
     try {
-        const distribuidorId = (req.user as any)?.distribuidorId as string | undefined;
+        const userId = req.user?.userId;
+        if (!userId) {
+            res.status(401).json({ success: false, message: 'No autenticado' });
+            return;
+        }
+        // Look up distribuidorId from DB — it's NOT in the JWT
+        const usuario = await prisma.usuario.findUnique({
+            where: { id: userId },
+            select: { distribuidorGestionado: { select: { id: true } } },
+        });
+        const distribuidorId = usuario?.distribuidorGestionado?.id;
         if (!distribuidorId) {
             res.status(400).json({ success: false, message: 'Usuario no vinculado a una distribuidora' });
             return;
@@ -176,6 +187,31 @@ export const obtenerProximaRemisionHandler = async (req: Request, res: Response)
         const result = await inventarioService.proximaRemision(distribuidorId);
         res.json({ success: true, data: result });
     } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const confirmarEntregaMultiTanqueHandler = async (req: Request, res: Response) => {
+    try {
+        const validData = confirmarEntregaMultiTanqueSchema.parse({
+            ...req.body,
+            entregaId: req.params.id,
+        });
+        const result = await inventarioService.confirmarEntregaMultiTanque(validData, {
+            usuarioId: req.user?.userId,
+            ip: req.ip,
+            userAgent: typeof req.get === 'function' ? req.get('user-agent') || undefined : undefined,
+        });
+        res.json({
+            success: true,
+            message: `Entrega confirmada y distribuida en ${result.transacciones.length} tanque(s)`,
+            data: result,
+        });
+    } catch (error: any) {
+        if (error instanceof ZodError) {
+            res.status(400).json({ success: false, errors: error.issues });
+            return;
+        }
         res.status(400).json({ success: false, message: error.message });
     }
 };
