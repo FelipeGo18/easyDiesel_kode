@@ -20,7 +20,7 @@ import { ParticularPanelPage } from '@/pages/ParticularPanelPage';
 import { ReguladorPanelPage } from '@/pages/ReguladorPanelPage';
 import { AuditoriaPage } from '@/pages/AuditoriaPage';
 
-export function DashboardPage() {
+export function PanelPage() {
     const { user } = useAuth();
     const { hasAnyPermission, roleName } = useAccess();
     const navigate = useNavigate();
@@ -67,7 +67,7 @@ export function DashboardPage() {
     }
 // prueba logica dashbotd
     // Lógica de visualización condicional basada en roles
-    const availableModules = navigationRoutes.filter((route) => route.path !== '/dashboard' && hasAnyPermission(...(route.requiredPermissions || [])));
+    const availableModules = navigationRoutes.filter((route) => route.path !== '/panel' && hasAnyPermission(...(route.requiredPermissions || [])));
 
     const greeting = () => {
         const hour = new Date().getHours();

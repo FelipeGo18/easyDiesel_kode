@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/useAuth';
 import { useAccess } from '@/hooks/useAccess';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Icon } from '@/components/ui/Icon';
+import { protectedRoutes } from '@/features/routing/appRoutes';
 
 export function Topbar() {
     const { user, logout } = useAuth();
     const { roleName } = useAccess();
     const navigate = useNavigate();
+    const location = useLocation();
     const [menuOpen, setMenuOpen] = useState(false);
 
     const now = new Date();
@@ -24,7 +26,16 @@ export function Topbar() {
     });
 
     const stationName = user?.estacion?.nombre;
-    const pageTitle = roleName === 'estacion' ? (stationName || 'Panel de estación') : 'Dashboard';
+
+    // Resolve page title from the current route
+    const currentRoute = protectedRoutes.find(r => r.path === location.pathname);
+    const pageTitle = location.pathname === '/panel'
+        ? (roleName === 'estacion'
+            ? (stationName || 'Panel de estación')
+            : roleName === 'admin'
+                ? 'Panel administrativo'
+                : 'Panel principal')
+        : currentRoute?.label || 'Panel principal';
 
     const handleLogout = () => {
         logout();
