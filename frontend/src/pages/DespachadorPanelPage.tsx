@@ -214,12 +214,13 @@ export function StationOperationsPage() {
 
     const unitPrice = Number(pricePreview?.precioGalon ?? 0);
     const subsidy = Number(pricePreview?.subsidioGalon ?? 0);
+    const basePrice = unitPrice + subsidy; // Valor configurado en el surtidor (sin subsidio)
+
     const gallons = inputMode === 'PRECIO' 
-        ? (unitPrice > 0 ? (Number(form.precioTotalInput) || 0) / unitPrice : 0)
+        ? (basePrice > 0 ? (Number(form.precioTotalInput) || 0) / basePrice : 0)
         : (Number(form.galones) || 0);
-    const estimatedTotal = inputMode === 'PRECIO'
-        ? (Number(form.precioTotalInput) || 0)
-        : (gallons * unitPrice);
+    
+    const estimatedTotal = gallons * unitPrice; // Lo que realmente paga el cliente
     const lowTanks = tanques.filter((tanque) => Number(tanque.nivelActual) <= Number(tanque.nivelMinimo));
     const totalFuel = tanques.reduce((total, tanque) => total + Number(tanque.nivelActual), 0);
     const selectedServiceMeta = tipoServicioOptions.find((option) => option.value === form.tipoServicio);
@@ -455,7 +456,7 @@ export function StationOperationsPage() {
                 </div>
             )}
             {/* ── Hero compacto ── */}
-            <section className="relative overflow-hidden rounded-[24px] border border-amber-500/15 bg-[linear-gradient(135deg,rgba(18,18,16,1)_0%,rgba(14,12,8,1)_60%,rgba(30,18,2,1)_100%)] px-6 py-5">
+            <section className="relative overflow-hidden rounded-[24px] border border-white/10 bg-white/[0.03] backdrop-blur-xl px-6 py-5">
                 <div className="absolute top-0 left-0 w-64 h-64 rounded-full bg-amber-500/10 blur-[80px] pointer-events-none" />
                 <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     {/* Left: Title + meta */}
@@ -530,7 +531,7 @@ export function StationOperationsPage() {
             <div className="grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
 
                 {/* Form card */}
-                <Card className="rounded-[22px] border-white/5 bg-[linear-gradient(180deg,rgba(20,20,18,0.98),rgba(13,13,11,0.98))] p-0 overflow-hidden">
+                <Card className="rounded-[22px] border-white/10 bg-white/[0.02] backdrop-blur-md p-0 overflow-hidden">
                     {/* Card header */}
                     <div className="flex items-center justify-between gap-4 border-b border-white/5 px-5 py-4">
                         <div>
@@ -654,7 +655,7 @@ export function StationOperationsPage() {
                             <div className="grid gap-3 sm:grid-cols-2">
                                 {inputMode === 'PRECIO' ? (
                                     <InputField
-                                        label="Valor a tanquear ($)"
+                                        label="Valor marcado en surtidor ($)"
                                         type="number"
                                         min="0"
                                         step="1"
@@ -736,7 +737,7 @@ export function StationOperationsPage() {
                 <div className="space-y-4">
 
                     {/* Entregas pendientes */}
-                    <Card className="rounded-[22px] border-white/5 bg-[linear-gradient(180deg,rgba(16,16,14,0.98),rgba(11,11,10,0.98))]">
+                    <Card className="rounded-[22px] border-white/10 bg-white/[0.02] backdrop-blur-md">
                         <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-2.5">
                                 <div className="rounded-[12px] border border-emerald-500/20 bg-emerald-500/8 p-2.5 text-emerald-400">
@@ -796,7 +797,7 @@ export function StationOperationsPage() {
                     </Card>
 
                     {/* Checklist + Cierre (merged card) */}
-                    <Card className="rounded-[22px] border-white/5 bg-[linear-gradient(180deg,rgba(16,16,14,0.98),rgba(11,11,10,0.98))]">
+                    <Card className="rounded-[22px] border-white/10 bg-white/[0.02] backdrop-blur-md">
                         <div className="flex items-center gap-2.5 mb-4">
                             <div className="rounded-[12px] border border-white/8 bg-white/4 p-2.5 text-amber-400">
                                 <TimerReset size={15} />
@@ -851,7 +852,7 @@ export function StationOperationsPage() {
                     </Card>
 
                     {/* Tank status */}
-                    <Card className="rounded-[22px] border-white/5 bg-[linear-gradient(180deg,rgba(16,16,14,0.98),rgba(11,11,10,0.98))]">
+                    <Card className="rounded-[22px] border-white/10 bg-white/[0.02] backdrop-blur-md">
                         <div className="flex items-center gap-2.5 mb-4">
                             <div className="rounded-[12px] border border-sky-500/18 bg-sky-500/6 p-2.5 text-sky-400">
                                 <Fuel size={15} />
@@ -889,7 +890,7 @@ export function StationOperationsPage() {
 
 
             {/* ── Ventas del turno ── */}
-            <Card className="rounded-[28px] border-white/5 bg-[linear-gradient(180deg,rgba(20,20,18,0.98),rgba(12,12,10,0.98))] p-0 overflow-hidden">
+            <Card className="rounded-[28px] border-white/10 bg-white/[0.02] backdrop-blur-md p-0 overflow-hidden">
                 <div className="flex items-center justify-between gap-4 border-b border-white/6 px-6 py-5">
                     <div className="flex items-center gap-3">
                         <div className="rounded-[16px] border border-white/8 bg-white/[0.04] p-3 text-amber-400">
