@@ -363,7 +363,7 @@ export function HomePage() {
                 <div className="relative z-10 max-w-6xl mx-auto w-full px-8 md:px-16 pt-24 pb-12">
                     <div className="grid md:grid-cols-2 gap-16 items-center">
                         {/* Left: editorial copy */}
-                        <div>
+                        <div className="prices-header-block">
                             <span className="font-mono text-[10px] text-amber-500/60 tracking-[0.25em] uppercase block mb-6">Consulta de precios</span>
                             <h2 className="font-display text-[64px] md:text-[80px] leading-none text-text-primary mb-4 tracking-wide">
                                 PRECIOS<br />
@@ -373,7 +373,7 @@ export function HomePage() {
                                 Selecciona tu zona geográfica, el tipo de combustible y la categoría de tu vehículo para consultar el precio oficial vigente.
                             </p>
                             {publicDataError && (
-                                <div className="mt-6 flex items-start gap-3 rounded-brand border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+                                <div className="mt-6 flex items-start gap-3 rounded-[4px] border border-amber-500/20 bg-amber-500/5 px-4 py-3">
                                     <Icon name="alert" size={14} className="text-amber-500 mt-0.5 shrink-0" />
                                     <p className="text-[12px] text-amber-300/80 font-sans leading-relaxed">{publicDataError}</p>
                                 </div>
@@ -381,7 +381,7 @@ export function HomePage() {
                         </div>
 
                         {/* Right: filter card */}
-                        <div className="bg-bg-surface border border-[#222] rounded-[4px] p-6 space-y-6">
+                        <div className="config-card bg-bg-surface border border-[#222] rounded-[4px] p-6 space-y-6">
                             {/* Zona */}
                             <div>
                                 <label htmlFor="select-zona" className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">

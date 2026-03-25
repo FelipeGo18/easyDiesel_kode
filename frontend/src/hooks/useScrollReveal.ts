@@ -56,64 +56,47 @@ export function useScrollReveal(refs: SectionRefs, enabled: boolean) {
                 }
 
                 /* ────────────────────────────────
-                   PRICES — Fade in up block
+                   PRICES — Entrance & Destruction
                    ──────────────────────────────── */
                 if (refs.prices.current) {
-                    const cards = Array.from(refs.prices.current.querySelectorAll<HTMLElement>('.price-card'));
+                    const section = refs.prices.current;
+                    const headerText = section.querySelector('.prices-header-block');
+                    const configCard = section.querySelector('.config-card');
+                    const priceCards = Array.from(section.querySelectorAll<HTMLElement>('.price-card'));
                     
-                    if (cards.length > 0) {
-                        gsap.fromTo(cards, 
-                            { y: 40, opacity: 0 },
-                            {
-                                y: 0, opacity: 1,
-                                stagger: 0.1,
-                                duration: 0.8,
-                                ease: 'power3.out',
-                                scrollTrigger: {
-                                    trigger: refs.prices.current,
-                                    start: 'top 75%',
-                                    toggleActions: 'play none none reverse',
-                                }
-                            }
+                    // 1. Unified Entrance & Exit Timeline
+                    // Using "play reverse play reverse" ensures the animation plays completely forward when entering the bounds,
+                    // reverses when leaving the bottom, plays forward again when scrolling back up into bounds, 
+                    // and reverses when leaving the top.
+                    const tlEnter = gsap.timeline({
+                        scrollTrigger: {
+                            trigger: section,
+                            start: 'top 85%',
+                            end: 'bottom 15%', // Exits when the bottom of the section reaches 15% from the top
+                            toggleActions: 'play reverse play reverse',
+                        }
+                    });
+
+                    // We add the aggressive entrance animations. They will naturally reverse for the exit.
+                    if (headerText) tlEnter.fromTo(headerText, { y: 150, opacity: 0, scale: 0.8 }, { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: 'back.out(1.5)' }, 0);
+                    if (configCard) tlEnter.fromTo(configCard, { x: 150, opacity: 0, scale: 0.8 }, { x: 0, opacity: 1, scale: 1, duration: 0.8, ease: 'back.out(1.2)' }, 0.1);
+
+                    if (priceCards.length > 0) {
+                        tlEnter.fromTo(priceCards, 
+                            { y: 250, opacity: 0, scale: 0.7, rotateX: 25 },
+                            { y: 0, opacity: 1, scale: 1, rotateX: 0, stagger: 0.15, duration: 1.0, ease: 'elastic.out(1, 0.75)' },
+                            0.2
                         );
                     }
 
-                    /* ─ Gauge + needle + subsidy — trigger on section enter ─ */
-                    const gaugeArc = refs.prices.current.querySelector('.gauge-arc');
-                    const needle = refs.prices.current.querySelector('.gauge-needle');
-                    const subsidyBar = refs.prices.current.querySelector('.fuel-subsidy-bar');
+                    // Internal visual gauges (triggered slightly after)
+                    const gaugeArc = section.querySelector('.gauge-arc');
+                    const needle = section.querySelector('.gauge-needle');
+                    const subsidyBar = section.querySelector('.fuel-subsidy-bar');
 
-                    if (gaugeArc) {
-                        gsap.fromTo(gaugeArc,
-                            { strokeDashoffset: 251.3 },
-                            {
-                                strokeDashoffset: 60, duration: 1.4, ease: 'power2.out',
-                                delay: 0.3,
-                                scrollTrigger: { trigger: refs.prices.current, start: 'top 80%', toggleActions: 'play none none reverse' },
-                            }
-                        );
-                    }
-                    if (needle) {
-                        gsap.fromTo(needle,
-                            { rotation: -90 },
-                            {
-                                rotation: 55, duration: 1.4, ease: 'power2.out',
-                                transformOrigin: '100px 100px',
-                                delay: 0.3,
-                                scrollTrigger: { trigger: refs.prices.current, start: 'top 80%', toggleActions: 'play none none reverse' },
-                            }
-                        );
-                    }
-                    if (subsidyBar) {
-                        gsap.fromTo(subsidyBar,
-                            { width: '0%' },
-                            {
-                                width: '65%', duration: 1.2, ease: 'power2.out',
-                                delay: 0.5,
-                                scrollTrigger: { trigger: refs.prices.current, start: 'top 70%', toggleActions: 'play none none reverse' },
-                            }
-                        );
-                    }
+                    if (gaugeArc) tlEnter.fromTo(gaugeArc, { strokeDashoffset: 251.3 }, { strokeDashoffset: 60, duration: 1.2, ease: 'power3.out' }, 0.5);
+                    if (needle) tlEnter.fromTo(needle, { rotation: -90 }, { rotation: 55, duration: 1.2, ease: 'power3.out', transformOrigin: '100px 100px' }, 0.5);
+                    if (subsidyBar) tlEnter.fromTo(subsidyBar, { width: '0%' }, { width: '65%', duration: 1.2, ease: 'power3.out' }, 0.7);
                 }
 
                 /* ────────────────────────────────
