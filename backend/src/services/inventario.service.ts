@@ -5,33 +5,6 @@ import { pricingEngineService } from './pricing-engine.service';
 export class InventarioService {
 
     /**
-     * Calcula los galones de combustible despachados a un vehículo (por placa)
-     * durante el mes calendario actual en todas las estaciones.
-     */
-    async calcularConsumoMensualPlaca(placaVehiculo: string): Promise<number> {
-        if (!placaVehiculo) return 0;
-        const normalizedPlaca = placaVehiculo.trim().toUpperCase().replace(/\s+/g, '').replace(/[^A-Z0-9-]/g, '');
-        if (!normalizedPlaca) return 0;
-
-        const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-        const result = await prisma.transaccionCombustible.aggregate({
-            _sum: { galones: true },
-            where: {
-                placaVehiculo: normalizedPlaca,
-                tipo: 'SALIDA',
-                estado: 'COMPLETADA',
-                createdAt: {
-                    gte: startOfMonth,
-                }
-            }
-        });
-
-        return Number(result._sum.galones || 0);
-    }
-
-    /**
      * Realiza un cierre de turno comparando el nivel teórico vs el físico reportado.
      * Ajusta el inventario al nivel físico y retorna la diferencia.
      */
@@ -130,8 +103,9 @@ export class InventarioService {
             tipoServicio: 'CARGA', // Las entregas de distribuidor son tipo CARGA
         });
 
-        // 3. Generar número de remisión automático correlativo global (constraint único global)
+        // 3. Generar número de remisión automático correlativo por distribuidor
         const ultimaEntrega = await prisma.entregaDistribuidor.findFirst({
+            where: { distribuidorId: data.distribuidorId },
             orderBy: { createdAt: 'desc' },
             select: { numeroRemision: true }
         });
@@ -398,20 +372,11 @@ export class InventarioService {
         // Advertencia si cae debajo del mínimo operativo
         const alertaMinimo = nuevoNivel <= nivelMinimo;
 
-        // Verificar consumo mensual automático para Forzar Gran Consumidor
-        let esGranConsumidorFinal = data.esGranConsumidor ?? false;
-        if (data.placaVehiculo) {
-            const consumoAcumuladoMes = await this.calcularConsumoMensualPlaca(data.placaVehiculo);
-            if ((consumoAcumuladoMes + data.galones) > 20000) {
-                esGranConsumidorFinal = true;
-            }
-        }
-
         const precioAplicado = await pricingEngineService.resolveCurrentFuelPrice({
             estacionId: data.estacionId,
             tipoCombustible: data.tipoCombustible,
             tipoServicio: data.tipoServicio,
-            esGranConsumidor: esGranConsumidorFinal,
+            esGranConsumidor: data.esGranConsumidor,
         });
 
         const precioUnitario = precioAplicado.precioUnitario;
@@ -610,153 +575,6 @@ export class InventarioService {
             }
         }
         return { proxima };
-    }
-
-    /**
-     * Confirma una entrega distribuyendo los galones recibidos entre múltiples tanques.
-     * Todo se procesa en una transacción atómica: si cualquier tanque falla, se deshace todo.
-     */
-    async confirmarEntregaMultiTanque(
-        data: { entregaId: string; estacionId: string; distribuciones: { tanqueId: string; galones: number }[] },
-        options?: { usuarioId?: string; ip?: string; userAgent?: string }
-    ) {
-        const entrega = await prisma.entregaDistribuidor.findUnique({
-            where: { id: data.entregaId },
-            include: {
-                distribuidor: { select: { id: true, nombre: true, tipo: true } },
-            },
-        });
-
-        if (!entrega) throw new Error('Entrega no encontrada');
-        if (entrega.confirmada) throw new Error('La entrega ya fue confirmada anteriormente');
-        if (entrega.estacionId !== data.estacionId) {
-            throw new Error('La entrega no pertenece a la estación indicada');
-        }
-
-        // Validate all tanks upfront
-        const totalGalonesRecibidos = data.distribuciones.reduce((sum, d) => sum + d.galones, 0);
-        const tanqueIds = data.distribuciones.map(d => d.tanqueId);
-
-        // Check for duplicate tanks
-        if (new Set(tanqueIds).size !== tanqueIds.length) {
-            throw new Error('No se puede asignar el mismo tanque más de una vez');
-        }
-
-        const tanques = await prisma.tanque.findMany({
-            where: { id: { in: tanqueIds } },
-        });
-
-        const tanqueMap = new Map(tanques.map(t => [t.id, t]));
-
-        for (const dist of data.distribuciones) {
-            const tanque = tanqueMap.get(dist.tanqueId);
-            if (!tanque) throw new Error(`Tanque ${dist.tanqueId} no encontrado`);
-            if (tanque.estacionId !== data.estacionId) {
-                throw new Error(`El tanque "${tanque.nombre}" no pertenece a la estación indicada`);
-            }
-            if (tanque.tipoCombustible !== entrega.tipoCombustible) {
-                throw new Error(`El tanque "${tanque.nombre}" es de ${tanque.tipoCombustible}, pero la entrega es de ${entrega.tipoCombustible}`);
-            }
-            const nivelActual = Number(tanque.nivelActual);
-            const capacidad = Number(tanque.capacidadGalones);
-            if (nivelActual + dist.galones > capacidad) {
-                throw new Error(`La asignación de ${dist.galones} gal al tanque "${tanque.nombre}" excede su capacidad (${capacidad} gal máx, actual ${nivelActual} gal)`);
-            }
-        }
-
-        // Calculate price-related info
-        const galonesEsperados = Number(entrega.galones);
-        const diferenciaGalones = Number((totalGalonesRecibidos - galonesEsperados).toFixed(3));
-        const diferenciaPorcentaje = galonesEsperados > 0
-            ? Number(((diferenciaGalones / galonesEsperados) * 100).toFixed(2))
-            : 0;
-        const precioUnitario = Number(entrega.precioUnitario);
-
-        return prisma.$transaction(async (tx: any) => {
-            // 1. Mark delivery as confirmed (update tanqueId to first tank for backward compat)
-            const entregaConfirmada = await tx.entregaDistribuidor.update({
-                where: { id: data.entregaId },
-                data: {
-                    confirmada: true,
-                    tanqueId: data.distribuciones[0].tanqueId,
-                },
-                include: {
-                    distribuidor: { select: { id: true, nombre: true, tipo: true } },
-                },
-            });
-
-            // 2. Create a transaction and update level for each tank
-            const transacciones = [];
-            for (const dist of data.distribuciones) {
-                const tanque = tanqueMap.get(dist.tanqueId)!;
-                const nuevoNivel = Number(tanque.nivelActual) + dist.galones;
-                const precioTotal = Number((dist.galones * precioUnitario).toFixed(2));
-
-                const transaccion = await tx.transaccionCombustible.create({
-                    data: {
-                        estacionId: data.estacionId,
-                        tanqueId: dist.tanqueId,
-                        distribuidorId: entrega.distribuidorId,
-                        entregaId: entrega.id,
-                        tipo: 'ENTRADA',
-                        tipoCombustible: entrega.tipoCombustible,
-                        tipoServicio: 'CARGA',
-                        galones: dist.galones,
-                        precioUnitario,
-                        precioTotal,
-                        estado: 'COMPLETADA',
-                    },
-                });
-
-                await tx.tanque.update({
-                    where: { id: dist.tanqueId },
-                    data: { nivelActual: nuevoNivel },
-                });
-
-                transacciones.push({ transaccion, tanqueNombre: tanque.nombre, galones: dist.galones });
-            }
-
-            // 3. Audit log
-            if (options?.usuarioId) {
-                await tx.auditoriaLog.create({
-                    data: {
-                        usuarioId: options.usuarioId,
-                        modulo: 'inventario',
-                        accion: 'CONFIRMAR_ENTREGA_MULTI_TANQUE',
-                        entidad: 'entrega_distribuidor',
-                        entidadId: entrega.id,
-                        datosAntes: {
-                            confirmada: false,
-                            galonesEsperados,
-                        },
-                        datosDespues: {
-                            confirmada: true,
-                            totalGalonesRecibidos,
-                            diferenciaGalones,
-                            diferenciaPorcentaje,
-                            distribuciones: data.distribuciones.map(d => ({
-                                tanqueId: d.tanqueId,
-                                tanqueNombre: tanqueMap.get(d.tanqueId)?.nombre,
-                                galones: d.galones,
-                            })),
-                        },
-                        ip: options.ip,
-                        userAgent: options.userAgent,
-                    },
-                });
-            }
-
-            const alerta = Math.abs(diferenciaGalones) > 0.001
-                ? `Diferencia detectada frente a la entrega registrada: ${diferenciaGalones.toFixed(3)} gal (${diferenciaPorcentaje.toFixed(2)}%)`
-                : undefined;
-
-            return {
-                entrega: entregaConfirmada,
-                transacciones,
-                totalGalonesRecibidos,
-                alerta,
-            };
-        });
     }
 
     /**

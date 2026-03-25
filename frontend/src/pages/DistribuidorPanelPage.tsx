@@ -67,41 +67,35 @@ export function DistribuidorPanelPage() {
     useEffect(() => {
         const fetchMeta = async () => {
             if (!form.estacionId || !form.tipoCombustible) return;
-
-            // 1. Get next remission (independent of station selection)
             try {
+                // 1. Get next remission
                 const remRes = await api.get(`/inventario/proxima-remision`);
                 const proximaRemision = remRes.data?.data?.proxima;
-                if (proximaRemision) {
-                    setField('numeroRemision', proximaRemision);
-                }
-            } catch (error) {
-                console.error('Error fetching remisión:', error);
-                setField('numeroRemision', 'Error');
-            }
 
-            // 2. Get zona price
-            try {
+                // 2. Get zona price
                 const selectedEstacion = estaciones.find(e => e.id === form.estacionId);
                 const zonaId = selectedEstacion?.zonaId;
+                let precioUnitario = 0;
 
-                if (!zonaId) {
-                    console.warn('La estación seleccionada no tiene zona asignada');
-                    setField('precioUnitario', '0');
-                    return;
+                if (zonaId) {
+                    const priceRes = await api.get(`/precios/consultar`, {
+                        params: {
+                            zonaId,
+                            tipoCombustible: form.tipoCombustible,
+                            tipoServicio: 'CARGA'
+                        }
+                    });
+                    precioUnitario = priceRes.data?.data?.precioGalon || 0;
                 }
 
-                const priceRes = await api.get(`/precios/consultar`, {
-                    params: {
-                        zonaId,
-                        tipoCombustible: form.tipoCombustible,
-                        tipoServicio: 'CARGA'
-                    }
-                });
-                const precioUnitario = priceRes.data?.data?.precioGalon || 0;
-                setField('precioUnitario', precioUnitario ? String(precioUnitario) : '0');
+                setForm(prev => ({
+                    ...prev,
+                    numeroRemision: proximaRemision || prev.numeroRemision,
+                    precioUnitario: precioUnitario ? String(precioUnitario) : '0'
+                }));
+
             } catch (error) {
-                console.error('Error fetching precio:', error);
+                console.error('Error fetching delivery meta:', error);
                 setField('precioUnitario', '0');
             }
         };
@@ -240,7 +234,7 @@ export function DistribuidorPanelPage() {
     return (
         <div className="space-y-6 animate-enter">
             {/* ── Header ── */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-h1 text-text-primary">
                         {distribuidor?.nombre ?? 'Distribuidor'}
@@ -249,14 +243,14 @@ export function DistribuidorPanelPage() {
                         Panel de operaciones · Registro y seguimiento de entregas
                     </p>
                 </div>
-                <Button onClick={() => setModalOpen(true)} className="w-full sm:w-auto">
+                <Button onClick={() => setModalOpen(true)}>
                     <PackagePlus className="w-4 h-4" />
                     Nueva entrega
                 </Button>
             </div>
 
             {/* ── KPIs ── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
                 <KpiCard
                     label="Total entregas"
                     value={String(kpis.totalEntregas)}
@@ -385,7 +379,7 @@ export function DistribuidorPanelPage() {
                         placeholder="500"
                         required
                     />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-medium text-text-secondary uppercase tracking-wider">
                                 Número de Remisión

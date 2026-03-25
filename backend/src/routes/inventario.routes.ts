@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { obtenerEntregasPendientesHandler, obtenerEntregasPorDistribuidorHandler, registrarEntregaHandler, confirmarEntregaHandler, confirmarEntregaMultiTanqueHandler, registrarTransaccionHandler, cierreTurnoHandler, registrarEntradaDirectaHandler, obtenerTransaccionesHandler, cancelarEntregaHandler, obtenerProximaRemisionHandler, obtenerConsumoPlacaHandler } from '../controllers/inventario.controller';
+import { obtenerEntregasPendientesHandler, obtenerEntregasPorDistribuidorHandler, registrarEntregaHandler, confirmarEntregaHandler, registrarTransaccionHandler, cierreTurnoHandler, registrarEntradaDirectaHandler, obtenerTransaccionesHandler, cancelarEntregaHandler, obtenerProximaRemisionHandler } from '../controllers/inventario.controller';
 import { can } from '../middleware/auth';
 
 const router = Router();
@@ -7,8 +7,6 @@ const router = Router();
 // Endpoints bajo /api/inventario
 
 router.get('/proxima-remision', can('inventario:escribir'), obtenerProximaRemisionHandler);
-
-router.get('/vehiculo/:placa/consumo-mes', obtenerConsumoPlacaHandler);
 
 /**
  * @swagger
@@ -97,7 +95,6 @@ router.post('/entregas', can('inventario:escribir'), registrarEntregaHandler); /
  *         description: Entrega confirmada y tanque actualizado
  */
 router.post('/entregas/:id/confirmar', can('inventario:escribir'), confirmarEntregaHandler);
-router.post('/entregas/:id/confirmar-multi', can('inventario:escribir'), confirmarEntregaMultiTanqueHandler);
 
 /** DELETE /inventario/entregas/:id — Cancela (elimina) una entrega pendiente */
 router.delete('/entregas/:id', can('inventario:escribir'), cancelarEntregaHandler);
