@@ -44,7 +44,7 @@ export function KpiCard({ label, value, trend, icon, className, delay = 0, child
 
             {/* Value */}
             <div className="kpi-value" style={{ animationDelay: `${delay + 100}ms` }}>
-                <span className="font-display text-[48px] leading-none text-text-primary tracking-wide">
+                <span className="font-display text-[28px] sm:text-[36px] lg:text-[48px] leading-none text-text-primary tracking-wide break-words">
                     {value}
                 </span>
             </div>

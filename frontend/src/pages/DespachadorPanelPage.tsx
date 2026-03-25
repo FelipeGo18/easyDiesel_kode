@@ -472,7 +472,7 @@ export function StationOperationsPage() {
                             Captura placa, elige servicio y el sistema aplica la tarifa regulatoria de la zona antes de registrar la salida.
                         </p>
                         {/* Stat strip */}
-                        <div className="mt-4 flex flex-wrap gap-3">
+                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             <div className="flex items-center gap-2 rounded-[10px] border border-white/10 bg-white/[0.04] px-3 py-2">
                                 <Fuel size={13} className="text-amber-400" />
                                 <span className="text-[12px] font-medium text-white">{formatGallons(totalFuel)} gal</span>
@@ -528,12 +528,12 @@ export function StationOperationsPage() {
             </section>
 
             {/* ── Main grid: Form + Sidebar ── */}
-            <div className="grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
+            <div className="grid gap-5 lg:grid-cols-1 xl:grid-cols-[1.3fr_0.7fr]">
 
                 {/* Form card */}
                 <Card className="rounded-[22px] border-white/10 bg-white/[0.02] backdrop-blur-md p-0 overflow-hidden">
                     {/* Card header */}
-                    <div className="flex items-center justify-between gap-4 border-b border-white/5 px-5 py-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/5 px-5 py-4">
                         <div>
                             <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-amber-500/60">Cabina de despacho</p>
                             <h2 className="mt-1 text-lg font-semibold text-white">Registrar venta</h2>
@@ -691,7 +691,7 @@ export function StationOperationsPage() {
                         </div>
 
                         {/* Price summary strip */}
-                        <div className={`grid ${subsidy > 0 ? 'grid-cols-4' : 'grid-cols-3'} divide-x divide-amber-500/10 rounded-[14px] border border-amber-500/12 bg-amber-500/[0.04] overflow-hidden`}>
+                        <div className={`grid ${subsidy > 0 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3'} gap-2 sm:gap-0 sm:divide-x sm:divide-amber-500/10 rounded-[14px] border border-amber-500/12 bg-amber-500/[0.04] overflow-hidden`}>
                             {[
                                 { label: 'Precio/gal', value: unitPrice ? formatCurrency(unitPrice) : '—', show: true },
                                 { label: 'Subsidio', value: subsidy > 0 ? formatCurrency(subsidy) : '—', show: subsidy > 0 },
@@ -718,7 +718,7 @@ export function StationOperationsPage() {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex flex-wrap justify-end gap-2.5 pt-1">
+                        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-end gap-2.5 pt-1">
                             <Button type="button" variant="ghost" onClick={fetchTanques}>
                                 Actualizar niveles
                             </Button>
