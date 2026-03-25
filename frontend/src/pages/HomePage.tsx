@@ -349,15 +349,13 @@ export function HomePage() {
                 id="precios"
                 className="relative z-10 border-t border-border-subtle"
             >
-                {/* Atmospheric background */}
+                {/* Atmospheric grid minimal */}
                 <div className="pointer-events-none absolute inset-0">
-                    <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-amber-500/3 blur-[120px]" />
-                    <div className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full bg-green-500/3 blur-[100px]" />
                     <div className="absolute inset-0" style={{
-                        backgroundImage: 'linear-gradient(rgba(245,166,35,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(245,166,35,0.03) 1px, transparent 1px)',
+                        backgroundImage: 'linear-gradient(#222 1px, transparent 1px), linear-gradient(90deg, #222 1px, transparent 1px)',
                         backgroundSize: '48px 48px',
-                        mask: 'radial-gradient(ellipse 70% 80% at 30% 50%, black 30%, transparent 75%)',
-                        WebkitMask: 'radial-gradient(ellipse 70% 80% at 30% 50%, black 30%, transparent 75%)',
+                        mask: 'radial-gradient(ellipse 70% 80% at 30% 50%, black 20%, transparent 80%)',
+                        WebkitMask: 'radial-gradient(ellipse 70% 80% at 30% 50%, black 20%, transparent 80%)',
                     }} />
                 </div>
 
@@ -383,8 +381,7 @@ export function HomePage() {
                         </div>
 
                         {/* Right: filter card */}
-                        <div className="bg-bg-surface/60 backdrop-blur-sm border border-border-subtle rounded-[8px] p-6 space-y-6"
-                            style={{ boxShadow: '0 0 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.03)' }}>
+                        <div className="bg-bg-surface border border-[#222] rounded-[4px] p-6 space-y-6">
                             {/* Zona */}
                             <div>
                                 <label htmlFor="select-zona" className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">
@@ -410,10 +407,10 @@ export function HomePage() {
                                 <div className="flex gap-2">
                                     {tiposCombustible.map(tc => (
                                         <button key={tc.id} onClick={() => setCombustibleSeleccionado(tc.id)}
-                                            className={`flex-1 py-2.5 px-3 rounded-brand text-[11px] font-mono uppercase tracking-wider interactive border cursor-pointer transition-all duration-200 ${
+                                            className={`flex-1 py-2.5 px-3 rounded-[4px] text-[11px] font-mono uppercase tracking-wider interactive border cursor-pointer transition-all duration-200 ${
                                                 combustibleSeleccionado === tc.id
-                                                    ? 'bg-amber-500/10 border-amber-500/40 text-amber-500'
-                                                    : 'bg-bg-elevated border-border-subtle text-text-muted hover:border-border-strong hover:text-text-secondary'
+                                                    ? 'bg-amber-500 border-amber-500 text-black font-bold'
+                                                    : 'bg-bg-elevated border-border-subtle text-text-muted hover:border-text-secondary hover:text-text-primary'
                                             }`}
                                         >
                                             {tc.id === 'ACPM' ? 'ACPM' : 'Gasolina'}
@@ -427,10 +424,10 @@ export function HomePage() {
                                 <div className="grid grid-cols-2 gap-2">
                                     {tiposServicio.map(ts => (
                                         <button key={ts.id} onClick={() => setServicioSeleccionado(ts.id)}
-                                            className={`py-2.5 px-3 rounded-brand text-[10px] font-mono uppercase tracking-wider interactive border cursor-pointer text-center transition-all duration-200 ${
+                                            className={`py-2.5 px-3 rounded-[4px] text-[10px] font-mono uppercase tracking-wider interactive border cursor-pointer text-center transition-all duration-200 ${
                                                 servicioSeleccionado === ts.id
-                                                    ? 'bg-amber-500/10 border-amber-500/40 text-amber-500'
-                                                    : 'bg-bg-elevated border-border-subtle text-text-muted hover:border-border-strong hover:text-text-secondary'
+                                                    ? 'bg-amber-500 border-amber-500 text-black font-bold'
+                                                    : 'bg-bg-elevated border-border-subtle text-text-muted hover:border-text-secondary hover:text-text-primary'
                                             }`}
                                         >
                                             {ts.label}
@@ -505,8 +502,7 @@ export function HomePage() {
 
                             {/* Price number */}
                             <div className="text-center">
-                                <span className="font-display text-[48px] md:text-[56px] leading-none text-amber-500 tracking-wide"
-                                    style={{ textShadow: '0 0 60px rgba(245,166,35,0.3)' }}>
+                                <span className="font-display text-[48px] md:text-[56px] leading-none text-amber-500 tracking-wide">
                                     {loadingPublicData ? '···' : precioActual ? formatCOP(Number(precioActual.precioGalon)) : '—'}
                                 </span>
                                 <span className="block text-[10px] text-text-muted font-mono tracking-[0.15em] mt-2 uppercase">por galón</span>
@@ -543,8 +539,7 @@ export function HomePage() {
                                     <div>
                                         <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">Subsidio por galón</span>
                                         <div className="flex items-end justify-between gap-3">
-                                            <span className={`font-display text-[40px] leading-none ${Number(precioActual.subsidioGalon) > 0 ? 'text-green-500' : 'text-text-muted'}`}
-                                                style={Number(precioActual.subsidioGalon) > 0 ? { textShadow: '0 0 30px rgba(46,204,113,0.25)' } : {}}>
+                                            <span className={`font-display text-[40px] leading-none ${Number(precioActual.subsidioGalon) > 0 ? 'text-green-500' : 'text-text-muted'}`}>
                                                 {Number(precioActual.subsidioGalon) > 0 ? formatCOP(Number(precioActual.subsidioGalon)) : 'N/A'}
                                             </span>
                                             {Number(precioActual.subsidioGalon) > 0 && (
@@ -610,15 +605,14 @@ export function HomePage() {
                                             }`}
                                         >
                                             {isActive && (
-                                                <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-amber-500"
-                                                    style={{ boxShadow: '0 0 8px rgba(245,166,35,0.8)' }} />
+                                                <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-amber-500" />
                                             )}
                                             <span className="font-mono text-[8px] text-text-muted uppercase tracking-[0.2em] block mb-2">
                                                 {tc.id === 'ACPM' ? 'ACPM · Diésel' : 'Gasolina Corriente'}
                                             </span>
                                             <span className={`font-display text-[36px] leading-none block transition-colors duration-300 ${
                                                 isActive ? 'text-amber-500' : 'text-text-primary'
-                                            }`} style={isActive ? { textShadow: '0 0 30px rgba(245,166,35,0.25)' } : {}}>
+                                            }`}>
                                                 {p ? formatCOP(Number(p.precioGalon)) : '—'}
                                             </span>
                                             <span className="font-mono text-[8px] text-text-muted block mt-1">por galón</span>
@@ -651,10 +645,6 @@ export function HomePage() {
                   RUTA CON ESTACIONES — Redesigned feature
               ══════════════════════════════════════════ */}
                     <section ref={routeRef} className="relative z-10 overflow-hidden border-t border-border-subtle bg-bg-base py-16 px-6 scroll-section">
-                        {/* Ambient glows */}
-                        <div className="pointer-events-none absolute -top-40 right-1/3 h-80 w-80 rounded-full bg-amber-500/4 blur-3xl scroll-glow" />
-                        <div className="pointer-events-none absolute -bottom-24 left-1/4 h-64 w-64 rounded-full bg-amber-500/3 blur-2xl scroll-glow" />
-
                         <div className="relative max-w-6xl mx-auto">
                             {/* Section header */}
                             <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
@@ -677,10 +667,8 @@ export function HomePage() {
                             {/* Feature card */}
                             <div
                                 onClick={() => navigate('/ruta-economica')}
-                                className="group relative cursor-pointer overflow-hidden rounded-brand border border-amber-500/20 bg-bg-surface transition-all duration-300 hover:border-amber-500/40 hover:shadow-[0_0_40px_rgba(245,166,35,0.06)]"
+                                className="group relative cursor-pointer overflow-hidden rounded-[4px] border border-border-subtle bg-bg-surface transition-all duration-300 hover:border-amber-500/40"
                             >
-                                {/* Top accent line */}
-                                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
 
                                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr]">
                                     {/* ── Left: feature list ── */}
@@ -831,7 +819,7 @@ export function HomePage() {
                                     />
                                 </div>
 
-                                <div className="rounded-brand border border-border-subtle bg-bg-elevated p-4">
+                                <div className="rounded-[4px] border border-border-subtle bg-bg-elevated p-4">
                                     <div className="flex items-center justify-between mb-3">
                                         <span className="text-label text-text-muted">Resumen de cobertura</span>
                                         <Badge variant="amber">{estacionesFiltradas.length} estaciones</Badge>
@@ -873,10 +861,10 @@ export function HomePage() {
                                                 key={est.id}
                                                 onClick={() => setHighlightedStationId(est.id)}
                                                 className={cn(
-                                                    "bg-bg-elevated border rounded-brand p-4 interactive cursor-pointer transition-all scroll-child",
+                                                    "bg-bg-elevated border rounded-[4px] p-4 interactive cursor-pointer transition-all scroll-child",
                                                     highlightedStationId === est.id
-                                                        ? "border-amber-500/50 bg-amber-500/2 shadow-[0_8px_20px_rgba(245,166,35,0.08)]"
-                                                        : "border-border-subtle hover:border-border-strong"
+                                                        ? "border-amber-500 bg-transparent text-white"
+                                                        : "border-border-subtle hover:border-[#444]"
                                                 )}
                                             >
                                                 <div className="flex items-start justify-between mb-2">
@@ -972,7 +960,7 @@ export function HomePage() {
                                 {noticiasMock.map((noticia) => (
                                     <article
                                         key={noticia.id}
-                                        className="bg-bg-surface border border-border-subtle rounded-brand p-5 hover:border-border-strong interactive group cursor-pointer scroll-child"
+                                        className="bg-bg-surface border border-border-subtle rounded-[4px] p-5 hover:border-[#666] interactive group cursor-pointer scroll-child"
                                     >
                                         <div className="flex items-center justify-between mb-3">
                                             <Badge variant="amber">{noticia.tag}</Badge>

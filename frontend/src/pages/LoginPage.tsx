@@ -12,9 +12,9 @@ const Alert = Swal.mixin({
     color: '#E8E8E8',
     confirmButtonColor: '#F5A623',
     customClass: {
-        popup: 'rounded-brand border border-border-strong',
+        popup: 'rounded-[4px] border border-[#222]',
         title: 'text-h2 font-heading',
-        confirmButton: 'rounded-brand px-6 py-2 text-[13px] font-sans font-medium uppercase tracking-wider',
+        confirmButton: 'rounded-[4px] px-6 py-2 text-[13px] font-sans font-medium uppercase tracking-wider text-black',
     }
 });
 
@@ -96,21 +96,15 @@ export function LoginPage() {
             <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden items-center justify-center">
                 {/* Grid pattern background */}
                 <div
-                    className="absolute inset-0 opacity-[0.03]"
+                    className="absolute inset-0 opacity-[0.2]"
                     style={{
                         backgroundImage: `
-              linear-gradient(var(--color-amber-500) 1px, transparent 1px),
-              linear-gradient(90deg, var(--color-amber-500) 1px, transparent 1px)
+              linear-gradient(#222 1px, transparent 1px),
+              linear-gradient(90deg, #222 1px, transparent 1px)
             `,
                         backgroundSize: '60px 60px',
-                    }}
-                />
-
-                {/* Radial glow */}
-                <div
-                    className="absolute inset-0"
-                    style={{
-                        background: 'radial-gradient(ellipse at center, rgba(245,166,35,0.06) 0%, transparent 70%)',
+                        mask: 'radial-gradient(ellipse at center, black 0%, transparent 70%)',
+                        WebkitMask: 'radial-gradient(ellipse at center, black 0%, transparent 70%)',
                     }}
                 />
 
@@ -156,7 +150,7 @@ export function LoginPage() {
                         {['Control', 'Trazabilidad', 'Normativa', 'Reportes'].map((tag) => (
                             <span
                                 key={tag}
-                                className="text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-[2px] bg-amber-dim text-amber-500/70 border border-amber-500/10"
+                                className="text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded-[2px] bg-bg-surface text-text-muted border border-[#333]"
                             >
                                 {tag}
                             </span>
@@ -202,7 +196,7 @@ export function LoginPage() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="usuario@correo.com"
                                 required
-                                className="w-full px-3.5 py-2.5 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive"
+                                className="w-full px-3.5 py-2.5 bg-bg-elevated border border-border-default rounded-[4px] text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive focus:border-amber-500 focus:outline-none transition-colors"
                             />
                         </div>
 
@@ -217,7 +211,7 @@ export function LoginPage() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
                                     required
-                                    className="w-full px-3.5 py-2.5 pr-10 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive"
+                                    className="w-full px-3.5 py-2.5 pr-10 bg-bg-elevated border border-border-default rounded-[4px] text-text-primary text-[14px] font-sans placeholder:text-text-muted interactive focus:border-amber-500 focus:outline-none transition-colors"
                                 />
                                 <button
                                     type="button"
@@ -233,7 +227,7 @@ export function LoginPage() {
 
                         {/* Error */}
                         {(error || oauthError) && (
-                            <div className="px-3 py-2 bg-red-dim border border-red-500/30 rounded-brand">
+                            <div className="px-3 py-2 bg-transparent border border-red-500 rounded-[4px]">
                                 <p className="text-[12px] font-mono text-red-500">{error || oauthError}</p>
                             </div>
                         )}
