@@ -52,6 +52,9 @@ export function StationOperationsPage() {
     const [submitting, setSubmitting] = useState(false);
     const [pendingDeliveriesLoading, setPendingDeliveriesLoading] = useState(false);
     const [pricePreview, setPricePreview] = useState<PrecioActual | null>(null);
+    const [pricesData, setPricesData] = useState<{ particular: PrecioActual[], publico: PrecioActual[] }>({ particular: [], publico: [] });
+    const [pricesLoading, setPricesLoading] = useState(false);
+    const [activeTarifa, setActiveTarifa] = useState<'PARTICULAR' | 'PUBLICO'>('PARTICULAR');
     const [_priceError, setPriceError] = useState<string | null>(null);
     const [pendingDeliveries, setPendingDeliveries] = useState<EntregaDistribuidor[]>([]);
     const [confirmDeliveryOpen, setConfirmDeliveryOpen] = useState(false);
@@ -211,6 +214,53 @@ export function StationOperationsPage() {
             cancelled = true;
         };
     }, [form.tipoServicio, selectedTanque, zoneId]);
+
+    useEffect(() => {
+        let cancelled = false;
+        async function fetchAllPrices() {
+            if (!zoneId || tanques.length === 0) {
+                setPricesData({ particular: [], publico: [] });
+                return;
+            }
+            const uniqueFuels = Array.from(new Set(tanques.map(t => t.tipoCombustible)));
+            try {
+                setPricesLoading(true);
+                const promisesParticular = uniqueFuels.map(fuel => 
+                    preciosService.consultarActual({ zonaId: zoneId, tipoCombustible: fuel, tipoServicio: 'PARTICULAR' }).catch(() => null)
+                );
+                const promisesPublico = uniqueFuels.map(fuel => 
+                    preciosService.consultarActual({ zonaId: zoneId, tipoCombustible: fuel, tipoServicio: 'PUBLICO' }).catch(() => null)
+                );
+                
+                const [resParticular, resPublico] = await Promise.all([
+                    Promise.all(promisesParticular),
+                    Promise.all(promisesPublico)
+                ]);
+                
+                if (!cancelled) {
+                    setPricesData({
+                        particular: resParticular.filter(Boolean) as PrecioActual[],
+                        publico: resPublico.filter(Boolean) as PrecioActual[],
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching all prices', error);
+            } finally {
+                if (!cancelled) {
+                    setPricesLoading(false);
+                }
+            }
+        }
+        fetchAllPrices();
+        return () => { cancelled = true; };
+    }, [zoneId, tanques]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setActiveTarifa(prev => prev === 'PARTICULAR' ? 'PUBLICO' : 'PARTICULAR');
+        }, 8000);
+        return () => clearInterval(interval);
+    }, []);
 
     const unitPrice = Number(pricePreview?.precioGalon ?? 0);
     const subsidy = Number(pricePreview?.subsidioGalon ?? 0);
@@ -662,156 +712,257 @@ export function StationOperationsPage() {
                     </form>
                 </Card>
 
-                {/* Sidebar */}
-                <div className="space-y-4">
-
-                    {/* Entregas pendientes */}
-                    <Card className="rounded-[22px] border-white/10 bg-white/[0.02] backdrop-blur-md">
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2.5">
-                                <div className="rounded-[12px] border border-emerald-500/20 bg-emerald-500/8 p-2.5 text-emerald-400">
-                                    <Truck size={15} />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-mono uppercase tracking-wider text-white/35">Recepción</p>
-                                    <h3 className="text-[14px] font-semibold text-white">Entregas pendientes</h3>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setDirectEntryForm({ tanqueId: tanques[0]?.id ?? '', galones: '0', precioUnitario: '0', observaciones: '' });
-                                    setDirectEntryOpen(true);
-                                }}
-                                className="flex items-center gap-1 rounded-[10px] border border-emerald-500/22 bg-emerald-500/[0.06] px-2.5 py-1.5 text-[11px] font-medium text-emerald-300 transition-colors hover:bg-emerald-500/12 cursor-pointer"
-                            >
-                                <Plus size={12} />
-                                Entrada directa
-                            </button>
+                {/* ── Totem Digital de Precios ── */}
+                {/* ── Estructura Completa Totem Digital ── */}
+                <div className="flex flex-col items-center self-stretch h-full w-full max-w-[380px] mx-auto">
+                    {/* Cuerpo Principal del Totem */}
+                    <div className="w-full rounded-[24px] border-[4px] border-[#1a1c23] bg-[#050505] shadow-2xl overflow-hidden flex flex-col relative z-20 shrink-0">
+                        {/* Header Totem */}
+                        <div className="bg-[#0a0a0a] py-5 px-6 border-b border-[#1a1c23] flex flex-col items-center justify-center z-10 relative">
+                            <span className="text-white/40 text-[10px] font-sans tracking-[0.3em] uppercase leading-none mb-1">easy</span>
+                            <span className="text-white/80 font-display text-[26px] tracking-[0.15em] leading-none">DIESEL</span>
                         </div>
 
-                        <div className="mt-4 space-y-2.5">
-                            {pendingDeliveriesLoading && (
-                                <div className="rounded-[12px] bg-white/[0.03] px-4 py-4 text-[12px] text-white/45 animate-pulse">
-                                    Cargando entregas…
+                        {/* Modulos de Precios (Body Totem) */}
+                        <div className="p-6 flex flex-col gap-6 justify-center z-10">
+                            {pricesLoading ? (
+                                <div className="flex flex-col items-center justify-center p-10 text-white/40 gap-3">
+                                    <Loader2 size={32} className="animate-spin" />
+                                    <span className="text-[10px] font-mono tracking-[0.3em] uppercase">Conectando...</span>
                                 </div>
-                            )}
-                            {!pendingDeliveriesLoading && pendingDeliveries.length === 0 && (
-                                <div className="rounded-[12px] border border-emerald-500/15 bg-emerald-500/[0.04] px-4 py-3 text-[12px] text-emerald-200/70">
-                                    Sin entregas pendientes para confirmar.
-                                </div>
-                            )}
-                            {pendingDeliveries.map((delivery) => (
-                                <div key={delivery.id} className="rounded-[14px] border border-white/7 bg-white/[0.02] px-4 py-3.5">
-                                    <div className="flex items-start justify-between gap-2">
-                                        <div className="min-w-0">
-                                            <p className="text-[13px] font-semibold text-white truncate">Rem. {delivery.numeroRemision}</p>
-                                            <p className="mt-0.5 text-[11px] text-white/45 truncate">
-                                                {delivery.distribuidor?.nombre || 'Distribuidor'} · {delivery.tipoCombustible} · {formatGallons(Number(delivery.galones))} gal
-                                            </p>
+                            ) : pricesData.particular.length > 0 || pricesData.publico.length > 0 ? (
+                                Array.from(new Set(tanques.map(t => t.tipoCombustible))).map((fuel, idx) => {
+                                    const particularPrice = pricesData.particular.find(p => p.tipoCombustible === fuel);
+                                    const publicoPrice = pricesData.publico.find(p => p.tipoCombustible === fuel);
+                                    
+                                    const valParticular = particularPrice ? Number(particularPrice.precioGalon) + Number(particularPrice.subsidioGalon) : 0;
+                                    const valPublico = publicoPrice ? Number(publicoPrice.precioGalon) + Number(publicoPrice.subsidioGalon) : 0;
+                                    
+                                    const isDiesel = fuel.toUpperCase().includes('DIESEL');
+                                    // Particular colors: Red or Amber
+                                    const colorPart = isDiesel ? 'text-[#F5A623] drop-shadow-[0_0_12px_rgba(245,166,35,0.8)]' : 'text-[#ef4444] drop-shadow-[0_0_12px_rgba(239,68,68,0.8)]';
+                                    // Publico colors: Cyan or Emerald
+                                    const colorPub = isDiesel ? 'text-[#06b6d4] drop-shadow-[0_0_12px_rgba(6,182,212,0.8)]' : 'text-[#10B981] drop-shadow-[0_0_12px_rgba(16,185,129,0.8)]';
+
+                                    return (
+                                        <div key={idx} className="bg-[#0a0a0a] border border-[#1a1c23] rounded-2xl p-6 flex flex-col items-center shadow-inner relative overflow-hidden group">
+                                            <h4 className="text-[13px] font-bold tracking-[0.25em] text-[#e2e8f0]/80 uppercase mb-4 relative z-10">
+                                                {fuel.replace('_', ' ')}
+                                            </h4>
+                                            
+                                            <div className="relative h-[56px] w-full flex justify-center items-center">
+                                                {/* Particular */}
+                                                <div className={`absolute transition-opacity duration-[1500ms] ease-in-out ${activeTarifa === 'PARTICULAR' ? 'opacity-100' : 'opacity-0'} ${colorPart}`}>
+                                                    <div className="font-mono text-[48px] sm:text-[56px] leading-none font-bold tracking-tight text-center">
+                                                        {valParticular ? valParticular.toLocaleString('es-CO') : '----'}
+                                                    </div>
+                                                </div>
+                                                {/* Publico */}
+                                                <div className={`absolute transition-opacity duration-[1500ms] ease-in-out ${activeTarifa === 'PUBLICO' ? 'opacity-100' : 'opacity-0'} ${colorPub}`}>
+                                                     <div className="font-mono text-[48px] sm:text-[56px] leading-none font-bold tracking-tight text-center">
+                                                        {valPublico ? valPublico.toLocaleString('es-CO') : '----'}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <Badge variant="blue" className="text-[10px] shrink-0">Pendiente</Badge>
-                                    </div>
-                                    <div className="mt-3 flex items-center justify-between gap-2">
-                                        <p className="text-[10px] text-white/35">
-                                            {new Date(delivery.fechaEntrega).toLocaleDateString('es-CO')}
-                                        </p>
-                                        <Button type="button" variant="ghost" onClick={() => openConfirmDelivery(delivery)} className="text-[11px] px-2.5 py-1">
-                                            Confirmar
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </Card>
-
-                    {/* Checklist + Cierre (merged card) */}
-                    <Card className="rounded-[22px] border-white/10 bg-white/[0.02] backdrop-blur-md">
-                        <div className="flex items-center gap-2.5 mb-4">
-                            <div className="rounded-[12px] border border-white/8 bg-white/4 p-2.5 text-amber-400">
-                                <TimerReset size={15} />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-mono uppercase tracking-wider text-white/35">Foco operativo</p>
-                                <h3 className="text-[14px] font-semibold text-white">Checklist de turno</h3>
-                            </div>
-                        </div>
-                        <ul className="space-y-2">
-                            {[
-                                'Verificar placa y tipo de servicio antes de confirmar.',
-                                'Despachar solo desde el tanque correcto.',
-                                'Escalar si un tanque cae por debajo del mínimo.',
-                            ].map((item, i) => (
-                                <li key={i} className="flex items-start gap-2.5 text-[12px] text-white/55">
-                                    <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500/50 mt-1.5" />
-                                    {item}
-                                </li>
-                            ))}
-                        </ul>
-
-                        <div className="mt-4 border-t border-white/5 pt-4">
-                            <div className="flex items-center gap-2.5 mb-2">
-                                <div className="rounded-[12px] border border-amber-500/18 bg-amber-500/6 p-2.5 text-amber-400">
-                                    <ClipboardList size={15} />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-mono uppercase tracking-wider text-amber-500/50">Operativo</p>
-                                    <h3 className="text-[14px] font-semibold text-white">Cierre de turno</h3>
-                                </div>
-                            </div>
-                            <p className="text-[11px] text-white/40 leading-4 mb-3">
-                                Compara nivel físico vs. inventario teórico y registra la diferencia.
-                            </p>
-                            <button
-                                type="button"
-                                className="w-full rounded-[12px] border border-amber-500/22 bg-amber-500/[0.06] px-4 py-2.5 text-[12px] font-medium text-amber-300 transition-colors hover:bg-amber-500/12 cursor-pointer"
-                                onClick={() => {
-                                    setCierreResult(null);
-                                    setCierreForm({
-                                        tanqueId: tanques[0]?.id ?? '',
-                                        nivelFisico: String(Number(tanques[0]?.nivelActual ?? '0').toFixed(2)),
-                                        observaciones: '',
-                                    });
-                                    setCierreModalOpen(true);
-                                }}
-                            >
-                                Iniciar cierre de turno
-                            </button>
-                        </div>
-                    </Card>
-
-                    {/* Tank status */}
-                    <Card className="rounded-[22px] border-white/10 bg-white/[0.02] backdrop-blur-md">
-                        <div className="flex items-center gap-2.5 mb-4">
-                            <div className="rounded-[12px] border border-sky-500/18 bg-sky-500/6 p-2.5 text-sky-400">
-                                <Fuel size={15} />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-mono uppercase tracking-wider text-white/35">Señales de riesgo</p>
-                                <h3 className="text-[14px] font-semibold text-white">Estado de tanques</h3>
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            {loading && (
-                                <div className="rounded-[12px] bg-white/[0.03] px-4 py-3 text-[12px] text-white/40 animate-pulse">Cargando…</div>
-                            )}
-                            {!loading && lowTanks.length === 0 && (
-                                <div className="rounded-[12px] border border-emerald-500/15 bg-emerald-500/[0.04] px-3.5 py-2.5 text-[12px] text-emerald-200/70">
-                                    Todos los tanques sobre el mínimo operativo.
+                                    );
+                                })
+                            ) : (
+                                <div className="text-center text-red-500/40 font-mono text-[14px] tracking-[0.3em] uppercase animate-pulse border border-red-500/10 p-6 rounded-2xl">
+                                    FUERA DE LÍNEA
                                 </div>
                             )}
-                            {lowTanks.map((tanque) => (
-                                <div key={tanque.id} className="flex items-center justify-between gap-3 rounded-[12px] border border-red-500/18 bg-red-500/[0.04] px-3.5 py-2.5">
-                                    <div>
-                                        <p className="text-[12px] font-semibold text-white">{tanque.nombre}</p>
-                                        <p className="text-[10px] text-white/40 mt-0.5">{formatGallons(Number(tanque.nivelActual))} / {formatGallons(Number(tanque.nivelMinimo))} gal mín.</p>
-                                    </div>
-                                    <Badge variant="red" className="text-[10px] shrink-0">Crítico</Badge>
-                                </div>
-                            ))}
                         </div>
-                    </Card>
+
+                        {/* Footer Totem: Información de Decreto/Tarifa */}
+                        <div className="bg-[#0a0a0a] border-t border-[#1a1c23] z-10 relative h-[80px] flex items-center justify-center overflow-hidden shrink-0">
+                            <div className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-[1500ms] ${activeTarifa === 'PARTICULAR' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+                                <span className="text-[11px] font-mono text-[#ef4444]/80 tracking-[0.2em] uppercase flex items-center justify-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#ef4444] shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse" />
+                                    TARIFA PARTICULAR
+                                </span>
+                                <span className="text-[10px] font-mono text-white/30 mt-1.5 uppercase tracking-widest">
+                                    {pricesData.particular[0]?.decreto.numero ? `Decreto ${pricesData.particular[0]?.decreto.numero}` : 'PRECIO ESTÁNDAR'}
+                                </span>
+                            </div>
+                            
+                            <div className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-[1500ms] ${activeTarifa === 'PUBLICO' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+                                <span className="text-[11px] font-mono text-[#10B981]/80 tracking-[0.2em] uppercase flex items-center justify-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" />
+                                    TARIFA PUBLICO (SUB)
+                                </span>
+                                <span className="text-[10px] font-mono text-[#10B981]/40 mt-1.5 uppercase tracking-widest">
+                                    {pricesData.publico[0]?.decreto.numero ? `Decreto ${pricesData.publico[0]?.decreto.numero}` : 'APLICA SUBSIDIO'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Poste / Soporte Central del Totem */}
+                    <div className="w-[120px] flex-1 min-h-[40px] bg-gradient-to-r from-[#050505] via-[#111318] to-[#050505] border-x-2 border-[#0a0a0a] z-10 relative shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] -mt-2">
+                        {/* Detalles del poste */}
+                        <div className="absolute inset-x-0 top-6 h-px bg-black" />
+                        <div className="absolute inset-x-0 top-12 h-px bg-black" />
+                    </div>
+                    
+                    {/* Base Cimiento del Totem */}
+                    <div className="w-full max-w-[280px] h-[30px] bg-gradient-to-b from-[#111318] to-[#050505] rounded-t-[12px] border-t-2 border-x-2 border-[#1a1c23] shadow-[0_10px_30px_rgba(0,0,0,0.8)] z-20 relative flex justify-center -mt-1 shrink-0">
+                        {/* Remache/Detalle de la base */}
+                        <div className="w-[200px] h-[6px] bg-[#0a0a0a] rounded-b-md mt-0 shadow-inner" />
+                    </div>
                 </div>
+            </div>
+
+            {/* ── Componentes Operativos Reubicados (Moved Sidebar) ── */}
+            <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
+
+                {/* Entregas pendientes */}
+                <Card className="rounded-[22px] border-white/10 bg-white/[0.02] backdrop-blur-md h-full flex flex-col">
+                    <div className="flex items-center justify-between gap-3 shrink-0">
+                        <div className="flex items-center gap-2.5">
+                            <div className="rounded-[12px] border border-emerald-500/20 bg-emerald-500/8 p-2.5 text-emerald-400">
+                                <Truck size={15} />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-mono uppercase tracking-wider text-white/35">Recepción</p>
+                                <h3 className="text-[14px] font-semibold text-white">Entregas pendientes</h3>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setDirectEntryForm({ tanqueId: tanques[0]?.id ?? '', galones: '0', precioUnitario: '0', observaciones: '' });
+                                setDirectEntryOpen(true);
+                            }}
+                            className="flex items-center gap-1 rounded-[10px] border border-emerald-500/22 bg-emerald-500/[0.06] px-2.5 py-1.5 text-[11px] font-medium text-emerald-300 transition-colors hover:bg-emerald-500/12 cursor-pointer shrink-0"
+                        >
+                            <Plus size={12} />
+                            Entrada directa
+                        </button>
+                    </div>
+
+                    <div className="mt-4 space-y-2.5 flex-1 overflow-y-auto">
+                        {pendingDeliveriesLoading && (
+                            <div className="rounded-[12px] bg-white/[0.03] px-4 py-4 text-[12px] text-white/45 animate-pulse">
+                                Cargando entregas…
+                            </div>
+                        )}
+                        {!pendingDeliveriesLoading && pendingDeliveries.length === 0 && (
+                            <div className="rounded-[12px] border border-emerald-500/15 bg-emerald-500/[0.04] px-4 py-3 text-[12px] text-emerald-200/70">
+                                Sin entregas pendientes para confirmar.
+                            </div>
+                        )}
+                        {pendingDeliveries.map((delivery) => (
+                            <div key={delivery.id} className="rounded-[14px] border border-white/7 bg-white/[0.02] px-4 py-3.5">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                        <p className="text-[13px] font-semibold text-white truncate">Rem. {delivery.numeroRemision}</p>
+                                        <p className="mt-0.5 text-[11px] text-white/45 truncate">
+                                            {delivery.distribuidor?.nombre || 'Distribuidor'} · {delivery.tipoCombustible} · {formatGallons(Number(delivery.galones))} gal
+                                        </p>
+                                    </div>
+                                    <Badge variant="blue" className="text-[10px] shrink-0">Pendiente</Badge>
+                                </div>
+                                <div className="mt-3 flex items-center justify-between gap-2">
+                                    <p className="text-[10px] text-white/35">
+                                        {new Date(delivery.fechaEntrega).toLocaleDateString('es-CO')}
+                                    </p>
+                                    <Button type="button" variant="ghost" onClick={() => openConfirmDelivery(delivery)} className="text-[11px] px-2.5 py-1">
+                                        Confirmar
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+
+                {/* Checklist + Cierre (merged card) */}
+                <Card className="rounded-[22px] border-white/10 bg-white/[0.02] backdrop-blur-md h-full flex flex-col">
+                    <div className="flex items-center gap-2.5 mb-4 shrink-0">
+                        <div className="rounded-[12px] border border-white/8 bg-white/4 p-2.5 text-amber-400">
+                            <TimerReset size={15} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-mono uppercase tracking-wider text-white/35">Foco operativo</p>
+                            <h3 className="text-[14px] font-semibold text-white">Checklist de turno</h3>
+                        </div>
+                    </div>
+                    <ul className="space-y-2 flex-1">
+                        {[
+                            'Verificar placa y tipo de servicio antes de confirmar.',
+                            'Despachar solo desde el tanque correcto.',
+                            'Escalar si un tanque cae por debajo del mínimo.',
+                        ].map((item, i) => (
+                            <li key={i} className="flex items-start gap-2.5 text-[12px] text-white/55">
+                                <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500/50 mt-1.5" />
+                                {item}
+                            </li>
+                        ))}
+                    </ul>
+
+                    <div className="mt-4 border-t border-white/5 pt-4 shrink-0">
+                        <div className="flex items-center gap-2.5 mb-2">
+                            <div className="rounded-[12px] border border-amber-500/18 bg-amber-500/6 p-2.5 text-amber-400">
+                                <ClipboardList size={15} />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-mono uppercase tracking-wider text-amber-500/50">Operativo</p>
+                                <h3 className="text-[14px] font-semibold text-white">Cierre de turno</h3>
+                            </div>
+                        </div>
+                        <p className="text-[11px] text-white/40 leading-4 mb-3">
+                            Compara nivel físico vs. inventario teórico y registra la diferencia.
+                        </p>
+                        <button
+                            type="button"
+                            className="w-full rounded-[12px] border border-amber-500/22 bg-amber-500/[0.06] px-4 py-2.5 text-[12px] font-medium text-amber-300 transition-colors hover:bg-amber-500/12 cursor-pointer"
+                            onClick={() => {
+                                setCierreResult(null);
+                                setCierreForm({
+                                    tanqueId: tanques[0]?.id ?? '',
+                                    nivelFisico: String(Number(tanques[0]?.nivelActual ?? '0').toFixed(2)),
+                                    observaciones: '',
+                                });
+                                setCierreModalOpen(true);
+                            }}
+                        >
+                            Iniciar cierre de turno
+                        </button>
+                    </div>
+                </Card>
+
+                {/* Tank status */}
+                <Card className="rounded-[22px] border-white/10 bg-white/[0.02] backdrop-blur-md h-full flex flex-col">
+                    <div className="flex items-center gap-2.5 mb-4 shrink-0">
+                        <div className="rounded-[12px] border border-sky-500/18 bg-sky-500/6 p-2.5 text-sky-400">
+                            <Fuel size={15} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-mono uppercase tracking-wider text-white/35">Señales de riesgo</p>
+                            <h3 className="text-[14px] font-semibold text-white">Estado de tanques</h3>
+                        </div>
+                    </div>
+                    <div className="space-y-2 flex-1 overflow-y-auto">
+                        {loading && (
+                            <div className="rounded-[12px] bg-white/[0.03] px-4 py-3 text-[12px] text-white/40 animate-pulse">Cargando…</div>
+                        )}
+                        {!loading && lowTanks.length === 0 && (
+                            <div className="rounded-[12px] border border-emerald-500/15 bg-emerald-500/[0.04] px-3.5 py-2.5 text-[12px] text-emerald-200/70 h-full flex items-center">
+                                Todos los tanques sobre el mínimo operativo.
+                            </div>
+                        )}
+                        {lowTanks.map((tanque) => (
+                            <div key={tanque.id} className="flex items-center justify-between gap-3 rounded-[12px] border border-red-500/18 bg-red-500/[0.04] px-3.5 py-2.5">
+                                <div>
+                                    <p className="text-[12px] font-semibold text-white">{tanque.nombre}</p>
+                                    <p className="text-[10px] text-white/40 mt-0.5">{formatGallons(Number(tanque.nivelActual))} / {formatGallons(Number(tanque.nivelMinimo))} gal mín.</p>
+                                </div>
+                                <Badge variant="red" className="text-[10px] shrink-0">Crítico</Badge>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+
             </div>
 
 
