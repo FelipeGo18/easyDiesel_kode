@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { BellRing, ClipboardList, Fuel, MapPinned, Plus, Receipt, ShieldCheck, TimerReset, Truck } from 'lucide-react';
+import { BellRing, ClipboardList, Fuel, MapPinned, Minus, Plus, Receipt, ShieldCheck, TimerReset, Truck } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -56,10 +56,7 @@ export function StationOperationsPage() {
     const [pendingDeliveries, setPendingDeliveries] = useState<EntregaDistribuidor[]>([]);
     const [confirmDeliveryOpen, setConfirmDeliveryOpen] = useState(false);
     const [selectedDelivery, setSelectedDelivery] = useState<EntregaDistribuidor | null>(null);
-    const [confirmReceiptForm, setConfirmReceiptForm] = useState({
-        tanqueId: '',
-        galonesRecibidos: '0',
-    });
+    const [distribuciones, setDistribuciones] = useState<{ tanqueId: string; galones: string }[]>([{ tanqueId: '', galones: '0' }]);
     const [directEntryOpen, setDirectEntryOpen] = useState(false);
     const [directEntryForm, setDirectEntryForm] = useState({
         tanqueId: '',
@@ -191,8 +188,8 @@ export function StationOperationsPage() {
     const lowTanks = tanques.filter((tanque) => Number(tanque.nivelActual) <= Number(tanque.nivelMinimo));
     const totalFuel = tanques.reduce((total, tanque) => total + Number(tanque.nivelActual), 0);
     const selectedServiceMeta = tipoServicioOptions.find((option) => option.value === form.tipoServicio);
-    const receivedGallons = Number(confirmReceiptForm.galonesRecibidos) || 0;
-    const selectedDeliveryTank = tanques.find((tanque) => tanque.id === confirmReceiptForm.tanqueId) ?? null;
+    const totalAsignado = distribuciones.reduce((s, d) => s + (Number(d.galones) || 0), 0);
+    const esperado = Number(selectedDelivery?.galones || 0);
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -242,13 +239,52 @@ export function StationOperationsPage() {
         }
     };
 
+    const compatibleTanques = useMemo(
+        () => selectedDelivery ? tanques.filter(t => t.tipoCombustible === selectedDelivery.tipoCombustible) : [],
+        [selectedDelivery, tanques]
+    );
+
     const openConfirmDelivery = (delivery: EntregaDistribuidor) => {
         setSelectedDelivery(delivery);
-        setConfirmReceiptForm({
-            tanqueId: delivery.tanqueId ?? '',
-            galonesRecibidos: String(Number(delivery.galones) || 0),
-        });
+        const firstCompatible = tanques.find(t => t.tipoCombustible === delivery.tipoCombustible);
+        setDistribuciones([{
+            tanqueId: delivery.tanqueId ?? firstCompatible?.id ?? '',
+            galones: String(Number(delivery.galones) || 0),
+        }]);
         setConfirmDeliveryOpen(true);
+    };
+
+    const addDistribucion = () => {
+        const usedIds = new Set(distribuciones.map(d => d.tanqueId));
+        const nextTank = compatibleTanques.find(t => !usedIds.has(t.id));
+        setDistribuciones(prev => [...prev, { tanqueId: nextTank?.id ?? '', galones: '0' }]);
+    };
+
+    const removeDistribucion = (index: number) => {
+        setDistribuciones(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const updateDistribucion = (index: number, field: 'tanqueId' | 'galones', value: string) => {
+        setDistribuciones(prev => {
+            const next = prev.map((d, i) => i === index ? { ...d, [field]: value } : d);
+            // Auto-redistribute remainder when galones change
+            if (field === 'galones' && next.length > 1 && esperado > 0) {
+                const changed = Number(value) || 0;
+                const otherIndexes = next.map((_, i) => i).filter(i => i !== index);
+                const remainder = Math.max(0, esperado - changed);
+                // If only 1 other tank, assign all remainder to it
+                if (otherIndexes.length === 1) {
+                    next[otherIndexes[0]] = { ...next[otherIndexes[0]], galones: String(Number(remainder.toFixed(2))) };
+                } else {
+                    // Split remainder evenly across other tanks
+                    const perTank = Number((remainder / otherIndexes.length).toFixed(2));
+                    otherIndexes.forEach(i => {
+                        next[i] = { ...next[i], galones: String(perTank) };
+                    });
+                }
+            }
+            return next;
+        });
     };
 
     const handleConfirmDelivery = async (event: FormEvent<HTMLFormElement>) => {
@@ -259,25 +295,24 @@ export function StationOperationsPage() {
             return;
         }
 
-        if (!confirmReceiptForm.tanqueId) {
-            toast.error('Selecciona el tanque de recepción.');
+        const parsed = distribuciones.map(d => ({ tanqueId: d.tanqueId, galones: Number(d.galones) || 0 }));
+        if (parsed.some(d => !d.tanqueId)) {
+            toast.error('Selecciona un tanque para cada distribución.');
             return;
         }
-
-        if (receivedGallons <= 0) {
-            toast.error('Ingresa una cantidad recibida mayor a 0.');
+        if (parsed.some(d => d.galones <= 0)) {
+            toast.error('Ingresa una cantidad mayor a 0 para cada tanque.');
             return;
         }
 
         setSubmitting(true);
         try {
-            const result = await inventarioService.confirmarEntrega(selectedDelivery.id, {
+            const result = await inventarioService.confirmarEntregaMulti(selectedDelivery.id, {
                 estacionId: stationId,
-                tanqueId: confirmReceiptForm.tanqueId,
-                galonesRecibidos: receivedGallons,
+                distribuciones: parsed,
             });
 
-            toast.success(`Entrega confirmada por ${formatGallons(Number(result.transaccion.galones))} gal`);
+            toast.success(`Entrega confirmada: ${formatGallons(result.totalGalonesRecibidos)} gal distribuidos en ${result.transacciones.length} tanque(s)`);
             if (result.alerta) {
                 toast.error(result.alerta);
             }
@@ -850,30 +885,90 @@ export function StationOperationsPage() {
             >
                 <form onSubmit={handleConfirmDelivery} className="space-y-4">
                     <div className="rounded-brand border border-border-subtle bg-bg-elevated px-3 py-3 text-[12px] text-text-secondary">
-                        Esperado: {formatGallons(Number(selectedDelivery?.galones || 0))} gal · {selectedDelivery?.tipoCombustible || 'Combustible'}
+                        Esperado: {formatGallons(esperado)} gal · {selectedDelivery?.tipoCombustible || 'Combustible'}
                     </div>
 
-                    <SelectField
-                        label="Tanque receptor"
-                        value={confirmReceiptForm.tanqueId}
-                        onChange={(event) => setConfirmReceiptForm((current) => ({ ...current, tanqueId: event.target.value }))}
-                        options={tanques
-                            .filter((tanque) => !selectedDelivery || tanque.tipoCombustible === selectedDelivery.tipoCombustible)
-                            .map((tanque) => ({ value: tanque.id, label: `${tanque.nombre} · ${tanque.tipoCombustible}` }))}
-                    />
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-white/50">Distribución por tanque</p>
+                            {compatibleTanques.length > distribuciones.length && (
+                                <button
+                                    type="button"
+                                    onClick={addDistribucion}
+                                    className="flex items-center gap-1 rounded-[10px] border border-emerald-500/25 bg-emerald-500/[0.08] px-2.5 py-1 text-[11px] font-medium text-emerald-300 transition-colors hover:bg-emerald-500/[0.14]"
+                                >
+                                    <Plus size={12} /> Agregar tanque
+                                </button>
+                            )}
+                        </div>
 
-                    <InputField
-                        label="Galones recibidos"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={confirmReceiptForm.galonesRecibidos}
-                        onChange={(event) => setConfirmReceiptForm((current) => ({ ...current, galonesRecibidos: event.target.value }))}
-                        required
-                    />
+                        {distribuciones.map((dist, idx) => {
+                            const tank = tanques.find(t => t.id === dist.tanqueId);
+                            const gals = Number(dist.galones) || 0;
+                            const projected = tank ? Number(tank.nivelActual) + gals : 0;
+                            const cap = tank ? Number(tank.capacidadGalones) : 0;
+                            const over = tank && projected > cap;
 
-                    <div className="rounded-brand border border-border-subtle bg-bg-elevated px-3 py-3 text-[12px] text-text-secondary">
-                        Nivel proyectado del tanque: {selectedDeliveryTank ? `${formatGallons(Number(selectedDeliveryTank.nivelActual) + receivedGallons)} gal` : 'Selecciona un tanque'}
+                            return (
+                                <div key={idx} className="rounded-[18px] border border-white/8 bg-white/[0.03] p-3 space-y-3">
+                                    <div className="flex items-start gap-2">
+                                        <div className="flex-1">
+                                            <SelectField
+                                                label={`Tanque ${idx + 1}`}
+                                                value={dist.tanqueId}
+                                                onChange={(e) => updateDistribucion(idx, 'tanqueId', e.target.value)}
+                                                options={compatibleTanques.map(t => ({
+                                                    value: t.id,
+                                                    label: `${t.nombre} · ${formatGallons(Number(t.nivelActual))} / ${formatGallons(Number(t.capacidadGalones))} gal`,
+                                                }))}
+                                            />
+                                        </div>
+                                        <div className="w-32">
+                                            <InputField
+                                                label="Galones"
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                value={dist.galones}
+                                                onChange={(e) => updateDistribucion(idx, 'galones', e.target.value)}
+                                                required
+                                            />
+                                        </div>
+                                        {distribuciones.length > 1 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => removeDistribucion(idx)}
+                                                className="mt-6 rounded-[8px] border border-red-500/25 bg-red-500/[0.08] p-1.5 text-red-400 transition-colors hover:bg-red-500/[0.16]"
+                                            >
+                                                <Minus size={14} />
+                                            </button>
+                                        )}
+                                    </div>
+                                    {tank && gals > 0 && (
+                                        <div className={`rounded-[10px] border px-2.5 py-1.5 text-[11px] ${
+                                            over
+                                                ? 'border-red-500/25 bg-red-500/[0.07] text-red-300'
+                                                : 'border-white/8 bg-white/[0.03] text-white/55'
+                                        }`}>
+                                            Nivel: {formatGallons(Number(tank.nivelActual))} → {formatGallons(projected)} / {formatGallons(cap)} gal
+                                            {over && ' · Excede capacidad'}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className={`rounded-brand border px-3 py-3 text-[12px] ${
+                        Math.abs(totalAsignado - esperado) < 0.01
+                            ? 'border-emerald-500/25 bg-emerald-500/[0.07] text-emerald-300'
+                            : totalAsignado > esperado
+                                ? 'border-amber-500/25 bg-amber-500/[0.07] text-amber-300'
+                                : 'border-border-subtle bg-bg-elevated text-text-secondary'
+                    }`}>
+                        Total asignado: {formatGallons(totalAsignado)} / {formatGallons(esperado)} gal
+                        {totalAsignado > esperado && ' (sobrepasa lo esperado)'}
+                        {totalAsignado < esperado && totalAsignado > 0 && ` (faltan ${formatGallons(esperado - totalAsignado)} gal)`}
                     </div>
 
                     <div className="flex justify-end gap-2 pt-2">
@@ -883,7 +978,7 @@ export function StationOperationsPage() {
                         }}>
                             Cancelar
                         </Button>
-                        <Button type="submit" isLoading={submitting}>
+                        <Button type="submit" isLoading={submitting} disabled={totalAsignado <= 0}>
                             Confirmar entrega
                         </Button>
                     </div>

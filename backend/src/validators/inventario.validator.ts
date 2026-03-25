@@ -56,3 +56,14 @@ export const entradaDirectaSchema = z.object({
 });
 
 export type EntradaDirectaInput = z.infer<typeof entradaDirectaSchema>;
+
+export const confirmarEntregaMultiTanqueSchema = z.object({
+    entregaId: z.string().uuid('ID de entrega inválido'),
+    estacionId: z.string().uuid('ID de estación inválido'),
+    distribuciones: z.array(z.object({
+        tanqueId: z.string().min(1, 'ID de tanque requerido'),
+        galones: z.number().positive('La cantidad de galones debe ser mayor a 0'),
+    })).min(1, 'Debe asignar al menos un tanque'),
+});
+
+export type ConfirmarEntregaMultiTanqueInput = z.infer<typeof confirmarEntregaMultiTanqueSchema>;

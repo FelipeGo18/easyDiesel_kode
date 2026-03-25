@@ -67,35 +67,41 @@ export function DistribuidorPanelPage() {
     useEffect(() => {
         const fetchMeta = async () => {
             if (!form.estacionId || !form.tipoCombustible) return;
+
+            // 1. Get next remission (independent of station selection)
             try {
-                // 1. Get next remission
                 const remRes = await api.get(`/inventario/proxima-remision`);
                 const proximaRemision = remRes.data?.data?.proxima;
+                if (proximaRemision) {
+                    setField('numeroRemision', proximaRemision);
+                }
+            } catch (error) {
+                console.error('Error fetching remisión:', error);
+                setField('numeroRemision', 'Error');
+            }
 
-                // 2. Get zona price
+            // 2. Get zona price
+            try {
                 const selectedEstacion = estaciones.find(e => e.id === form.estacionId);
                 const zonaId = selectedEstacion?.zonaId;
-                let precioUnitario = 0;
 
-                if (zonaId) {
-                    const priceRes = await api.get(`/precios/consultar`, {
-                        params: {
-                            zonaId,
-                            tipoCombustible: form.tipoCombustible,
-                            tipoServicio: 'CARGA'
-                        }
-                    });
-                    precioUnitario = priceRes.data?.data?.precioGalon || 0;
+                if (!zonaId) {
+                    console.warn('La estación seleccionada no tiene zona asignada');
+                    setField('precioUnitario', '0');
+                    return;
                 }
 
-                setForm(prev => ({
-                    ...prev,
-                    numeroRemision: proximaRemision || prev.numeroRemision,
-                    precioUnitario: precioUnitario ? String(precioUnitario) : '0'
-                }));
-
+                const priceRes = await api.get(`/precios/consultar`, {
+                    params: {
+                        zonaId,
+                        tipoCombustible: form.tipoCombustible,
+                        tipoServicio: 'CARGA'
+                    }
+                });
+                const precioUnitario = priceRes.data?.data?.precioGalon || 0;
+                setField('precioUnitario', precioUnitario ? String(precioUnitario) : '0');
             } catch (error) {
-                console.error('Error fetching delivery meta:', error);
+                console.error('Error fetching precio:', error);
                 setField('precioUnitario', '0');
             }
         };
