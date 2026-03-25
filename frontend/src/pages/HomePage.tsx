@@ -364,12 +364,12 @@ export function HomePage() {
                     <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-6 lg:gap-10">
                         {/* Title block */}
                         <div className="prices-header-block flex-1 max-w-2xl pt-2">
-                            <span className="font-mono text-[9px] text-amber-500/60 tracking-[0.25em] uppercase block mb-3">Consulta de precios</span>
-                            <h2 className="font-display text-[44px] lg:text-[56px] leading-tight text-text-primary mb-3 tracking-wide">
-                                PRECIOS <span className="text-amber-500">REGULADOS</span>
+                            <span className="font-mono text-[9px] text-amber-500/60 tracking-[0.25em] uppercase block mb-3">Tarifas oficiales e información regulatoria</span>
+                            <h2 className="font-display text-[40px] lg:text-[48px] leading-tight text-text-primary mb-3 tracking-wide whitespace-nowrap overflow-hidden text-ellipsis">
+                                CONSULTOR DE <span className="text-amber-500">PRECIOS</span>
                             </h2>
-                            <p className="text-[12px] text-text-secondary font-sans leading-relaxed max-w-sm">
-                                Selecciona zona, combustible y vehículo para ver el precio vigente.
+                            <p className="text-[13px] text-text-secondary font-sans leading-relaxed max-w-sm">
+                                Descubre al instante la tarifa exacta del combustible de acuerdo con tu ubicación, categoría de vehículo y normativa legal vigente.
                             </p>
                             
                             {publicDataError && (
@@ -381,11 +381,11 @@ export function HomePage() {
                         </div>
 
                         {/* Right: Config Form */}
-                        <div className="config-card w-full xl:max-w-[480px] shrink-0 bg-[#0c0c0c] border border-[#222] rounded-[4px] p-4 lg:p-5">
+                        <div className="config-card w-full xl:max-w-[480px] shrink-0 bg-[#0c0c0c] border border-[#333] rounded-[4px] p-4 lg:p-5">
                             <div className="space-y-4">
                                 {/* Zona */}
-                                <div>
-                                    <label htmlFor="select-zona" className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">
+                                <div className="form-group">
+                                    <label htmlFor="select-zona" className="font-mono text-[9px] text-gray-400 uppercase tracking-[0.2em] block mb-2">
                                         Zona de distribución
                                     </label>
                                     <div className="relative">
@@ -394,25 +394,25 @@ export function HomePage() {
                                             value={zonaSeleccionada}
                                             onChange={(e) => setZonaSeleccionada(e.target.value)}
                                             disabled={!zonas.length}
-                                            className="w-full px-3 py-2.5 bg-[#111] border border-[#333] rounded-[4px] text-text-primary text-[11px] font-sans appearance-none cursor-pointer pr-8 focus:border-amber-500/40 focus:outline-none transition-colors"
+                                            className="w-full px-3 py-2.5 bg-[#151515] border border-[#444] rounded-[4px] text-gray-200 text-[12px] font-sans appearance-none cursor-pointer pr-8 focus:border-amber-500/60 focus:outline-none transition-colors"
                                         >
                                             {!zonas.length ? <option value="">Sin zonas</option> : null}
                                             {zonas.map(z => <option key={z.id} value={z.id}>{z.nombre}</option>)}
                                         </select>
-                                        <Icon name="chevron-down" size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+                                        <Icon name="chevron-down" size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                                     </div>
                                 </div>
 
                                 {/* Combustible */}
-                                <div>
-                                    <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">Tipo de combustible</span>
+                                <div className="form-group">
+                                    <span className="font-mono text-[9px] text-gray-400 uppercase tracking-[0.2em] block mb-2">Tipo de combustible</span>
                                     <div className="flex gap-2 h-[38px]">
                                         {tiposCombustible.map(tc => (
                                             <button key={tc.id} onClick={() => setCombustibleSeleccionado(tc.id)}
                                                 className={`flex-1 rounded-[4px] text-[10px] font-mono uppercase tracking-wider cursor-pointer transition-colors border ${
                                                     combustibleSeleccionado === tc.id
                                                         ? 'bg-amber-500 border-amber-500 text-black font-bold'
-                                                        : 'bg-[#111] border-[#333] text-text-muted hover:border-[#555] hover:text-text-primary'
+                                                        : 'bg-[#151515] border-[#444] text-gray-400 hover:border-[#666] hover:text-white'
                                                 }`}
                                             >
                                                 {tc.id === 'ACPM' ? 'ACPM' : 'Gasolina'}
@@ -422,15 +422,15 @@ export function HomePage() {
                                 </div>
 
                                 {/* Servicio */}
-                                <div>
-                                    <span className="font-mono text-[9px] text-text-muted uppercase tracking-[0.2em] block mb-2">Categoría de vehículo</span>
+                                <div className="form-group">
+                                    <span className="font-mono text-[9px] text-gray-400 uppercase tracking-[0.2em] block mb-2">Categoría de vehículo</span>
                                     <div className="grid grid-cols-2 gap-2">
                                         {tiposServicio.map(ts => (
                                             <button key={ts.id} onClick={() => setServicioSeleccionado(ts.id)}
                                                 className={`py-2 px-1 rounded-[4px] text-[9px] font-mono uppercase tracking-wider cursor-pointer border text-center transition-colors h-[32px] ${
                                                     servicioSeleccionado === ts.id
                                                         ? 'bg-amber-500 border-amber-500 text-black font-bold'
-                                                        : 'bg-[#111] border-[#333] text-text-muted hover:border-[#555] hover:text-text-primary'
+                                                        : 'bg-[#151515] border-[#444] text-gray-400 hover:border-[#666] hover:text-white'
                                                 }`}
                                             >
                                                 {ts.label}

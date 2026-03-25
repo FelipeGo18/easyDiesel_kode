@@ -64,28 +64,57 @@ export function useScrollReveal(refs: SectionRefs, enabled: boolean) {
                     const configCard = section.querySelector('.config-card');
                     const priceCards = Array.from(section.querySelectorAll<HTMLElement>('.price-card'));
                     
-                    // 1. Unified Entrance & Exit Timeline
-                    // Using "play reverse play reverse" ensures the animation plays completely forward when entering the bounds,
-                    // reverses when leaving the bottom, plays forward again when scrolling back up into bounds, 
-                    // and reverses when leaving the top.
+                    // Unified timeline tied to the whole section
                     const tlEnter = gsap.timeline({
                         scrollTrigger: {
                             trigger: section,
-                            start: 'top 100%',
-                            end: 'bottom 15%', // Exits when the bottom of the section reaches 15% from the top
+                            start: 'top 85%', // Trigger slightly before it hits bottom of viewport
+                            end: 'bottom 10%', 
                             toggleActions: 'play reverse play reverse',
                         }
                     });
 
-                    // We add the aggressive entrance animations. They will naturally reverse for the exit.
-                    if (headerText) tlEnter.fromTo(headerText, { y: 150, opacity: 0, scale: 0.8 }, { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: 'back.out(1.5)' }, 0);
-                    if (configCard) tlEnter.fromTo(configCard, { x: 150, opacity: 0, scale: 0.8 }, { x: 0, opacity: 1, scale: 1, duration: 0.8, ease: 'back.out(1.2)' }, 0.1);
+                    // Dramatic 3D scatter for letters
+                    const scatterChars = headerText?.querySelectorAll('.scatter-char');
+                    if (scatterChars && scatterChars.length > 0) {
+                        tlEnter.fromTo(scatterChars, 
+                            { 
+                                x: () => gsap.utils.random(-800, 800), 
+                                y: () => gsap.utils.random(-800, 800),
+                                z: () => gsap.utils.random(-800, 800),
+                                rotationX: () => gsap.utils.random(-360, 360),
+                                rotationY: () => gsap.utils.random(-360, 360),
+                                opacity: 0,
+                                scale: () => gsap.utils.random(0, 5)
+                            },
+                            {
+                                x: 0, y: 0, z: 0, rotationX: 0, rotationY: 0, opacity: 1, scale: 1,
+                                duration: 1.5, 
+                                stagger: 0.02, 
+                                ease: 'expo.out'
+                            },
+                            0
+                        );
+                        
+                        const otherHeaderElements = headerText?.querySelectorAll('span:not(.scatter-char), p');
+                        if (otherHeaderElements) {
+                            tlEnter.fromTo(otherHeaderElements, { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 1.2, ease: 'power2.out' }, 0.5);
+                        }
+                    }
+
+                    if (configCard) {
+                        tlEnter.fromTo(configCard, { x: 100, opacity: 0, scale: 0.9 }, { x: 0, opacity: 1, scale: 1, duration: 1, ease: 'back.out(1.2)' }, 0.2);
+                        const formGroups = configCard.querySelectorAll('.form-group');
+                        if (formGroups.length > 0) {
+                            tlEnter.fromTo(formGroups, { y: 20, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.1, duration: 0.8, ease: 'power2.out' }, 0.5);
+                        }
+                    }
 
                     if (priceCards.length > 0) {
                         tlEnter.fromTo(priceCards, 
-                            { y: 250, opacity: 0, scale: 0.7, rotateX: 25 },
-                            { y: 0, opacity: 1, scale: 1, rotateX: 0, stagger: 0.15, duration: 1.0, ease: 'elastic.out(1, 0.75)' },
-                            0.2
+                            { y: 150, opacity: 0, scale: 0.8, rotateX: 15 },
+                            { y: 0, opacity: 1, scale: 1, rotateX: 0, stagger: 0.15, duration: 1.2, ease: 'elastic.out(1, 0.75)' },
+                            0.3 // Cards animate right after config card starts
                         );
                     }
 
@@ -94,9 +123,9 @@ export function useScrollReveal(refs: SectionRefs, enabled: boolean) {
                     const needle = section.querySelector('.gauge-needle');
                     const subsidyBar = section.querySelector('.fuel-subsidy-bar');
 
-                    if (gaugeArc) tlEnter.fromTo(gaugeArc, { strokeDashoffset: 251.3 }, { strokeDashoffset: 60, duration: 1.2, ease: 'power3.out' }, 0.5);
-                    if (needle) tlEnter.fromTo(needle, { rotation: -90 }, { rotation: 55, duration: 1.2, ease: 'power3.out', transformOrigin: '100px 100px' }, 0.5);
-                    if (subsidyBar) tlEnter.fromTo(subsidyBar, { width: '0%' }, { width: '65%', duration: 1.2, ease: 'power3.out' }, 0.7);
+                    if (gaugeArc) tlEnter.fromTo(gaugeArc, { strokeDashoffset: 251.3 }, { strokeDashoffset: 60, duration: 1.5, ease: 'power3.out' }, 0.6);
+                    if (needle) tlEnter.fromTo(needle, { rotation: -90 }, { rotation: 55, duration: 1.5, ease: 'power3.out', transformOrigin: '100px 100px' }, 0.6);
+                    if (subsidyBar) tlEnter.fromTo(subsidyBar, { width: '0%' }, { width: '65%', duration: 1.5, ease: 'power3.out' }, 0.8);
                 }
 
                 /* ────────────────────────────────
