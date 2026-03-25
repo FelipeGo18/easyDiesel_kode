@@ -10,11 +10,11 @@ interface BadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-    green: 'bg-green-dim text-green-500 border-green-500/40',
-    red: 'bg-red-dim text-red-500 border-red-500/40',
-    yellow: 'bg-yellow-dim text-yellow-500 border-yellow-500/40',
-    blue: 'bg-blue-dim text-blue-500 border-blue-500/40',
-    amber: 'bg-amber-dim text-amber-500 border-amber-500/40',
+    green: 'bg-transparent text-[#10B981] border-[#10B981]',
+    red: 'bg-transparent text-[#E53935] border-[#E53935]',
+    yellow: 'bg-transparent text-[#F5A623] border-[#F5A623]',
+    blue: 'bg-transparent text-[#3B82F6] border-[#3B82F6]',
+    amber: 'bg-transparent text-amber-500 border-amber-500',
 };
 
 export function Badge({ variant = 'amber', children, className }: BadgeProps) {

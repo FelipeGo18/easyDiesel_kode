@@ -12,7 +12,7 @@ export function Card({ variant = 'default', children, className, ...props }: Car
         elevated: 'bg-bg-elevated border-border-default',
         interactive: [
             'bg-bg-surface border-border-subtle',
-            'hover:border-border-strong hover:bg-bg-elevated',
+            'hover:border-white/20 hover:bg-bg-surface',
             'interactive cursor-pointer',
         ],
     };
@@ -20,7 +20,7 @@ export function Card({ variant = 'default', children, className, ...props }: Car
     return (
         <div
             className={cn(
-                'rounded-[var(--radius-brand)] border p-5',
+                'rounded-[4px] border p-5',
                 variants[variant],
                 className
             )}

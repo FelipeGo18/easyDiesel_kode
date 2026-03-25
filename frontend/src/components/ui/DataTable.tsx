@@ -125,7 +125,7 @@ export function DataTable<T extends object>({
                                 value={search}
                                 onChange={(e) => { setSearch(e.target.value); setPage(0); }}
                                 placeholder={searchPlaceholder}
-                                className="w-full pl-9 pr-3 py-2 bg-bg-elevated border border-border-default rounded-brand text-[13px] text-text-primary font-sans placeholder:text-text-muted interactive"
+                                className="w-full pl-9 pr-3 py-2 bg-bg-elevated border border-border-default rounded-[4px] text-[13px] text-text-primary font-sans placeholder:text-text-muted interactive"
                             />
                         </div>
                     )}
@@ -134,7 +134,7 @@ export function DataTable<T extends object>({
             )}
 
             {/* Table */}
-            <div className="border border-border-subtle rounded-brand overflow-hidden">
+            <div className="border border-border-subtle rounded-[4px] overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
@@ -206,7 +206,7 @@ export function DataTable<T extends object>({
                         <button
                             onClick={() => setPage((p) => Math.max(0, p - 1))}
                             disabled={page === 0}
-                            className="p-1.5 rounded-brand hover:bg-bg-elevated disabled:opacity-30 disabled:cursor-not-allowed interactive text-text-muted"
+                            className="p-1.5 rounded-[4px] hover:bg-bg-elevated disabled:opacity-30 disabled:cursor-not-allowed interactive text-text-muted"
                         >
                             <Icon name="chevron-left" size={14} />
                         </button>
@@ -216,7 +216,7 @@ export function DataTable<T extends object>({
                         <button
                             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                             disabled={page >= totalPages - 1}
-                            className="p-1.5 rounded-brand hover:bg-bg-elevated disabled:opacity-30 disabled:cursor-not-allowed interactive text-text-muted"
+                            className="p-1.5 rounded-[4px] hover:bg-bg-elevated disabled:opacity-30 disabled:cursor-not-allowed interactive text-text-muted"
                         >
                             <Icon name="chevron-right" size={14} />
                         </button>

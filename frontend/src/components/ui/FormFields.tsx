@@ -35,7 +35,7 @@ function FieldWrapper({
     );
 }
 
-const baseInput = 'w-full px-3 py-2.5 bg-bg-elevated border border-border-default rounded-brand text-text-primary text-[13px] font-sans placeholder:text-text-muted interactive focus:border-amber-500/50 focus:outline-none';
+const baseInput = 'w-full px-3 py-2.5 bg-bg-elevated border border-border-default rounded-[4px] text-text-primary text-[13px] font-sans placeholder:text-text-muted interactive focus:border-amber-500 focus:outline-none transition-colors';
 
 /* ── InputField ── */
 interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {

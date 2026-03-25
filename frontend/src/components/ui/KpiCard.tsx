@@ -28,7 +28,7 @@ export function KpiCard({ label, value, trend, icon, className, delay = 0, child
     return (
         <div
             className={cn(
-                'bg-bg-surface border border-border-subtle rounded-brand p-5',
+                'bg-bg-surface border border-border-subtle rounded-[4px] p-5',
                 'animate-enter',
                 className
             )}
