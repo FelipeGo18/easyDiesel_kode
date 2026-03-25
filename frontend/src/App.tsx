@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { ToastProvider } from '@/components/ui/Toast';
 import { useAuth } from '@/context/useAuth';
@@ -12,6 +12,7 @@ import { useLenis } from '@/hooks/useLenis';
 function ProtectedRoute({ children, requiredPermissions = [] }: { children: ReactNode; requiredPermissions?: string[] }) {
   const { isAuthenticated, isLoading } = useAuth();
   const { hasAnyPermission } = useAccess();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -44,7 +45,7 @@ function ProtectedRoute({ children, requiredPermissions = [] }: { children: Reac
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
   if (requiredPermissions.length && !hasAnyPermission(...requiredPermissions)) {
