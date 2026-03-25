@@ -26,7 +26,7 @@ describe('CPI — UC-03/UC-08 con UC-01: Precios Configurados y Reportes', () =>
 
     afterAll(async () => {
         await teardownCpiContext(ctx);
-    });
+    }, 60000);
 
     // ================================================================
     // CPI-007 — Generación de reportes refleja transacciones registradas

@@ -112,6 +112,20 @@ describe('Inventario Integration Tests', () => {
         });
         precioId = precio.id;
 
+        // Precio tipo CARGA requerido por registrarEntrega (tipoServicio: 'CARGA')
+        await prisma.precioVigente.create({
+            data: {
+                tipoCombustible: 'ACPM',
+                tipoServicio: 'CARGA',
+                zonaId,
+                precioGalon: 11800,
+                subsidioGalon: 0,
+                decretoId: decreto.id,
+                vigenciaDesde: new Date(),
+                activo: true,
+            },
+        });
+
         const loginResponse = await request(app)
             .post('/api/auth/login')
             .send({

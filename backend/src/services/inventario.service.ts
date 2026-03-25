@@ -130,9 +130,8 @@ export class InventarioService {
             tipoServicio: 'CARGA', // Las entregas de distribuidor son tipo CARGA
         });
 
-        // 3. Generar número de remisión automático correlativo por distribuidor
+        // 3. Generar número de remisión automático correlativo global (constraint único global)
         const ultimaEntrega = await prisma.entregaDistribuidor.findFirst({
-            where: { distribuidorId: data.distribuidorId },
             orderBy: { createdAt: 'desc' },
             select: { numeroRemision: true }
         });
