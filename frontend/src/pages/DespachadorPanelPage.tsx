@@ -799,16 +799,16 @@ export function StationOperationsPage() {
                     </div>
                     
                     {/* Poste / Soporte Central del Totem */}
-                    <div className="w-[120px] flex-1 min-h-[40px] bg-gradient-to-r from-[#050505] via-[#111318] to-[#050505] border-x-2 border-[#0a0a0a] z-10 relative shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] -mt-2">
+                    <div className="w-[120px] flex-1 min-h-[40px] bg-gradient-to-r from-[#1c1f26] via-[#2d323e] to-[#1c1f26] border-x-2 border-[#111318] z-10 relative shadow-[inset_0_0_15px_rgba(0,0,0,0.8)] -mt-2">
                         {/* Detalles del poste */}
-                        <div className="absolute inset-x-0 top-6 h-px bg-black" />
-                        <div className="absolute inset-x-0 top-12 h-px bg-black" />
+                        <div className="absolute inset-x-0 top-6 h-px bg-[#0a0a0a]" />
+                        <div className="absolute inset-x-0 top-12 h-px bg-[#0a0a0a]" />
                     </div>
                     
                     {/* Base Cimiento del Totem */}
-                    <div className="w-full max-w-[280px] h-[30px] bg-gradient-to-b from-[#111318] to-[#050505] rounded-t-[12px] border-t-2 border-x-2 border-[#1a1c23] shadow-[0_10px_30px_rgba(0,0,0,0.8)] z-20 relative flex justify-center -mt-1 shrink-0">
+                    <div className="w-full max-w-[280px] h-[30px] bg-gradient-to-b from-[#1c1f26] to-[#050505] rounded-t-[12px] border-t-2 border-x-2 border-[#2d323e] shadow-[0_10px_30px_rgba(0,0,0,0.8)] z-20 relative flex justify-center -mt-1 shrink-0">
                         {/* Remache/Detalle de la base */}
-                        <div className="w-[200px] h-[6px] bg-[#0a0a0a] rounded-b-md mt-0 shadow-inner" />
+                        <div className="w-[200px] h-[6px] bg-[#111318] rounded-b-md mt-0 shadow-inner" />
                     </div>
                 </div>
             </div>
