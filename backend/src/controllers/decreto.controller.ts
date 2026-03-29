@@ -25,7 +25,11 @@ export const obtenerDecretoPorIdHandler = async (req: Request, res: Response) =>
 export const crearDecretoHandler = async (req: Request, res: Response) => {
     try {
         const validData = crearDecretoSchema.parse(req.body);
-        const decreto = await decretoService.crearDecreto(validData);
+        const decreto = await decretoService.crearDecreto(validData, {
+            usuarioId: (req as any).user?.userId || 'sistema',
+            ip: req.ip || '127.0.0.1',
+            userAgent: req.get('user-agent')
+        });
         res.status(201).json({ success: true, message: 'Decreto creado', data: decreto });
     } catch (error: any) {
         if (error instanceof ZodError) { res.status(400).json({ success: false, errors: error.issues }); return; }
@@ -36,7 +40,11 @@ export const crearDecretoHandler = async (req: Request, res: Response) => {
 export const actualizarDecretoHandler = async (req: Request, res: Response) => {
     try {
         const validData = actualizarDecretoSchema.parse(req.body);
-        const decreto = await decretoService.actualizarDecreto(req.params.id as string, validData);
+        const decreto = await decretoService.actualizarDecreto(req.params.id as string, validData, {
+            usuarioId: (req as any).user?.userId || 'sistema',
+            ip: req.ip || '127.0.0.1',
+            userAgent: req.get('user-agent')
+        });
         res.json({ success: true, message: 'Decreto actualizado', data: decreto });
     } catch (error: any) {
         if (error instanceof ZodError) { res.status(400).json({ success: false, errors: error.issues }); return; }

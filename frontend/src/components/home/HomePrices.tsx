@@ -54,7 +54,7 @@ export const HomePrices = forwardRef<HTMLElement, HomePricesProps>(({
         <section
             ref={ref}
             id="precios"
-            className="relative z-10 border-t border-border-subtle"
+            className="relative z-10 border-t border-border-subtle -mt-px"
         >
             {/* Atmospheric grid minimal */}
             <div className="pointer-events-none absolute inset-0">
@@ -80,7 +80,7 @@ export const HomePrices = forwardRef<HTMLElement, HomePricesProps>(({
                         </p>
                         
                         {publicDataError && (
-                            <div className="mt-4 flex items-start gap-3 rounded-[4px] border border-amber-500/20 bg-amber-500/5 px-4 py-3 max-w-sm">
+                            <div className="mt-4 flex items-start gap-3 rounded-brand border border-amber-500/20 bg-amber-500/5 px-4 py-3 max-w-sm">
                                 <Icon name="alert" size={14} className="text-amber-500 mt-0.5 shrink-0" />
                                 <p className="text-[11px] text-amber-300/80 font-sans leading-relaxed">{publicDataError}</p>
                             </div>
@@ -88,7 +88,7 @@ export const HomePrices = forwardRef<HTMLElement, HomePricesProps>(({
                     </div>
 
                     {/* Right: Config Form */}
-                    <div className="config-card w-full xl:max-w-[480px] shrink-0 bg-[#0c0c0c] border border-[#333] rounded-[4px] p-4 lg:p-5">
+                    <div className="config-card w-full xl:max-w-[480px] shrink-0 bg-[#0c0c0c] border border-[#333] rounded-brand p-4 lg:p-5">
                         <div className="space-y-4">
                             {/* Zona */}
                             <div className="form-group">
@@ -101,7 +101,7 @@ export const HomePrices = forwardRef<HTMLElement, HomePricesProps>(({
                                         value={zonaSeleccionada}
                                         onChange={(e) => setZonaSeleccionada(e.target.value)}
                                         disabled={!zonas.length}
-                                        className="w-full px-3 py-2.5 bg-[#151515] border border-[#444] rounded-[4px] text-gray-200 text-[12px] font-sans appearance-none cursor-pointer pr-8 focus:border-amber-500/60 focus:outline-none transition-colors"
+                                        className="w-full px-3 py-2.5 bg-[#151515] border border-[#444] rounded-brand text-gray-200 text-[12px] font-sans appearance-none cursor-pointer pr-8 focus:border-amber-500/60 focus:outline-none transition-colors"
                                     >
                                         {!zonas.length ? <option value="">Sin zonas</option> : null}
                                         {zonas.map(z => <option key={z.id} value={z.id}>{z.nombre}</option>)}
@@ -116,7 +116,7 @@ export const HomePrices = forwardRef<HTMLElement, HomePricesProps>(({
                                 <div className="flex gap-2 h-[38px]">
                                     {tiposCombustible.map(tc => (
                                         <button key={tc.id} onClick={() => setCombustibleSeleccionado(tc.id)}
-                                            className={`flex-1 rounded-[4px] text-[10px] font-mono uppercase tracking-wider cursor-pointer transition-colors border ${
+                                            className={`flex-1 rounded-brand text-[10px] font-mono uppercase tracking-wider cursor-pointer transition-colors border ${
                                                 combustibleSeleccionado === tc.id
                                                     ? 'bg-amber-500 border-amber-500 text-black font-bold'
                                                     : 'bg-[#151515] border-[#444] text-gray-400 hover:border-[#666] hover:text-white'
@@ -134,7 +134,7 @@ export const HomePrices = forwardRef<HTMLElement, HomePricesProps>(({
                                 <div className="grid grid-cols-2 gap-2">
                                     {tiposServicio.map(ts => (
                                         <button key={ts.id} onClick={() => setServicioSeleccionado(ts.id)}
-                                            className={`py-2 px-1 rounded-[4px] text-[9px] font-mono uppercase tracking-wider cursor-pointer border text-center transition-colors h-[32px] ${
+                                            className={`py-2 px-1 rounded-brand text-[9px] font-mono uppercase tracking-wider cursor-pointer border text-center transition-colors h-[32px] ${
                                                 servicioSeleccionado === ts.id
                                                     ? 'bg-amber-500 border-amber-500 text-black font-bold'
                                                     : 'bg-[#151515] border-[#444] text-gray-400 hover:border-[#666] hover:text-white'
@@ -155,8 +155,8 @@ export const HomePrices = forwardRef<HTMLElement, HomePricesProps>(({
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 h-full">
 
                     {/* ── Card 0 — Precio Vigente + Gauge ── */}
-                    <div className="price-card relative overflow-hidden rounded-[4px] border border-[#222] bg-[#0c0c0c] p-5 lg:p-6 flex flex-col justify-between">
-                        <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-amber-500/60 via-amber-500/20 to-transparent" />
+                    <div className="price-card relative overflow-hidden rounded-brand border border-[#222] bg-[#0c0c0c] p-5 lg:p-6 flex flex-col justify-between">
+                        <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-linear-to-r from-amber-500/60 via-amber-500/20 to-transparent" />
 
                             <span className="font-mono text-[9px] text-amber-500/60 tracking-[0.25em] uppercase block mb-4">Precio vigente</span>
 
@@ -223,7 +223,7 @@ export const HomePrices = forwardRef<HTMLElement, HomePricesProps>(({
                                     <span className="text-green-500">{formatCOP(Number(precioActual.subsidioGalon))} / gal</span>
                                 </div>
                                 <div className="h-[3px] w-full bg-bg-elevated rounded-full overflow-hidden">
-                                    <div className="fuel-subsidy-bar h-full bg-gradient-to-r from-green-500/80 to-green-500/30 rounded-full" style={{ width: '0%' }} />
+                                    <div className="fuel-subsidy-bar h-full bg-linear-to-r from-green-500/80 to-green-500/30 rounded-full" style={{ width: '0%' }} />
                                 </div>
                             </div>
                         )}
@@ -233,8 +233,8 @@ export const HomePrices = forwardRef<HTMLElement, HomePricesProps>(({
                     </div>
 
                     {/* ── Card 1 — Detalle Regulatorio ── */}
-                    <div className="price-card relative overflow-hidden rounded-[4px] border border-[#222] bg-[#0c0c0c] p-5 lg:p-6 flex flex-col justify-between">
-                        <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-green-500/60 via-green-500/20 to-transparent" />
+                    <div className="price-card relative overflow-hidden rounded-brand border border-[#222] bg-[#0c0c0c] p-5 lg:p-6 flex flex-col justify-between">
+                        <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-linear-to-r from-green-500/60 via-green-500/20 to-transparent" />
 
                         <span className="font-mono text-[9px] text-amber-500/60 tracking-[0.25em] uppercase block mb-6">Detalle regulatorio</span>
 
@@ -284,8 +284,8 @@ export const HomePrices = forwardRef<HTMLElement, HomePricesProps>(({
                     </div>
 
                     {/* ── Card 2 — Comparativa ACPM vs Gasolina ── */}
-                    <div className="price-card relative overflow-hidden rounded-[4px] border border-[#222] bg-[#0c0c0c] p-5 lg:p-6 flex flex-col justify-between">
-                        <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
+                    <div className="price-card relative overflow-hidden rounded-brand border border-[#222] bg-[#0c0c0c] p-5 lg:p-6 flex flex-col justify-between">
+                        <div className="pointer-events-none absolute top-0 left-0 w-full h-[2px] bg-linear-to-r from-amber-500/40 via-amber-500/10 to-transparent" />
 
                         <span className="font-mono text-[9px] text-amber-500/60 tracking-[0.25em] uppercase block mb-3">Comparativa</span>
                         <h3 className="font-display text-[24px] lg:text-[28px] text-text-primary leading-none mb-4">

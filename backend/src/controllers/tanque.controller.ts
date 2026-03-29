@@ -30,7 +30,11 @@ export const obtenerTanquePorIdHandler = async (req: Request, res: Response) => 
 export const crearTanqueHandler = async (req: Request, res: Response) => {
     try {
         const validData = crearTanqueSchema.parse(req.body);
-        const nuevoTanque = await tanqueService.crearTanque(validData);
+        const nuevoTanque = await tanqueService.crearTanque(validData, {
+            usuarioId: (req as any).user?.userId || 'sistema',
+            ip: req.ip || '127.0.0.1',
+            userAgent: req.get('user-agent')
+        });
         res.status(201).json({ success: true, message: 'Tanque creado exitosamente', data: nuevoTanque });
     } catch (error: any) {
         if (error instanceof ZodError) {
@@ -53,7 +57,11 @@ export const actualizarTanqueHandler = async (req: Request, res: Response) => {
 
         const validData = actualizarTanqueSchema.parse(body);
 
-        const tanqueActualizado = await tanqueService.actualizarTanque(id, validData);
+        const tanqueActualizado = await tanqueService.actualizarTanque(id, validData, {
+            usuarioId: (req as any).user?.userId || 'sistema',
+            ip: req.ip || '127.0.0.1',
+            userAgent: req.get('user-agent')
+        });
         res.json({ success: true, message: 'Tanque actualizado', data: tanqueActualizado });
     } catch (error: any) {
         if (error instanceof ZodError) {

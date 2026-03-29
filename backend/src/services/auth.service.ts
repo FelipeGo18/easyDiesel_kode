@@ -6,6 +6,7 @@ import { prisma } from '../utils/prisma';
 import type { RegisterInput, LoginInput, UpdateProfileInput } from '../validators/auth.validator';
 import { normalizePermissions } from '../utils/permissions';
 import { getJwtSecret } from '../config/security';
+import { auditoriaService } from './auditoria.service';
 
 // ──────────────────────────────────────────
 // Supabase Client (Backend)
@@ -175,7 +176,21 @@ export class AuthService {
         });
 
         // Generar token
-        return this.issueSession(usuario, metadata);
+        const session = await this.issueSession(usuario, metadata);
+
+        // Auditoría
+        await auditoriaService.registrarLog({
+            usuarioId: usuario.id,
+            modulo: 'AUTH',
+            accion: 'REGISTRO',
+            entidad: 'usuario',
+            entidadId: usuario.id,
+            ip: metadata?.ip,
+            userAgent: metadata?.userAgent,
+            datosDespues: { email: usuario.email, rol: usuario.rol.nombre }
+        });
+
+        return session;
     }
 
     /**
@@ -215,7 +230,20 @@ export class AuthService {
         }
 
         // Generar token
-        return this.issueSession(usuario, metadata);
+        const session = await this.issueSession(usuario, metadata);
+
+        // Auditoría
+        await auditoriaService.registrarLog({
+            usuarioId: usuario.id,
+            modulo: 'AUTH',
+            accion: 'LOGIN',
+            entidad: 'usuario',
+            entidadId: usuario.id,
+            ip: metadata?.ip,
+            userAgent: metadata?.userAgent
+        });
+
+        return session;
     }
 
     /**

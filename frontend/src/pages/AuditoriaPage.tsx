@@ -10,7 +10,7 @@ import api from '@/services/api';
 import type { ApiResponse } from '@/types';
 import { getErrorMessage } from '@/lib/http';
 
-const MODULOS = ['auth', 'inventario', 'precios', 'decretos', 'zonas', 'usuarios', 'actores', 'tanques', 'reportes'];
+const MODULOS = ['AUTH', 'INVENTARIO', 'PRECIOS', 'DECRETOS', 'ZONAS', 'USUARIOS', 'ACTORES', 'TANQUES', 'REPORTES'];
 const PAGE_LIMIT = 50;
 
 interface AuditoriaLog {
@@ -173,7 +173,7 @@ export function AuditoriaPage() {
                         >
                             <option value="">Todos los módulos</option>
                             {MODULOS.map((m) => (
-                                <option key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>
+                                <option key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1).toLowerCase()}</option>
                             ))}
                         </select>
                     </div>
@@ -245,7 +245,7 @@ export function AuditoriaPage() {
                                     key={page}
                                     onClick={() => handlePageChange(page)}
                                     className={[
-                                        'h-8 min-w-[2rem] rounded-[6px] px-2 text-[12px] font-mono transition-colors',
+                                        'h-8 min-w-8 rounded-[6px] px-2 text-[12px] font-mono transition-colors',
                                         page === currentPage
                                             ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
                                             : 'text-text-muted hover:bg-bg-elevated hover:text-text-primary',

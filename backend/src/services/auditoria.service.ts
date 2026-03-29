@@ -16,12 +16,13 @@ export class AuditoriaService {
     /**
      * Registra un evento de auditoria en la base de datos.
      */
-    async registrarLog(data: RegistrarLogInput) {
-        return prisma.auditoriaLog.create({
+    async registrarLog(data: RegistrarLogInput, tx?: any) {
+        const prismaClient = tx || prisma;
+        return (prismaClient.auditoriaLog as any).create({
             data: {
                 usuarioId: data.usuarioId,
-                modulo: data.modulo,
-                accion: data.accion,
+                modulo: data.modulo.toUpperCase(),
+                accion: data.accion.toUpperCase(),
                 entidad: data.entidad,
                 entidadId: data.entidadId,
                 datosAntes: data.datosAntes ?? undefined,
@@ -48,8 +49,8 @@ export class AuditoriaService {
     }) {
         const where: any = {};
         if (filtros?.usuarioId) where.usuarioId = filtros.usuarioId;
-        if (filtros?.modulo) where.modulo = filtros.modulo;
-        if (filtros?.accion) where.accion = filtros.accion;
+        if (filtros?.modulo) where.modulo = filtros.modulo.toUpperCase();
+        if (filtros?.accion) where.accion = filtros.accion.toUpperCase();
         if (filtros?.entidad) where.entidad = filtros.entidad;
 
         // Si hay filtro por estación, solo mostramos logs generados por usuarios de esa estación

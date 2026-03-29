@@ -27,7 +27,11 @@ export const obtenerUsuarioPorIdHandler = async (req: Request, res: Response) =>
 export const crearUsuarioHandler = async (req: Request, res: Response) => {
     try {
         const validData = crearUsuarioSchema.parse(req.body);
-        const nuevoUsuario = await usuarioService.crearUsuario(validData);
+        const nuevoUsuario = await usuarioService.crearUsuario(validData, {
+            usuarioId: (req as any).user?.userId || 'sistema',
+            ip: req.ip || '127.0.0.1',
+            userAgent: req.get('user-agent')
+        });
         res.status(201).json({ success: true, message: 'Usuario creado', data: nuevoUsuario });
     } catch (error: any) {
         if (error.name === 'ZodError') {
@@ -48,7 +52,11 @@ export const actualizarUsuarioHandler = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, message: 'No hay datos válidos para actualizar' });
         }
 
-        const usuario = await usuarioService.actualizarUsuario(id, validData);
+        const usuario = await usuarioService.actualizarUsuario(id, validData, {
+            usuarioId: (req as any).user?.userId || 'sistema',
+            ip: req.ip || '127.0.0.1',
+            userAgent: req.get('user-agent')
+        });
         res.json({ success: true, message: 'Usuario actualizado', data: usuario });
     } catch (error: any) {
         if (error.name === 'ZodError') {
@@ -71,7 +79,11 @@ export const obtenerRolesHandler = async (_req: Request, res: Response) => {
 export const desactivarUsuarioHandler = async (req: Request, res: Response) => {
     try {
         const id = req.params.id as string;
-        const resultado = await usuarioService.desactivarUsuario(id);
+        const resultado = await usuarioService.desactivarUsuario(id, {
+            usuarioId: (req as any).user?.userId || 'sistema',
+            ip: req.ip || '127.0.0.1',
+            userAgent: req.get('user-agent')
+        });
         res.json({ success: true, message: 'Usuario desactivado', data: resultado });
     } catch (error: any) {
         res.status(400).json({ success: false, message: error.message });

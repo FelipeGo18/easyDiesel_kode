@@ -16,7 +16,7 @@ function formatZodErrors(error: ZodError) {
 
 function buildSessionMetadata(req: Request) {
     return {
-        ip: req.ip,
+        ip: req.ip || '127.0.0.1',
         userAgent: typeof req.get === 'function' ? req.get('user-agent') || undefined : undefined,
     };
 }

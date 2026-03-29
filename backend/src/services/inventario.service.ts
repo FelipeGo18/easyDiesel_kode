@@ -1,6 +1,7 @@
 import { prisma } from '../utils/prisma';
 import { RegistrarEntregaInput, ConfirmarEntregaInput, RegistrarTransaccionInput, CierreTurnoInput, EntradaDirectaInput } from '../validators/inventario.validator';
 import { pricingEngineService } from './pricing-engine.service';
+import { auditoriaService } from './auditoria.service';
 
 export class InventarioService {
 
@@ -49,29 +50,27 @@ export class InventarioService {
             }
 
             if (options?.usuarioId) {
-                await tx.auditoriaLog.create({
-                    data: {
-                        usuarioId: options.usuarioId,
-                        modulo: 'inventario',
-                        accion: 'CIERRE_TURNO',
-                        entidad: 'tanque',
-                        entidadId: data.tanqueId,
-                        datosAntes: {
-                            nivelTeorico,
-                            nivelMinimo: Number(tanque.nivelMinimo),
-                            nivelActual: Number(tanque.nivelActual),
-                        },
-                        datosDespues: {
-                            nivelFisico: data.nivelFisico,
-                            diferencia,
-                            ajusteRealizado: true,
-                            ajusteTransaccionId,
-                            observaciones: data.observaciones,
-                        },
-                        ip: options.ip,
-                        userAgent: options.userAgent,
-                    }
-                });
+                await auditoriaService.registrarLog({
+                    usuarioId: options.usuarioId,
+                    modulo: 'INVENTARIO',
+                    accion: 'CIERRE_TURNO',
+                    entidad: 'tanque',
+                    entidadId: data.tanqueId,
+                    datosAntes: {
+                        nivelTeorico,
+                        nivelMinimo: Number(tanque.nivelMinimo),
+                        nivelActual: Number(tanque.nivelActual),
+                    },
+                    datosDespues: {
+                        nivelFisico: data.nivelFisico,
+                        diferencia,
+                        ajusteRealizado: true,
+                        ajusteTransaccionId,
+                        observaciones: data.observaciones,
+                    },
+                    ip: options.ip,
+                    userAgent: options.userAgent,
+                }, tx);
             }
 
             return {
@@ -157,29 +156,27 @@ export class InventarioService {
             });
 
             if (options?.usuarioId) {
-                await tx.auditoriaLog.create({
-                    data: {
-                        usuarioId: options.usuarioId,
-                        modulo: 'inventario',
-                        accion: 'REGISTRAR_ENTREGA_PENDIENTE',
-                        entidad: 'entrega_distribuidor',
-                        entidadId: entrega.id,
-                        datosDespues: {
-                            distribuidorId: data.distribuidorId,
-                            estacionId: data.estacionId,
-                            tanqueId: data.tanqueId,
-                            tipoCombustible: data.tipoCombustible,
-                            galones: data.galones,
-                            precioUnitario: precioUnitario,
-                            precioTotal,
-                            numeroRemision: nuevoNumeroRemision,
-                            fechaEntrega: data.fechaEntrega,
-                            confirmada: false,
-                        },
-                        ip: options.ip,
-                        userAgent: options.userAgent,
-                    }
-                });
+                await auditoriaService.registrarLog({
+                    usuarioId: options.usuarioId,
+                    modulo: 'INVENTARIO',
+                    accion: 'REGISTRAR_ENTREGA_PENDIENTE',
+                    entidad: 'entrega_distribuidor',
+                    entidadId: entrega.id,
+                    datosDespues: {
+                        distribuidorId: data.distribuidorId,
+                        estacionId: data.estacionId,
+                        tanqueId: data.tanqueId,
+                        tipoCombustible: data.tipoCombustible,
+                        galones: data.galones,
+                        precioUnitario: precioUnitario,
+                        precioTotal,
+                        numeroRemision: nuevoNumeroRemision,
+                        fechaEntrega: data.fechaEntrega,
+                        confirmada: false,
+                    },
+                    ip: options.ip,
+                    userAgent: options.userAgent,
+                }, tx);
             }
 
             return { ...entrega, _precioDetalle: precioAplicado };

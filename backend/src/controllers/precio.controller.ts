@@ -30,7 +30,11 @@ export const obtenerPrecioPorIdHandler = async (req: Request, res: Response) => 
 export const crearPrecioHandler = async (req: Request, res: Response) => {
     try {
         const validData = crearPrecioSchema.parse(req.body);
-        const precio = await precioService.crearPrecio(validData);
+        const precio = await precioService.crearPrecio(validData, {
+            usuarioId: (req as any).user?.userId || '',
+            ip: req.ip || '127.0.0.1',
+            userAgent: req.get('user-agent')
+        });
         res.status(201).json({ success: true, message: 'Precio vigente creado (anteriores desactivados)', data: precio });
     } catch (error: any) {
         if (error instanceof ZodError) { res.status(400).json({ success: false, errors: error.issues }); return; }
@@ -41,7 +45,11 @@ export const crearPrecioHandler = async (req: Request, res: Response) => {
 export const actualizarPrecioHandler = async (req: Request, res: Response) => {
     try {
         const validData = actualizarPrecioSchema.parse(req.body);
-        const precio = await precioService.actualizarPrecio(req.params.id as string, validData);
+        const precio = await precioService.actualizarPrecio(req.params.id as string, validData, {
+            usuarioId: (req as any).user?.userId || '',
+            ip: req.ip || '127.0.0.1',
+            userAgent: req.get('user-agent')
+        });
         res.json({ success: true, message: 'Precio actualizado', data: precio });
     } catch (error: any) {
         if (error instanceof ZodError) { res.status(400).json({ success: false, errors: error.issues }); return; }

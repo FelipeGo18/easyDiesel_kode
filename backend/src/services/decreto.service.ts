@@ -1,5 +1,12 @@
 import { prisma } from '../utils/prisma';
 import { CrearDecretoInput, ActualizarDecretoInput } from '../validators/decreto.validator';
+import { auditoriaService } from './auditoria.service';
+
+interface AuditoriaMetadata {
+    usuarioId: string;
+    ip: string;
+    userAgent?: string;
+}
 
 export class DecretoService {
     async obtenerDecretos() {
@@ -18,11 +25,11 @@ export class DecretoService {
         return decreto;
     }
 
-    async crearDecreto(data: CrearDecretoInput) {
+    async crearDecreto(data: CrearDecretoInput, meta?: AuditoriaMetadata) {
         const existe = await prisma.decretoNormativo.findUnique({ where: { numero: data.numero } });
         if (existe) throw new Error('Ya existe un decreto con este numero');
 
-        return prisma.decretoNormativo.create({
+        const decreto = await prisma.decretoNormativo.create({
             data: {
                 numero: data.numero,
                 titulo: data.titulo,
@@ -33,9 +40,24 @@ export class DecretoService {
                 documentoUrl: data.documentoUrl,
             }
         });
+
+        if (meta) {
+            await auditoriaService.registrarLog({
+                usuarioId: meta.usuarioId,
+                modulo: 'DECRETOS',
+                accion: 'CREAR_DECRETO',
+                entidad: 'decreto_normativo',
+                entidadId: decreto.id,
+                ip: meta.ip,
+                userAgent: meta.userAgent,
+                datosDespues: { numero: decreto.numero, titulo: decreto.titulo }
+            });
+        }
+
+        return decreto;
     }
 
-    async actualizarDecreto(id: string, data: ActualizarDecretoInput) {
+    async actualizarDecreto(id: string, data: ActualizarDecretoInput, meta?: AuditoriaMetadata) {
         const existe = await prisma.decretoNormativo.findUnique({ where: { id } });
         if (!existe) throw new Error('Decreto no encontrado');
 
@@ -48,7 +70,23 @@ export class DecretoService {
         if (data.fechaExpedicion) updateData.fechaExpedicion = new Date(data.fechaExpedicion);
         if (data.fechaVigencia) updateData.fechaVigencia = new Date(data.fechaVigencia);
 
-        return prisma.decretoNormativo.update({ where: { id }, data: updateData });
+        const decreto = await prisma.decretoNormativo.update({ where: { id }, data: updateData });
+
+        if (meta) {
+            await auditoriaService.registrarLog({
+                usuarioId: meta.usuarioId,
+                modulo: 'DECRETOS',
+                accion: 'ACTUALIZAR_DECRETO',
+                entidad: 'decreto_normativo',
+                entidadId: id,
+                ip: meta.ip,
+                userAgent: meta.userAgent,
+                datosAntes: existe,
+                datosDespues: { cambios: Object.keys(data) }
+            });
+        }
+
+        return decreto;
     }
 }
 

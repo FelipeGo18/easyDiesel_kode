@@ -29,7 +29,10 @@ export const generarReporteHandler = async (req: Request, res: Response) => {
             validData.parametros.zonaId = usuario.estacionGestionada.zonaId;
         }
 
-        const { reporte, fileBuffer } = await reporteService.generarReporte(validData, usuarioId);
+        const { reporte, fileBuffer } = await reporteService.generarReporte(validData, usuarioId, {
+            ip: req.ip || '127.0.0.1',
+            userAgent: req.get('user-agent')
+        });
 
         // Nombres y tipos MIME segun formato
         let contentType = 'application/pdf';

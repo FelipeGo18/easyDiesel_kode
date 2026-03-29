@@ -94,9 +94,9 @@ export function HomePage() {
             <main className="relative">
                 <HeroSection />
 
-                {/* Separator / Marquee area */}
-                <div className="relative z-10 w-full bg-[#050505] border-y border-border-subtle flex flex-col justify-center overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-bg-base via-transparent to-bg-base z-10 w-full pointer-events-none" />
+                {/* Separator / Marquee area - Negative margin to overlap with Hero sticky exit */}
+                <div className="relative z-20 w-full bg-bg-base border-y border-border-subtle flex flex-col justify-center overflow-hidden -mt-[20vh]">
+                    <div className="absolute inset-0 bg-linear-to-r from-bg-base via-transparent to-bg-base z-10 w-full pointer-events-none" />
                     <Marquee />
                 </div>
 

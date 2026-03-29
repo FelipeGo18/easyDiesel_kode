@@ -18,7 +18,7 @@ import { StationOperationsPage } from '@/pages/DespachadorPanelPage';
 import { DistribuidorPanelPage } from '@/pages/DistribuidorPanelPage';
 import { ParticularPanelPage } from '@/pages/ParticularPanelPage';
 import { ReguladorPanelPage } from '@/pages/ReguladorPanelPage';
-import { AuditoriaPage } from '@/pages/AuditoriaPage';
+import { AuditorPanelPage } from '@/pages/AuditorPanelPage';
 
 export function PanelPage() {
     const { user } = useAuth();
@@ -63,7 +63,7 @@ export function PanelPage() {
     }
 
     if (roleName === 'auditor') {
-        return <AuditoriaPage />;
+        return <AuditorPanelPage />;
     }
 // prueba logica dashbotd
     // Lógica de visualización condicional basada en roles

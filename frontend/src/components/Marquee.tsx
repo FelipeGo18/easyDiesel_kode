@@ -50,13 +50,13 @@ export function Marquee() {
     return (
         <div
             ref={wrapRef}
-            className="relative overflow-hidden py-6 md:py-10 select-none pointer-events-none"
+            className="relative overflow-hidden py-4 md:py-6 select-none pointer-events-none"
         >
             <div className="marquee-inner whitespace-nowrap flex">
-                <span className="font-display text-[72px] md:text-[120px] leading-none text-amber-500/[0.07] tracking-wider shrink-0">
+                <span className="font-display text-[64px] md:text-[90px] leading-none text-amber-500/12 tracking-wider shrink-0">
                     {repeated}
                 </span>
-                <span className="font-display text-[72px] md:text-[120px] leading-none text-amber-500/[0.07] tracking-wider shrink-0">
+                <span className="font-display text-[64px] md:text-[90px] leading-none text-amber-500/12 tracking-wider shrink-0">
                     {repeated}
                 </span>
             </div>

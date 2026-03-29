@@ -32,7 +32,7 @@ export const cancelarEntregaHandler = async (req: Request, res: Response) => {
         const result = await inventarioService.cancelarEntrega(entregaId, {
             distribuidorId,
             usuarioId: req.user?.userId,
-            ip: req.ip,
+            ip: req.ip || '127.0.0.1',
             userAgent: typeof req.get === 'function' ? req.get('user-agent') || undefined : undefined,
         });
         res.json({ success: true, message: 'Entrega cancelada correctamente', data: result });
@@ -79,7 +79,7 @@ export const cierreTurnoHandler = async (req: Request, res: Response) => {
         const validData = cierreTurnoSchema.parse(req.body);
         const result = await inventarioService.cierreTurno(validData, {
             usuarioId: req.user?.userId,
-            ip: req.ip,
+            ip: req.ip || '127.0.0.1',
             userAgent: typeof req.get === 'function' ? req.get('user-agent') || undefined : undefined,
         });
         res.status(200).json({
@@ -101,7 +101,7 @@ export const registrarEntregaHandler = async (req: Request, res: Response) => {
         const validData = registrarEntregaSchema.parse(req.body);
         const entrega = await inventarioService.registrarEntrega(validData, {
             usuarioId: req.user?.userId,
-            ip: req.ip,
+            ip: req.ip || '127.0.0.1',
             userAgent: typeof req.get === 'function' ? req.get('user-agent') || undefined : undefined,
         });
         res.status(201).json({
@@ -126,7 +126,7 @@ export const confirmarEntregaHandler = async (req: Request, res: Response) => {
         });
         const result = await inventarioService.confirmarEntrega(validData, {
             usuarioId: req.user?.userId,
-            ip: req.ip,
+            ip: req.ip || '127.0.0.1',
             userAgent: typeof req.get === 'function' ? req.get('user-agent') || undefined : undefined,
         });
         res.status(200).json({
@@ -149,7 +149,7 @@ export const registrarEntradaDirectaHandler = async (req: Request, res: Response
         const validData = entradaDirectaSchema.parse(req.body);
         const result = await inventarioService.registrarEntradaDirecta(validData, {
             usuarioId: req.user?.userId,
-            ip: req.ip,
+            ip: req.ip || '127.0.0.1',
             userAgent: typeof req.get === 'function' ? req.get('user-agent') || undefined : undefined,
         });
         res.status(201).json({
@@ -185,7 +185,7 @@ export const registrarTransaccionHandler = async (req: Request, res: Response) =
         const validData = registrarTransaccionSchema.parse(req.body);
         const transaccion = await inventarioService.registrarTransaccion(validData, {
             usuarioId: req.user?.userId,
-            ip: req.ip,
+            ip: req.ip || '127.0.0.1',
             userAgent: typeof req.get === 'function' ? req.get('user-agent') || undefined : undefined,
         });
 

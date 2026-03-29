@@ -368,21 +368,21 @@ export function HeroSection({ onIntroStateChange }: HeroSectionProps) {
             // 0.6–1.0: entire content wrapper scales and fades (cinema zoom-out)
             scrubTL.fromTo(contentRef.current,
                 { scale: 1, opacity: 1 },
-                { scale: 0.7, opacity: 0, duration: 0.4, ease: 'power2.in' },
-            0.6);
+                { scale: 0.8, opacity: 0, duration: 0.4, ease: 'power2.in' },
+            0.5);
 
             // 0.7–1.0: glow final fade
             scrubTL.fromTo(glowRef.current,
                 { scale: 3, opacity: 0.25 },
                 { opacity: 0, duration: 0.3, ease: 'power2.in' },
-            0.7);
+            0.6);
 
             /* ── Create the single hooked ScrollTrigger for sticky element ── */
             ScrollTrigger.create({
                 trigger: hero.parentElement, // Trigger on the hero-root wrapper
                 start: 'top top',
                 end: 'bottom bottom', // End when the root wrapper finishes scrolling
-                scrub: 1,
+                scrub: true,
                 animation: scrubTL,
                 onLeave: () => {
                     onChangeRef.current?.(true);
@@ -394,8 +394,8 @@ export function HeroSection({ onIntroStateChange }: HeroSectionProps) {
                     const target = document.getElementById('precios');
                     if (l && target) {
                         l.scrollTo(target, {
-                            offset: 0,
-                            duration: 1.2,
+                            offset: -80, // Ajuste para que no se pase del Marquee
+                            duration: 0.8,
                             easing: (t: number) => 1 - Math.pow(1 - t, 4),
                         });
                     }
@@ -452,10 +452,10 @@ export function HeroSection({ onIntroStateChange }: HeroSectionProps) {
     }, []);
 
     return (
-        <div className="hero-root" style={{ height: '190vh' }}>
+        <div className="hero-root" style={{ height: '120vh' }}>
             <section
                 ref={heroRef}
-                className="h-screen sticky top-0 overflow-hidden bg-bg-base flex flex-col items-center justify-center px-6"
+                className="h-screen sticky top-0 overflow-hidden bg-transparent flex flex-col items-center justify-center px-6"
             >
                 {/* ── Capa -1: Animated canvas background ── */}
                 <canvas
@@ -573,8 +573,8 @@ export function HeroSection({ onIntroStateChange }: HeroSectionProps) {
                     >
                         <span className="text-[10px] font-mono uppercase tracking-[0.2em]">Explorar precios</span>
                         <div className="relative w-px h-12 overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-b from-amber-500 to-transparent" />
-                            <div className="absolute inset-0 bg-gradient-to-b from-amber-500 to-transparent hero-scan-line" />
+                            <div className="absolute inset-0 bg-linear-to-b from-amber-500 to-transparent" />
+                            <div className="absolute inset-0 bg-linear-to-b from-amber-500 to-transparent hero-scan-line" />
                         </div>
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="hero-chevron">
                             <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />

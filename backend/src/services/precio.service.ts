@@ -1,5 +1,12 @@
 import { prisma } from '../utils/prisma';
 import { CrearPrecioInput, ActualizarPrecioInput } from '../validators/precio.validator';
+import { auditoriaService } from './auditoria.service';
+
+interface AuditoriaMetadata {
+    usuarioId: string;
+    ip: string;
+    userAgent?: string;
+}
 
 export class PrecioService {
     /**
@@ -35,7 +42,7 @@ export class PrecioService {
      * Desactiva automáticamente el precio anterior para la misma combinación
      * (tipoCombustible + tipoServicio + zona).
      */
-    async crearPrecio(data: CrearPrecioInput) {
+    async crearPrecio(data: CrearPrecioInput, meta?: AuditoriaMetadata) {
         // Validar que la zona y el decreto existan
         const zona = await prisma.zonaDistribucion.findUnique({ where: { id: data.zonaId } });
         if (!zona) throw new Error('Zona no encontrada');
@@ -44,7 +51,7 @@ export class PrecioService {
         if (!decreto) throw new Error('Decreto no encontrado');
 
         // Transacción: desactivar precio anterior + crear nuevo
-        return prisma.$transaction(async (tx: any) => {
+        const nuevoPrecio = await prisma.$transaction(async (tx: any) => {
             // Desactivar precio(s) anterior(es) para la misma combinación
             await tx.precioVigente.updateMany({
                 where: {
@@ -75,24 +82,64 @@ export class PrecioService {
                 include: { zona: true, decreto: true }
             });
         });
+
+        // Registro de Auditoría
+        if (meta) {
+            await auditoriaService.registrarLog({
+                usuarioId: meta.usuarioId,
+                modulo: 'PRECIOS',
+                accion: 'CREAR_PRECIO',
+                entidad: 'precio_vigente',
+                entidadId: nuevoPrecio.id,
+                ip: meta.ip,
+                userAgent: meta.userAgent,
+                datosDespues: {
+                    zona: zona.nombre,
+                    combustible: data.tipoCombustible,
+                    precio: data.precioGalon
+                }
+            });
+        }
+
+        return nuevoPrecio;
     }
 
     /**
      * Actualizar un precio existente.
      */
-    async actualizarPrecio(id: string, data: ActualizarPrecioInput) {
-        const existe = await prisma.precioVigente.findUnique({ where: { id } });
+    async actualizarPrecio(id: string, data: ActualizarPrecioInput, meta?: AuditoriaMetadata) {
+        const existe = await prisma.precioVigente.findUnique({ where: { id }, include: { zona: true } });
         if (!existe) throw new Error('Precio no encontrado');
 
         const updateData: any = { ...data };
         if (data.vigenciaDesde) updateData.vigenciaDesde = new Date(data.vigenciaDesde);
         if (data.vigenciaHasta) updateData.vigenciaHasta = new Date(data.vigenciaHasta);
 
-        return prisma.precioVigente.update({
+        const precio = await prisma.precioVigente.update({
             where: { id },
             data: updateData,
             include: { zona: true, decreto: true }
         });
+
+        // Registro de Auditoría
+        if (meta) {
+            await auditoriaService.registrarLog({
+                usuarioId: meta.usuarioId,
+                modulo: 'PRECIOS',
+                accion: 'ACTUALIZAR_PRECIO',
+                entidad: 'precio_vigente',
+                entidadId: id,
+                ip: meta.ip,
+                userAgent: meta.userAgent,
+                datosAntes: existe,
+                datosDespues: {
+                    zona: existe.zona.nombre,
+                    cambios: Object.keys(data)
+                }
+            });
+        }
+
+        return precio;
     }
 
     /**

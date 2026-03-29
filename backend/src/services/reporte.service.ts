@@ -2,13 +2,14 @@ import { prisma } from '../utils/prisma';
 import { GenerarReporteInput } from '../validators/reporte.validator';
 import { generarPDF } from '../utils/pdfGenerator';
 import { generarExcel, generarCSV } from '../utils/excelGenerator';
+import { auditoriaService } from './auditoria.service';
 
 export class ReporteService {
     /**
      * Genera un registro de reporte y recopila los datos segun el tipo,
      * devolviendo el archivo generado en Buffer.
      */
-    async generarReporte(data: GenerarReporteInput, usuarioId: string) {
+    async generarReporte(data: GenerarReporteInput, usuarioId: string, options?: { ip?: string; userAgent?: string }) {
         // 1. Crear el registro del reporte
         const reporte = await prisma.reporte.create({
             data: {
@@ -19,6 +20,18 @@ export class ReporteService {
                 parametros: data.parametros ?? {},
                 generadoPor: usuarioId,
             }
+        });
+
+        // 2. Registro de Auditoría
+        await auditoriaService.registrarLog({
+            usuarioId,
+            modulo: 'REPORTES',
+            accion: 'GENERAR_REPORTE',
+            entidad: 'reporte',
+            entidadId: reporte.id,
+            ip: options?.ip,
+            userAgent: options?.userAgent,
+            datosDespues: { tipo: data.tipo, formato: data.formato }
         });
 
         // 2. Recopilar datos segun el tipo

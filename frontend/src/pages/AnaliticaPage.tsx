@@ -35,6 +35,7 @@ const tiposReporteBase = [
     { id: 'TRANSACCIONES', label: 'Ventas y Despachos', icon: 'history', description: 'Registro detallado de entradas y salidas de combustible.', roles: ['admin', 'estacion', 'distribuidor'] },
     { id: 'PRECIOS', label: 'Histórico de Precios', icon: 'spreadsheet', description: 'Evolución de precios por zona y tipo de combustible.', roles: ['admin', 'estacion', 'distribuidor', 'regulador'] },
     { id: 'NORMATIVO', label: 'Cumplimiento Normativo', icon: 'normativa', description: 'Decretos vigentes y resoluciones aplicadas.', roles: ['admin', 'estacion', 'distribuidor', 'regulador'] },
+    { id: 'AUDITORIA', label: 'Rastreo de Seguridad', icon: 'audit', description: 'Reporte consolidado de logs y acciones de usuarios.', roles: ['admin', 'auditor'] },
 ];
 
 // Mock data para los gráficos
@@ -75,6 +76,7 @@ export function AnaliticaPage() {
     const toast = useToast();
     const { user } = useAuth();
     const userRole = typeof user?.rol === 'object' ? user.rol.nombre : user?.rol;
+    const isAuditor = userRole === 'auditor';
 
     const [reportes, setReportes] = useState<ReporteRegistro[]>([]);
     const [loading, setLoading] = useState(true);
@@ -193,12 +195,18 @@ export function AnaliticaPage() {
             {/* Header Global */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-h1 text-text-primary mb-1">Analítica y Reportes</h1>
-                    <p className="text-small text-text-secondary">Monitorea los indicadores clave y genera informes detallados.</p>
+                    <h1 className="text-h1 text-text-primary mb-1">
+                        {isAuditor ? 'Análisis de Riesgos y Reportes' : 'Analítica y Reportes'}
+                    </h1>
+                    <p className="text-small text-text-secondary">
+                        {isAuditor 
+                            ? 'Detección de anomalías operativas y generación de informes de cumplimiento.' 
+                            : 'Monitorea los indicadores clave y genera informes detallados.'}
+                    </p>
                 </div>
                 
                 {/* Filtros Globales de Fecha */}
-                <div className="flex items-center gap-3 bg-bg-elevated p-2 rounded-[4px] border border-border-subtle">
+                <div className="flex items-center gap-3 bg-bg-elevated p-2 rounded-brand border border-border-subtle">
                     <div className="flex items-center gap-2">
                         <Icon name="calendar" size={14} className="text-text-muted ml-1" />
                         <input
@@ -223,70 +231,134 @@ export function AnaliticaPage() {
             {/* SECCIÓN 1: DASHBOARD ANALÍTICO */}
             <div className="space-y-6">
                 <h2 className="text-[16px] font-bold text-text-primary mb-4 flex items-center gap-2 border-b border-border-subtle pb-2">
-                    <Icon name="dashboard" size={18} className="text-amber-500" />
-                    Panel de Control Principal
+                    <Icon name={isAuditor ? 'audit' : 'dashboard'} size={18} className="text-amber-500" />
+                    {isAuditor ? 'Indicadores de Cumplimiento e Integridad' : 'Panel de Control Principal'}
                 </h2>
                 
                 {/* KPIs */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-[12px] text-text-secondary font-medium">Volumen Total Transado</p>
-                                <h3 className="text-2xl font-bold text-text-primary mt-1">144,000 <span className="text-sm font-normal text-text-muted">Gal</span></h3>
-                            </div>
-                            <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500">
-                                <Icon name="tank" size={20} />
-                            </div>
-                        </div>
-                        <div className="mt-4 flex items-center gap-1.5 text-[11px] text-green-500">
-                            <Icon name="refresh" size={12} /> {/* Reemplazar con icon de subida si hay */}
-                            <span className="font-medium">+12.5%</span>
-                            <span className="text-text-muted ml-1">vs mes anterior</span>
-                        </div>
-                    </Card>
-                    <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-[12px] text-text-secondary font-medium">Estaciones Activas</p>
-                                <h3 className="text-2xl font-bold text-text-primary mt-1">28</h3>
-                            </div>
-                            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
-                                <Icon name="station" size={20} />
-                            </div>
-                        </div>
-                        <div className="mt-4 flex items-center gap-1.5 text-[11px] text-text-muted">
-                            <span>Operativas en 4 zonas</span>
-                        </div>
-                    </Card>
-                    <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-[12px] text-text-secondary font-medium">Capacidad de Inventario</p>
-                                <h3 className="text-2xl font-bold text-text-primary mt-1">65%</h3>
-                            </div>
-                            <div className="p-2 bg-green-500/10 rounded-lg text-green-500">
-                                <Icon name="dashboard" size={20} />
-                            </div>
-                        </div>
-                        <div className="mt-4 w-full bg-bg-elevated h-1.5 rounded-full overflow-hidden">
-                            <div className="bg-green-500 h-full rounded-full" style={{ width: '65%' }} />
-                        </div>
-                    </Card>
-                    <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-[12px] text-text-secondary font-medium">Alertas Normativas</p>
-                                <h3 className="text-2xl font-bold text-text-primary mt-1">2</h3>
-                            </div>
-                            <div className="p-2 bg-red-500/10 rounded-lg text-red-500">
-                                <Icon name="normativa" size={20} />
-                            </div>
-                        </div>
-                        <div className="mt-4 flex items-center gap-1.5 text-[11px] text-red-500 cursor-pointer hover:underline">
-                            <span className="font-medium">Requieren atención inmediata</span>
-                        </div>
-                    </Card>
+                    {isAuditor ? (
+                        <>
+                            <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <p className="text-[12px] text-text-secondary font-medium">Alertas de Seguridad</p>
+                                        <h3 className="text-2xl font-bold text-text-primary mt-1">12</h3>
+                                    </div>
+                                    <div className="p-2 bg-red-500/10 rounded-lg text-red-500">
+                                        <Icon name="alert" size={20} />
+                                    </div>
+                                </div>
+                                <div className="mt-4 flex items-center gap-1.5 text-[11px] text-red-500">
+                                    <span className="font-medium">+3 hoy</span>
+                                    <span className="text-text-muted ml-1">Intentos fallidos / Acciones críticas</span>
+                                </div>
+                            </Card>
+                            <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <p className="text-[12px] text-text-secondary font-medium">Trazabilidad Global</p>
+                                        <h3 className="text-2xl font-bold text-text-primary mt-1">99.8%</h3>
+                                    </div>
+                                    <div className="p-2 bg-green-500/10 rounded-lg text-green-500">
+                                        <Icon name="check" size={20} />
+                                    </div>
+                                </div>
+                                <div className="mt-4 flex items-center gap-1.5 text-[11px] text-text-muted">
+                                    <span>Logs sin inconsistencias</span>
+                                </div>
+                            </Card>
+                            <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <p className="text-[12px] text-text-secondary font-medium">Variación de Precios</p>
+                                        <h3 className="text-2xl font-bold text-text-primary mt-1">±0.2%</h3>
+                                    </div>
+                                    <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
+                                        <Icon name="prices" size={20} />
+                                    </div>
+                                </div>
+                                <div className="mt-4 flex items-center gap-1.5 text-[11px] text-text-muted">
+                                    <span>Desviación vs Decreto 1428</span>
+                                </div>
+                            </Card>
+                            <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <p className="text-[12px] text-text-secondary font-medium">Usuarios Privilegiados</p>
+                                        <h3 className="text-2xl font-bold text-text-primary mt-1">4</h3>
+                                    </div>
+                                    <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500">
+                                        <Icon name="user" size={20} />
+                                    </div>
+                                </div>
+                                <div className="mt-4 flex items-center gap-1.5 text-[11px] text-text-muted">
+                                    <span>Con permisos de escritura</span>
+                                </div>
+                            </Card>
+                        </>
+                    ) : (
+                        <>
+                            <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <p className="text-[12px] text-text-secondary font-medium">Volumen Total Transado</p>
+                                        <h3 className="text-2xl font-bold text-text-primary mt-1">144,000 <span className="text-sm font-normal text-text-muted">Gal</span></h3>
+                                    </div>
+                                    <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500">
+                                        <Icon name="tank" size={20} />
+                                    </div>
+                                </div>
+                                <div className="mt-4 flex items-center gap-1.5 text-[11px] text-green-500">
+                                    <Icon name="refresh" size={12} /> {/* Reemplazar con icon de subida si hay */}
+                                    <span className="font-medium">+12.5%</span>
+                                    <span className="text-text-muted ml-1">vs mes anterior</span>
+                                </div>
+                            </Card>
+                            <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <p className="text-[12px] text-text-secondary font-medium">Estaciones Activas</p>
+                                        <h3 className="text-2xl font-bold text-text-primary mt-1">28</h3>
+                                    </div>
+                                    <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
+                                        <Icon name="station" size={20} />
+                                    </div>
+                                </div>
+                                <div className="mt-4 flex items-center gap-1.5 text-[11px] text-text-muted">
+                                    <span>Operativas en 4 zonas</span>
+                                </div>
+                            </Card>
+                            <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <p className="text-[12px] text-text-secondary font-medium">Capacidad de Inventario</p>
+                                        <h3 className="text-2xl font-bold text-text-primary mt-1">65%</h3>
+                                    </div>
+                                    <div className="p-2 bg-green-500/10 rounded-lg text-green-500">
+                                        <Icon name="dashboard" size={20} />
+                                    </div>
+                                </div>
+                                <div className="mt-4 w-full bg-bg-elevated h-1.5 rounded-full overflow-hidden">
+                                    <div className="bg-green-500 h-full rounded-full" style={{ width: '65%' }} />
+                                </div>
+                            </Card>
+                            <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <p className="text-[12px] text-text-secondary font-medium">Alertas Normativas</p>
+                                        <h3 className="text-2xl font-bold text-text-primary mt-1">2</h3>
+                                    </div>
+                                    <div className="p-2 bg-red-500/10 rounded-lg text-red-500">
+                                        <Icon name="normativa" size={20} />
+                                    </div>
+                                </div>
+                                <div className="mt-4 flex items-center gap-1.5 text-[11px] text-red-500 cursor-pointer hover:underline">
+                                    <span className="font-medium">Requieren atención inmediata</span>
+                                </div>
+                            </Card>
+                        </>
+                    )}
                 </div>
 
                 {/* Gráficos */}
@@ -412,7 +484,7 @@ export function AnaliticaPage() {
                                             <button
                                                 key={t.id}
                                                 onClick={() => setTipoSeleccionado(t.id)}
-                                                className={`flex items-start gap-3 p-3 rounded-[4px] border text-left transition-all interactive ${tipoSeleccionado === t.id
+                                                className={`flex items-start gap-3 p-3 rounded-brand border text-left transition-all interactive ${tipoSeleccionado === t.id
                                                         ? 'bg-transparent border-amber-500 ring-1 ring-amber-500'
                                                         : 'bg-bg-elevated border-border-subtle hover:border-[#444]'
                                                     }`}
@@ -433,13 +505,13 @@ export function AnaliticaPage() {
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => setFormato('PDF')}
-                                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-[4px] text-[11px] font-mono border transition-colors ${formato === 'PDF' ? 'bg-amber-500 text-black border-amber-500 font-bold' : 'bg-bg-elevated border-border-subtle text-text-secondary hover:border-[#444]'}`}
+                                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-brand text-[11px] font-mono border transition-colors ${formato === 'PDF' ? 'bg-amber-500 text-black border-amber-500 font-bold' : 'bg-bg-elevated border-border-subtle text-text-secondary hover:border-[#444]'}`}
                                         >
                                             <Icon name="normativa" size={14} /> PDF
                                         </button>
                                         <button
                                             onClick={() => setFormato('EXCEL')}
-                                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-[4px] text-[11px] font-mono border transition-colors ${formato === 'EXCEL' ? 'bg-[#10B981] text-black border-[#10B981] font-bold' : 'bg-bg-elevated border-border-subtle text-text-secondary hover:border-[#444]'}`}
+                                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-brand text-[11px] font-mono border transition-colors ${formato === 'EXCEL' ? 'bg-[#10B981] text-black border-[#10B981] font-bold' : 'bg-bg-elevated border-border-subtle text-text-secondary hover:border-[#444]'}`}
                                         >
                                             <Icon name="spreadsheet" size={14} /> EXCEL
                                         </button>

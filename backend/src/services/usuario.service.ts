@@ -1,6 +1,13 @@
 import bcrypt from 'bcryptjs';
 import { prisma } from '../utils/prisma';
 import { CrearUsuarioInput, ActualizarUsuarioInput } from '../validators/usuario.validator';
+import { auditoriaService } from './auditoria.service';
+
+interface AuditoriaMetadata {
+    usuarioId: string;
+    ip: string;
+    userAgent?: string;
+}
 
 export class UsuarioService {
     /**
@@ -65,7 +72,7 @@ export class UsuarioService {
     /**
      * Crear un nuevo usuario (típicamente por un Admin).
      */
-    async crearUsuario(data: CrearUsuarioInput) {
+    async crearUsuario(data: CrearUsuarioInput, meta?: AuditoriaMetadata) {
         // Validar si el email ya existe
         const existe = await prisma.usuario.findUnique({ where: { email: data.email } });
         if (existe) {
@@ -112,6 +119,20 @@ export class UsuarioService {
             });
         }
 
+        // Registro de Auditoría
+        if (meta) {
+            await auditoriaService.registrarLog({
+                usuarioId: meta.usuarioId,
+                modulo: 'USUARIOS',
+                accion: 'CREAR_USUARIO',
+                entidad: 'usuario',
+                entidadId: usuario.id,
+                ip: meta.ip,
+                userAgent: meta.userAgent,
+                datosDespues: { email: usuario.email, rol: usuario.rol.nombre }
+            });
+        }
+
         const { passwordHash: _, ...newUser } = usuario;
         return newUser;
     }
@@ -119,7 +140,7 @@ export class UsuarioService {
     /**
      * Actualizar datos de un usuario existente.
      */
-    async actualizarUsuario(id: string, data: ActualizarUsuarioInput) {
+    async actualizarUsuario(id: string, data: ActualizarUsuarioInput, meta?: AuditoriaMetadata) {
         // Validar existencia
         const existe = await prisma.usuario.findUnique({ where: { id } });
         if (!existe) {
@@ -178,6 +199,21 @@ export class UsuarioService {
             }
         }
 
+        // Registro de Auditoría
+        if (meta) {
+            await auditoriaService.registrarLog({
+                usuarioId: meta.usuarioId,
+                modulo: 'USUARIOS',
+                accion: 'ACTUALIZAR_USUARIO',
+                entidad: 'usuario',
+                entidadId: usuario.id,
+                ip: meta.ip,
+                userAgent: meta.userAgent,
+                datosAntes: existe,
+                datosDespues: { email: usuario.email, cambios: Object.keys(data) }
+            });
+        }
+
         const { passwordHash: _, ...newUser } = usuario;
         return newUser;
     }
@@ -194,7 +230,7 @@ export class UsuarioService {
     /**
      * Desactivación lógica (Soft Delete) del usuario.
      */
-    async desactivarUsuario(id: string) {
+    async desactivarUsuario(id: string, meta?: AuditoriaMetadata) {
         const existe = await prisma.usuario.findUnique({ where: { id } });
         if (!existe) {
             throw new Error('Usuario no encontrado');
@@ -202,8 +238,23 @@ export class UsuarioService {
 
         const usuario = await prisma.usuario.update({
             where: { id },
-            data: { activo: false } // Cambia a inactivo
+            data: { activo: false }
         });
+
+        // Registro de Auditoría
+        if (meta) {
+            await auditoriaService.registrarLog({
+                usuarioId: meta.usuarioId,
+                modulo: 'USUARIOS',
+                accion: 'DESACTIVAR_USUARIO',
+                entidad: 'usuario',
+                entidadId: id,
+                ip: meta.ip,
+                userAgent: meta.userAgent,
+                datosAntes: existe,
+                datosDespues: { email: usuario.email }
+            });
+        }
 
         return { id: usuario.id, email: usuario.email, activo: usuario.activo };
     }

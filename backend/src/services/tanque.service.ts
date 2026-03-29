@@ -1,5 +1,12 @@
 import { prisma } from '../utils/prisma';
 import { CrearTanqueInput, ActualizarTanqueInput } from '../validators/tanque.validator';
+import { auditoriaService } from './auditoria.service';
+
+interface AuditoriaMetadata {
+    usuarioId: string;
+    ip: string;
+    userAgent?: string;
+}
 
 export class TanqueService {
     async obtenerTanques(estacionId?: string) {
@@ -23,13 +30,13 @@ export class TanqueService {
         return tanque;
     }
 
-    async crearTanque(data: CrearTanqueInput) {
+    async crearTanque(data: CrearTanqueInput, meta?: AuditoriaMetadata) {
         // Valida que la estación exista
         const estacion = await prisma.estacionServicio.findUnique({ where: { id: data.estacionId } });
         if (!estacion) throw new Error('La estación seleccionada no existe');
 
         // Todo nuevo tanque arranca con nivelActual = 0
-        return prisma.tanque.create({
+        const tanque = await prisma.tanque.create({
             data: {
                 nombre: data.nombre,
                 capacidadGalones: data.capacidadGalones,
@@ -39,9 +46,24 @@ export class TanqueService {
                 estacionId: data.estacionId
             }
         });
+
+        if (meta) {
+            await auditoriaService.registrarLog({
+                usuarioId: meta.usuarioId,
+                modulo: 'TANQUES',
+                accion: 'CREAR_TANQUE',
+                entidad: 'tanque',
+                entidadId: tanque.id,
+                ip: meta.ip,
+                userAgent: meta.userAgent,
+                datosDespues: { nombre: tanque.nombre, capacidad: tanque.capacidadGalones }
+            });
+        }
+
+        return tanque;
     }
 
-    async actualizarTanque(id: string, data: ActualizarTanqueInput) {
+    async actualizarTanque(id: string, data: ActualizarTanqueInput, meta?: AuditoriaMetadata) {
         const existe = await prisma.tanque.findUnique({ where: { id } });
         if (!existe) throw new Error('Tanque no encontrado');
 
@@ -50,7 +72,7 @@ export class TanqueService {
             if (!estacion) throw new Error('La estación seleccionada no existe');
         }
 
-        return prisma.tanque.update({
+        const tanque = await prisma.tanque.update({
             where: { id },
             data: {
                 ...(data.nombre && { nombre: data.nombre }),
@@ -60,6 +82,22 @@ export class TanqueService {
                 ...(data.estacionId && { estacionId: data.estacionId })
             }
         });
+
+        if (meta) {
+            await auditoriaService.registrarLog({
+                usuarioId: meta.usuarioId,
+                modulo: 'TANQUES',
+                accion: 'ACTUALIZAR_TANQUE',
+                entidad: 'tanque',
+                entidadId: id,
+                ip: meta.ip,
+                userAgent: meta.userAgent,
+                datosAntes: existe,
+                datosDespues: { cambios: Object.keys(data) }
+            });
+        }
+
+        return tanque;
     }
 }
 
