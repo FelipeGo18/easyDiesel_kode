@@ -64,7 +64,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         description: 'Métricas clave y centro de reportes',
         requiredPermissions: ['estadisticas:leer', 'reportes:leer'],
         showInNavigation: true,
-        excludeRoles: ['distribuidor', 'distribuidor_regulado'],
+        excludeRoles: ['distribuidor', 'distribuidor_regulado', 'regulador'],
     },
     {
         path: '/zonas',
@@ -142,7 +142,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         description: 'Trazabilidad de operaciones y cambios',
         requiredPermissions: ['auditoria:leer'],
         showInNavigation: true,
-        excludeRoles: ['distribuidor', 'distribuidor_regulado', 'estacion', 'despachador'],
+        excludeRoles: ['distribuidor', 'distribuidor_regulado', 'estacion', 'despachador', 'regulador'],
     },
 ];
 

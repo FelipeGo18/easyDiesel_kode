@@ -41,9 +41,10 @@ const baseInput = 'w-full px-3 py-2.5 bg-bg-elevated border border-border-defaul
 interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
     label: string;
     error?: string;
+    rightElement?: ReactNode;
 }
 
-export function InputField({ label, error, id, ...props }: InputFieldProps) {
+export function InputField({ label, error, id, rightElement, ...props }: InputFieldProps) {
     const currentLength = typeof props.value === 'string' ? props.value.length : 0;
     
     return (
@@ -54,7 +55,14 @@ export function InputField({ label, error, id, ...props }: InputFieldProps) {
             maxLength={props.maxLength}
             currentLength={currentLength}
         >
-            <input id={id} className={`${baseInput} ${error ? 'border-red-500/50' : ''}`} {...props} />
+            <div className="relative">
+                <input id={id} className={`${baseInput} ${error ? 'border-red-500/50' : ''} ${rightElement ? 'pr-10' : ''}`} {...props} />
+                {rightElement && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                        {rightElement}
+                    </div>
+                )}
+            </div>
         </FieldWrapper>
     );
 }

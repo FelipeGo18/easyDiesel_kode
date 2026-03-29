@@ -34,6 +34,8 @@ export function UsuariosPage() {
     const [estaciones, setEstaciones] = useState<EstacionServicio[]>([]);
     const [distribuidores, setDistribuidores] = useState<Distribuidor[]>([]);
     const [submitting, setSubmitting] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [formError, setFormError] = useState<string | null>(null);
 
     const fetchUsers = useCallback(async (searchTerm: string, pg: number) => {
         try {
@@ -79,6 +81,8 @@ export function UsuariosPage() {
         setRolId(roles[0]?.id || '');
         setEstacionId('');
         setDistribuidorId('');
+        setFormError(null);
+        setShowPassword(false);
         setModalOpen(true);
     };
 
@@ -90,6 +94,8 @@ export function UsuariosPage() {
         setRolId(u.rol?.id || '');
         setEstacionId(u.estacionGestionada?.id || '');
         setDistribuidorId(u.distribuidorGestionado?.id || '');
+        setFormError(null);
+        setShowPassword(false);
         setModalOpen(true);
     };
 
@@ -107,6 +113,7 @@ export function UsuariosPage() {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
+        setFormError(null);
         const selectedRoleName = roles.find(r => r.id === rolId)?.nombre || '';
         try {
             if (editing) {
@@ -127,7 +134,9 @@ export function UsuariosPage() {
             setModalOpen(false);
             fetchData();
         } catch (error: unknown) {
-            toast.error(getErrorMessage(error, 'Error al guardar usuario'));
+            const msg = getErrorMessage(error, 'Error al guardar usuario');
+            setFormError(msg);
+            toast.error(msg);
         } finally {
             setSubmitting(false);
         }
@@ -274,6 +283,13 @@ export function UsuariosPage() {
                 title={editing ? 'Editar usuario' : 'Nuevo usuario'}
             >
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {formError && (
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-brand flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                            <Icon name="alert" size={16} className="text-red-500 shrink-0 mt-0.5" />
+                            <p className="text-[12px] text-red-500 font-medium leading-relaxed">{formError}</p>
+                        </div>
+                    )}
+
                     <InputField
                         label="Nombre completo"
                         id="user-nombre"
@@ -294,11 +310,21 @@ export function UsuariosPage() {
                     <InputField
                         label={editing ? 'Nueva contraseña (dejar vacío para no cambiar)' : 'Contraseña'}
                         id="user-password"
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder={editing ? '••••••••' : 'Contraseña segura'}
                         required={!editing}
+                        rightElement={
+                             <button
+                                 type="button"
+                                 onClick={() => setShowPassword(!showPassword)}
+                                 className={`${showPassword ? 'text-amber-500' : 'text-text-muted'} hover:text-text-primary transition-colors`}
+                                 title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                             >
+                                 <Icon name="eye" size={16} />
+                             </button>
+                         }
                     />
                     {roles.length > 0 && (
                         <SelectField

@@ -40,7 +40,11 @@ export const actualizarZonaEstacionHandler = async (req: Request, res: Response)
         if (!zonaId || typeof zonaId !== 'string') {
             return res.status(400).json({ success: false, message: 'Se requiere zonaId (string)' });
         }
-        const estacion = await actorService.actualizarZonaEstacion(id, zonaId);
+        const estacion = await actorService.actualizarZonaEstacion(id, zonaId, {
+            usuarioId: (req as any).user?.userId || 'sistema',
+            ip: req.ip || '127.0.0.1',
+            userAgent: req.get('user-agent')
+        });
         res.json({ success: true, message: 'Zona actualizada', data: estacion });
     } catch (error: any) {
         res.status(400).json({ success: false, message: error.message });
@@ -50,7 +54,11 @@ export const actualizarZonaEstacionHandler = async (req: Request, res: Response)
 export const crearEstacionHandler = async (req: Request, res: Response) => {
     try {
         const validData = crearEstacionSchema.parse(req.body);
-        const nuevaEstacion = await actorService.crearEstacion(validData);
+        const nuevaEstacion = await actorService.crearEstacion(validData, {
+            usuarioId: (req as any).user?.userId || 'sistema',
+            ip: req.ip || '127.0.0.1',
+            userAgent: req.get('user-agent')
+        });
         res.status(201).json({ success: true, message: 'Estación creada', data: nuevaEstacion });
     } catch (error: any) {
         if (error.name === 'ZodError') {
@@ -70,7 +78,11 @@ export const actualizarEstacionHandler = async (req: Request, res: Response) => 
             return res.status(400).json({ success: false, message: 'No hay datos válidos para actualizar' });
         }
 
-        const estacion = await actorService.actualizarEstacion(id, validData);
+        const estacion = await actorService.actualizarEstacion(id, validData, {
+            usuarioId: (req as any).user?.userId || 'sistema',
+            ip: req.ip || '127.0.0.1',
+            userAgent: req.get('user-agent')
+        });
         res.json({ success: true, message: 'Estación actualizada', data: estacion });
     } catch (error: any) {
         if (error.name === 'ZodError') {
@@ -110,7 +122,11 @@ export const obtenerDistribuidorPorIdHandler = async (req: Request, res: Respons
 export const crearDistribuidorHandler = async (req: Request, res: Response) => {
     try {
         const validData = crearDistribuidorSchema.parse(req.body);
-        const nuevoDistribuidor = await actorService.crearDistribuidor(validData);
+        const nuevoDistribuidor = await actorService.crearDistribuidor(validData, {
+            usuarioId: (req as any).user?.userId || 'sistema',
+            ip: req.ip || '127.0.0.1',
+            userAgent: req.get('user-agent')
+        });
         res.status(201).json({ success: true, message: 'Distribuidor creado', data: nuevoDistribuidor });
     } catch (error: any) {
         if (error.name === 'ZodError') {
@@ -130,7 +146,11 @@ export const actualizarDistribuidorHandler = async (req: Request, res: Response)
             return res.status(400).json({ success: false, message: 'No hay datos válidos para actualizar' });
         }
 
-        const distribuidor = await actorService.actualizarDistribuidor(id, validData);
+        const distribuidor = await actorService.actualizarDistribuidor(id, validData, {
+            usuarioId: (req as any).user?.userId || 'sistema',
+            ip: req.ip || '127.0.0.1',
+            userAgent: req.get('user-agent')
+        });
         res.json({ success: true, message: 'Distribuidor actualizado', data: distribuidor });
     } catch (error: any) {
         if (error.name === 'ZodError') {

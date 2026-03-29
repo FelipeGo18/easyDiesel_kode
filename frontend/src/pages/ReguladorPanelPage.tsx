@@ -1,13 +1,52 @@
 import { useCallback, useEffect, useState } from 'react';
-import { BookOpen, Building2, Fuel, MapPin, Scale, ShieldCheck } from 'lucide-react';
+import { 
+    BookOpen, 
+    Building2, 
+    Fuel, 
+    MapPin, 
+    Scale, 
+    ShieldCheck, 
+    Search, 
+    FileText, 
+    ShieldAlert, 
+    History,
+    ChevronRight,
+    Download,
+    Eye
+} from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { KpiCard } from '@/components/ui/KpiCard';
+import { Button } from '@/components/ui/Button';
+import { DataTable, type Column } from '@/components/ui/DataTable';
+import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/useToast';
+import api from '@/services/api';
 import { getErrorMessage } from '@/lib/http';
 import { zonasService, preciosService, decretosService, type Zona, type Precio, type Decreto } from '@/services/admin';
 import { estacionesService } from '@/services/actores';
-import type { EstacionServicio } from '@/types';
+import type { EstacionServicio, ApiResponse } from '@/types';
+
+// Interfaces para Auditoría y Reportes
+interface AuditoriaLog {
+    id: string;
+    modulo: string;
+    accion: string;
+    entidad: string;
+    createdAt: string;
+    usuario: { nombre: string; email: string; };
+    ip?: string;
+    datosAntes?: any;
+    datosDespues?: any;
+}
+
+interface ReporteRegistro {
+    id: string;
+    tipo: string;
+    formato: string;
+    createdAt: string;
+    usuario: { nombre: string; email: string; };
+}
 
 function formatCurrency(value: number) {
     return new Intl.NumberFormat('es-CO', {
@@ -20,253 +59,554 @@ function formatCurrency(value: number) {
 export function ReguladorPanelPage() {
     const toast = useToast();
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<'resumen' | 'auditoria' | 'reportes'>('resumen');
+    
+    // Datos regulatorios
     const [zonas, setZonas] = useState<Zona[]>([]);
     const [precios, setPrecios] = useState<Precio[]>([]);
     const [decretos, setDecretos] = useState<Decreto[]>([]);
     const [estaciones, setEstaciones] = useState<EstacionServicio[]>([]);
     const [filtroZona, setFiltroZona] = useState<string>('');
 
+    // Datos de auditoría y reportes
+    const [logs, setLogs] = useState<AuditoriaLog[]>([]);
+    const [reportes, setReportes] = useState<ReporteRegistro[]>([]);
+    const [selectedLog, setSelectedLog] = useState<AuditoriaLog | null>(null);
+    const [modalOpen, setModalOpen] = useState(false);
+
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const [zonasData, preciosData, decretosData, estacionesData] = await Promise.all([
+            // Ejecutar peticiones de forma individual para mayor resiliencia
+            const [
+                zonasRes, 
+                preciosRes, 
+                decretosRes, 
+                estacionesRes, 
+                logsRes, 
+                reportesRes
+            ] = await Promise.allSettled([
                 zonasService.getAll(),
                 preciosService.getAll({ activo: 'true' }),
                 decretosService.getAll(),
                 estacionesService.getAll({ limit: 200 }),
+                api.get<ApiResponse<AuditoriaLog[]>>('/auditoria', { params: { limit: 10 } }),
+                api.get<ApiResponse<ReporteRegistro[]>>('/reportes', { params: { limit: 10 } }),
             ]);
-            setZonas(zonasData);
-            setPrecios(preciosData);
-            setDecretos(decretosData);
-            setEstaciones(estacionesData.data ?? []);
+
+            if (zonasRes.status === 'fulfilled') setZonas(zonasRes.value);
+            if (preciosRes.status === 'fulfilled') setPrecios(preciosRes.value);
+            if (decretosRes.status === 'fulfilled') setDecretos(decretosRes.value);
+            if (estacionesRes.status === 'fulfilled') setEstaciones(estacionesRes.value.data ?? []);
+            if (logsRes.status === 'fulfilled') setLogs(logsRes.value.data.data ?? []);
+            if (reportesRes.status === 'fulfilled') setReportes(reportesRes.value.data.data ?? []);
+
+            // Mostrar aviso si algo falló pero el resto cargó
+            const failures = [zonasRes, preciosRes, decretosRes, estacionesRes, logsRes, reportesRes].filter(r => r.status === 'rejected');
+            if (failures.length > 0) {
+                console.warn(`${failures.length} fuentes de datos no pudieron cargarse.`);
+            }
         } catch (error: unknown) {
-            toast.error(`Error al cargar datos regulatorios: ${getErrorMessage(error)}`);
+            toast.error(`Error crítico al cargar panel: ${getErrorMessage(error)}`);
         } finally {
             setLoading(false);
         }
-    }, []); // toast excluded — stable ref
+    }, [toast]);
 
     useEffect(() => { fetchData(); }, [fetchData]);
+
+    const handleViewDetail = (log: AuditoriaLog) => {
+        setSelectedLog(log);
+        setModalOpen(true);
+    };
+
+    const columnsAuditoria: Column<AuditoriaLog>[] = [
+        {
+            key: 'createdAt',
+            header: 'Fecha/Hora',
+            render: (l) => (
+                <div className="flex flex-col">
+                    <span className="text-[11px] font-medium text-text-primary">{new Date(l.createdAt).toLocaleDateString()}</span>
+                    <span className="text-[10px] text-text-muted">{new Date(l.createdAt).toLocaleTimeString()}</span>
+                </div>
+            )
+        },
+        {
+            key: 'usuario',
+            header: 'Usuario',
+            render: (l) => <span className="text-[11px] text-text-secondary">{l.usuario.nombre}</span>
+        },
+        {
+            key: 'modulo',
+            header: 'Módulo',
+            render: (l) => <Badge variant="amber" className="text-[9px] uppercase tracking-wider">{l.modulo}</Badge>
+        },
+        {
+            key: 'accion',
+            header: 'Acción',
+            render: (l) => <span className="text-[11px] font-mono text-blue-400">{l.accion.toUpperCase()}</span>
+        }
+    ];
+
+    const columnsReportes: Column<ReporteRegistro>[] = [
+        {
+            key: 'tipo',
+            header: 'Reporte',
+            render: (r) => <span className="text-[11px] font-medium text-text-primary">{r.tipo}</span>
+        },
+        {
+            key: 'formato',
+            header: 'Formato',
+            render: (r) => <Badge variant={r.formato === 'PDF' ? 'amber' : 'green'}>{r.formato}</Badge>
+        },
+        {
+            key: 'createdAt',
+            header: 'Generado el',
+            render: (r) => <span className="text-[11px] text-text-muted">{new Date(r.createdAt).toLocaleDateString()}</span>
+        }
+    ];
 
     const decretoActivos = decretos.filter(d => d.activo);
     const preciosFiltrados = filtroZona ? precios.filter(p => p.zonaId === filtroZona) : precios;
     const estacionesFiltradas = filtroZona ? estaciones.filter(e => e.zonaId === filtroZona) : estaciones;
 
     return (
-        <div className="space-y-6 animate-enter">
-            {/* ── Header ── */}
-            <section className="relative overflow-hidden rounded-[28px] border border-emerald-500/20 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.14),transparent_30%),linear-gradient(135deg,rgba(18,18,16,1)_0%,rgba(12,12,10,1)_55%,rgba(2,28,20,1)_100%)] p-6 sm:p-8">
-                <div className="relative">
-                    <Badge variant="green" className="mb-4">ROL REGULATORIO · INSPECCIÓN</Badge>
-                    <h1 className="text-3xl font-semibold text-white">Regulación y Cumplimiento</h1>
-                    <p className="mt-2 text-sm text-white/65 max-w-2xl">
-                        Panel de inspección: precios vigentes por zona, decretos normativos y estaciones supervisadas. Solo lectura.
-                    </p>
-
-                    {/* Zone filter pills */}
-                    {zonas.length > 0 && (
-                        <div className="mt-5 flex flex-wrap gap-2">
-                            <button
-                                onClick={() => setFiltroZona('')}
-                                className={`px-3 py-1.5 rounded-[10px] text-[12px] font-medium border transition-colors ${
-                                    !filtroZona
-                                        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-                                        : 'border-white/10 bg-white/5 text-white/55 hover:bg-white/10'
-                                }`}
-                            >
-                                Todas las zonas
-                            </button>
-                            {zonas.map(z => (
-                                <button
-                                    key={z.id}
-                                    onClick={() => setFiltroZona(z.id)}
-                                    className={`px-3 py-1.5 rounded-[10px] text-[12px] font-medium border transition-colors ${
-                                        filtroZona === z.id
-                                            ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-                                            : 'border-white/10 bg-white/5 text-white/55 hover:bg-white/10'
-                                    }`}
-                                >
-                                    {z.nombre}
-                                </button>
-                            ))}
+        <div className="space-y-8 animate-enter pb-12 max-w-[1440px] mx-auto">
+            {/* ── Header Profesional Pro Max ── */}
+            <section className="relative overflow-hidden rounded-[32px] bg-bg-surface border border-border-subtle p-8 md:p-10 shadow-2xl group transition-all duration-500 hover:border-emerald-500/30">
+                {/* Background effects */}
+                <div className="absolute top-0 right-0 w-1/2 h-full bg-linear-to-bl from-emerald-500/10 via-transparent to-transparent opacity-50 pointer-events-none" />
+                <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-amber-500/5 blur-[100px] rounded-full pointer-events-none" />
+                
+                <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                    <div className="space-y-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Estado: Supervisión Activa</span>
+                            </div>
+                            <div className="flex items-center gap-2 bg-bg-elevated border border-border-subtle px-3 py-1 rounded-full">
+                                <Building2 className="w-3.5 h-3.5 text-text-muted" />
+                                <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Ministerio de Minas y Energía</span>
+                            </div>
                         </div>
-                    )}
-                </div>
-            </section>
-
-            {/* ── KPIs ── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                <KpiCard
-                    label="Zonas regulatorias"
-                    value={String(zonas.length)}
-                    icon={<MapPin className="w-4 h-4" />}
-                />
-                <KpiCard
-                    label="Estaciones supervisadas"
-                    value={String(estacionesFiltradas.length)}
-                    icon={<Building2 className="w-4 h-4" />}
-                />
-                <KpiCard
-                    label="Precios vigentes"
-                    value={String(preciosFiltrados.length)}
-                    icon={<Fuel className="w-4 h-4" />}
-                />
-                <KpiCard
-                    label="Decretos activos"
-                    value={String(decretoActivos.length)}
-                    icon={<BookOpen className="w-4 h-4" />}
-                />
-            </div>
-
-            {/* ── Main content ── */}
-            <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-                {/* Precios vigentes table */}
-                <Card className="p-0 overflow-hidden">
-                    <div className="flex items-center gap-3 border-b border-border-subtle px-5 py-4">
-                        <div className="rounded-[14px] border border-border-subtle bg-bg-elevated p-2.5 text-emerald-400">
-                            <Scale className="w-4 h-4" />
-                        </div>
+                        
                         <div>
-                            <h2 className="text-[14px] font-semibold text-text-primary">Precios vigentes</h2>
-                            <p className="text-[11px] text-text-muted mt-0.5">
-                                {preciosFiltrados.length} precios activos
-                                {filtroZona ? ` en ${zonas.find(z => z.id === filtroZona)?.nombre}` : ' en todas las zonas'}
+                            <h1 className="text-4xl md:text-5xl font-display font-bold text-text-primary tracking-tight">
+                                Centro de Mando <span className="text-amber-500">Regulatorio</span>
+                            </h1>
+                            <p className="mt-3 text-base text-text-secondary max-w-2xl leading-relaxed">
+                                Plataforma de alta integridad para la fiscalización nacional de hidrocarburos. 
+                                Monitoreo inmutable de precios, cumplimiento de decretos y trazabilidad total de operaciones.
                             </p>
                         </div>
                     </div>
 
-                    {loading ? (
-                        <div className="p-5 space-y-3">
-                            {[1, 2, 3, 4].map(i => <div key={i} className="h-9 bg-bg-elevated rounded animate-pulse" />)}
-                        </div>
-                    ) : preciosFiltrados.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12 gap-3 text-text-muted">
-                            <Scale className="w-8 h-8 opacity-30" />
-                            <p className="text-small">Sin precios vigentes para el filtro seleccionado.</p>
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-[12px]">
-                                <thead>
-                                    <tr className="border-b border-border-subtle">
-                                        {['Zona', 'Combustible', 'Servicio', 'Precio/gal', 'Subsidio', 'Decreto'].map(h => (
-                                            <th key={h} className="px-4 py-2.5 text-left text-[10px] font-medium text-text-muted uppercase tracking-wider">{h}</th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border-subtle">
-                                    {preciosFiltrados.map(p => (
-                                        <tr key={p.id} className="hover:bg-bg-elevated/40 transition-colors">
-                                            <td className="px-4 py-3 text-text-primary">
-                                                <span className="font-medium">{p.zona?.nombre ?? '—'}</span>
-                                                {p.zona?.tipoZona && (
-                                                    <span className="ml-2 text-[10px] font-mono text-text-muted uppercase">{p.zona.tipoZona}</span>
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <Badge variant="amber">{p.tipoCombustible}</Badge>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <Badge variant="blue">{p.tipoServicio}</Badge>
-                                            </td>
-                                            <td className="px-4 py-3 font-mono text-amber-400 font-medium">
-                                                {formatCurrency(Number(p.precioGalon))}
-                                            </td>
-                                            <td className="px-4 py-3 font-mono text-text-secondary">
-                                                {Number(p.subsidioGalon) > 0 ? formatCurrency(Number(p.subsidioGalon)) : '—'}
-                                            </td>
-                                            <td className="px-4 py-3 font-mono text-[11px] text-text-muted">
-                                                {p.decreto?.numero ?? '—'}
-                                            </td>
-                                        </tr>
+                    <div className="flex flex-col sm:flex-row items-stretch gap-3 bg-bg-base/50 p-2 rounded-[20px] border border-border-subtle backdrop-blur-sm">
+                        <button 
+                            onClick={() => setActiveTab('resumen')}
+                            className={`flex items-center justify-center gap-2.5 px-6 py-3 rounded-[14px] text-[13px] font-bold transition-all duration-300 ${
+                                activeTab === 'resumen' 
+                                    ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' 
+                                    : 'text-text-muted hover:text-text-primary hover:bg-bg-elevated'
+                            }`}
+                        >
+                            <Scale className="w-4 h-4" /> Resumen General
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('auditoria')}
+                            className={`flex items-center justify-center gap-2.5 px-6 py-3 rounded-[14px] text-[13px] font-bold transition-all duration-300 ${
+                                activeTab === 'auditoria' 
+                                    ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' 
+                                    : 'text-text-muted hover:text-text-primary hover:bg-bg-elevated'
+                            }`}
+                        >
+                            <ShieldAlert className="w-4 h-4" /> Rastro Auditor
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('reportes')}
+                            className={`flex items-center justify-center gap-2.5 px-6 py-3 rounded-[14px] text-[13px] font-bold transition-all duration-300 ${
+                                activeTab === 'reportes' 
+                                    ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' 
+                                    : 'text-text-muted hover:text-text-primary hover:bg-bg-elevated'
+                            }`}
+                        >
+                            <FileText className="w-4 h-4" /> Exportación
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            {activeTab === 'resumen' && (
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    {/* ── Bento Grid de KPIs ── */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        <KpiCard 
+                            label="Zonas Operativas" 
+                            value={String(zonas.length)} 
+                            icon={<MapPin className="w-5 h-5" />} 
+                            className="bg-bg-surface border-border-subtle hover:border-amber-500/30 transition-all duration-300"
+                        />
+                        <KpiCard 
+                            label="Estaciones (EDS)" 
+                            value={String(estaciones.length)} 
+                            icon={<Building2 className="w-5 h-5" />} 
+                            className="bg-bg-surface border-border-subtle hover:border-amber-500/30 transition-all duration-300"
+                        />
+                        <KpiCard 
+                            label="Tarifas Activas" 
+                            value={String(precios.length)} 
+                            icon={<Fuel className="w-5 h-5" />} 
+                            className="bg-bg-surface border-border-subtle hover:border-amber-500/30 transition-all duration-300"
+                        />
+                        <KpiCard 
+                            label="Marco Normativo" 
+                            value={String(decretos.length)} 
+                            icon={<BookOpen className="w-5 h-5" />} 
+                            className="bg-bg-surface border-border-subtle hover:border-amber-500/30 transition-all duration-300"
+                        />
+                    </div>
+
+                    <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
+                        {/* Main Stream: Precios y Auditoría */}
+                        <div className="space-y-8">
+                            {/* Monitoreo de Precios Pro */}
+                            <Card className="p-0 overflow-hidden border-border-subtle shadow-xl bg-bg-surface ring-1 ring-white/5">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border-subtle px-6 py-5 bg-bg-elevated/40">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-2.5 bg-amber-500/10 rounded-xl text-amber-500 border border-amber-500/20">
+                                            <Scale className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-lg font-bold text-text-primary tracking-tight">Vigilancia de Precios</h2>
+                                            <p className="text-xs text-text-muted">Cumplimiento del Decreto 1428 en tiempo real</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="relative group">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted group-focus-within:text-amber-500 transition-colors" />
+                                        <select 
+                                            value={filtroZona}
+                                            onChange={(e) => setFiltroZona(e.target.value)}
+                                            className="pl-9 pr-8 py-2 bg-bg-base border border-border-subtle rounded-xl text-xs font-medium outline-none text-text-primary appearance-none interactive hover:border-amber-500/30 min-w-[180px]"
+                                        >
+                                            <option value="">Jurisdicción Nacional</option>
+                                            {zonas.map(z => <option key={z.id} value={z.id}>{z.nombre}</option>)}
+                                        </select>
+                                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-text-muted rotate-90 pointer-events-none" />
+                                    </div>
+                                </div>
+
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="bg-bg-base/30 text-[10px] text-text-muted uppercase font-bold tracking-widest border-b border-border-subtle">
+                                                <th className="px-6 py-4 text-left">Ubicación / Zona</th>
+                                                <th className="px-6 py-4 text-left">Combustible</th>
+                                                <th className="px-6 py-4 text-left">Precio Oficial</th>
+                                                <th className="px-6 py-4 text-center">Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-border-subtle/50">
+                                            {loading ? (
+                                                [...Array(5)].map((_, i) => (
+                                                    <tr key={i} className="animate-pulse">
+                                                        <td colSpan={4} className="px-6 py-4"><div className="h-10 bg-bg-elevated rounded-lg" /></td>
+                                                    </tr>
+                                                ))
+                                            ) : preciosFiltrados.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={4} className="px-6 py-12 text-center text-text-muted">
+                                                        No se encontraron registros bajo los criterios actuales.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                preciosFiltrados.slice(0, 8).map(p => (
+                                                    <tr key={p.id} className="hover:bg-bg-elevated/30 transition-all duration-200 group">
+                                                        <td className="px-6 py-4">
+                                                            <p className="font-bold text-text-primary group-hover:text-amber-500 transition-colors">{p.zona?.nombre}</p>
+                                                            <p className="text-[10px] text-text-muted uppercase font-mono tracking-tight">{p.zona?.tipoZona || 'Urbana'}</p>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className={`w-1.5 h-1.5 rounded-full ${p.tipoCombustible.includes('DIESEL') ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                                                                <span className="text-xs font-medium text-text-secondary">{p.tipoCombustible}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <span className="font-mono font-bold text-text-primary text-base">
+                                                                {formatCurrency(Number(p.precioGalon))}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <Badge variant="green" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[9px] px-2 py-0.5">VIGENTE</Badge>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div className="px-6 py-4 bg-bg-elevated/20 border-t border-border-subtle flex justify-between items-center">
+                                    <p className="text-[10px] text-text-muted">Sincronizado con base de datos ministerial · Última actualización: {new Date().toLocaleDateString()}</p>
+                                    <button className="text-[10px] font-bold text-amber-500 uppercase tracking-wider hover:underline">Ver todos los precios</button>
+                                </div>
+                            </Card>
+
+                            {/* Feed de Actividad de Auditoría */}
+                            <Card className="p-6 border-border-subtle bg-bg-surface shadow-lg">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-2.5 bg-blue-500/10 rounded-xl text-blue-500 border border-blue-500/20">
+                                            <History className="w-5 h-5" />
+                                        </div>
+                                        <h2 className="text-lg font-bold text-text-primary tracking-tight">Bitácora de Seguridad</h2>
+                                    </div>
+                                    <button 
+                                        onClick={() => setActiveTab('auditoria')} 
+                                        className="group flex items-center gap-2 text-xs font-bold text-amber-500 uppercase tracking-wider hover:text-amber-400 transition-all"
+                                    >
+                                        Rastro completo <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                                    </button>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {logs.slice(0, 6).map(log => (
+                                        <div 
+                                            key={log.id} 
+                                            onClick={() => handleViewDetail(log)}
+                                            className="flex items-center justify-between p-4 rounded-2xl bg-bg-elevated/20 border border-border-subtle/50 hover:border-amber-500/30 hover:bg-bg-elevated/40 transition-all cursor-pointer group"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-bg-base flex items-center justify-center border border-border-subtle group-hover:scale-110 transition-transform">
+                                                    <ShieldCheck size={18} className="text-emerald-500" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-text-primary">{log.accion.replace(/_/g, ' ')}</p>
+                                                    <p className="text-[11px] text-text-muted font-medium">{log.usuario.nombre} · <span className="font-mono">{new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></p>
+                                                </div>
+                                            </div>
+                                            <Badge variant="amber" className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[8px] tracking-tighter uppercase">{log.modulo}</Badge>
+                                        </div>
                                     ))}
-                                </tbody>
-                            </table>
+                                </div>
+                            </Card>
                         </div>
-                    )}
-                </Card>
 
-                {/* Right column */}
-                <div className="space-y-6">
-                    {/* Decretos activos */}
-                    <Card>
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="rounded-[14px] border border-border-subtle bg-bg-elevated p-2.5 text-sky-400">
-                                <BookOpen className="w-4 h-4" />
+                        {/* Sidebar Column: Decretos y EDS */}
+                        <div className="space-y-8">
+                            {/* Decretos Minimalistas */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3 px-2">
+                                    <BookOpen className="w-4 h-4 text-sky-500" />
+                                    <h3 className="text-xs font-bold text-text-muted uppercase tracking-[0.2em]">Normativa Legal</h3>
+                                </div>
+                                
+                                <div className="space-y-4">
+                                    {decretoActivos.slice(0, 3).map(d => (
+                                        <div key={d.id} className="p-5 rounded-[24px] bg-bg-surface border border-border-subtle shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-sky-500/30 transition-all duration-300">
+                                            <div className="absolute top-0 right-0 p-3">
+                                                <Badge variant="green" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[8px] font-bold">ACTIVO</Badge>
+                                            </div>
+                                            <p className="text-sm font-black text-text-primary">Decreto {d.numero}</p>
+                                            <p className="mt-2 text-xs text-text-secondary leading-relaxed line-clamp-3 font-medium italic">"{d.titulo}"</p>
+                                            <div className="mt-5 pt-4 border-t border-border-subtle/50 flex items-center justify-between">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[9px] text-text-muted uppercase font-bold tracking-widest">Vigencia</span>
+                                                    <span className="text-[11px] text-text-primary font-mono">{new Date(d.fechaVigencia).toLocaleDateString()}</span>
+                                                </div>
+                                                <button className="p-2 bg-sky-500/10 rounded-lg text-sky-500 hover:bg-sky-500 hover:text-white transition-all shadow-sm">
+                                                    <Download size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
+
+                            {/* Estaciones Supervisadas */}
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3 px-2">
+                                    <Building2 className="w-4 h-4 text-purple-500" />
+                                    <h3 className="text-xs font-bold text-text-muted uppercase tracking-[0.2em]">Red Supervisada</h3>
+                                </div>
+                                
+                                <Card className="p-2 border-border-subtle bg-bg-surface/50 backdrop-blur-md">
+                                    <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar space-y-1">
+                                        {estacionesFiltradas.map(e => (
+                                            <div key={e.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-bg-elevated transition-colors group">
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-bold text-text-primary truncate group-hover:text-amber-500 transition-colors">{e.nombre}</p>
+                                                    <p className="text-[10px] text-text-muted truncate font-medium">{e.ciudad} · {e.departamento}</p>
+                                                </div>
+                                                <div className="flex flex-col items-end gap-1">
+                                                    <Badge variant="blue" className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-[8px] font-mono">{e.codigoSicom}</Badge>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="p-3 border-t border-border-subtle/50 text-center">
+                                        <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">{estacionesFiltradas.length} EDS Totales</p>
+                                    </div>
+                                </Card>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'auditoria' && (
+                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                    <Card className="p-8 border-border-subtle bg-bg-surface shadow-2xl">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                             <div>
-                                <h3 className="text-[14px] font-semibold text-text-primary">Decretos activos</h3>
-                                <p className="text-[11px] text-text-muted mt-0.5">
-                                    {decretoActivos.length} instrumentos normativos vigentes
+                                <h2 className="text-2xl font-bold text-text-primary tracking-tight">Trazabilidad de Alta Integridad</h2>
+                                <p className="text-sm text-text-muted mt-1 leading-relaxed max-w-xl">
+                                    Registro cronológico inmutable de cada interacción con el sistema. 
+                                    Diseñado para auditoría forense y fiscalización ministerial.
                                 </p>
                             </div>
+                            <Button variant="ghost" className="rounded-xl border border-border-subtle hover:border-amber-500/30" onClick={fetchData}>
+                                <History className="w-4 h-4 mr-2" /> Sincronizar Logs
+                            </Button>
                         </div>
-
-                        {loading ? (
-                            <div className="space-y-2">
-                                {[1, 2, 3].map(i => <div key={i} className="h-12 bg-bg-elevated rounded animate-pulse" />)}
-                            </div>
-                        ) : decretoActivos.length === 0 ? (
-                            <p className="text-small text-text-muted py-4 text-center">Sin decretos activos.</p>
-                        ) : (
-                            <div className="space-y-2">
-                                {decretoActivos.slice(0, 8).map(d => (
-                                    <div key={d.id} className="rounded-brand border border-border-subtle bg-bg-elevated px-3 py-3">
-                                        <div className="flex items-start justify-between gap-2">
-                                            <p className="text-[12px] font-medium text-text-primary">Decreto {d.numero}</p>
-                                            <Badge variant="green">Vigente</Badge>
-                                        </div>
-                                        <p className="mt-1 text-[11px] text-text-muted leading-snug line-clamp-2">{d.titulo}</p>
-                                        <p className="mt-1 text-[10px] font-mono text-text-muted opacity-60">
-                                            Desde {new Date(d.fechaVigencia).toLocaleDateString('es-CO')}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </Card>
-
-                    {/* Estaciones supervisadas */}
-                    <Card>
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="rounded-[14px] border border-border-subtle bg-bg-elevated p-2.5 text-amber-400">
-                                <ShieldCheck className="w-4 h-4" />
-                            </div>
-                            <div>
-                                <h3 className="text-[14px] font-semibold text-text-primary">Estaciones supervisadas</h3>
-                                <p className="text-[11px] text-text-muted mt-0.5">
-                                    {estacionesFiltradas.length} puntos de distribución
-                                </p>
-                            </div>
+                        <div className="rounded-2xl border border-border-subtle overflow-hidden">
+                            <DataTable 
+                                columns={columnsAuditoria} 
+                                data={logs} 
+                                loading={loading}
+                                onRowClick={handleViewDetail}
+                                searchPlaceholder="Filtrar por responsable, acción o módulo..."
+                            />
                         </div>
-
-                        {loading ? (
-                            <div className="space-y-2">
-                                {[1, 2, 3].map(i => <div key={i} className="h-10 bg-bg-elevated rounded animate-pulse" />)}
-                            </div>
-                        ) : estacionesFiltradas.length === 0 ? (
-                            <p className="text-small text-text-muted py-4 text-center">Sin estaciones para este filtro.</p>
-                        ) : (
-                            <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
-                                {estacionesFiltradas.slice(0, 25).map(e => (
-                                    <div key={e.id} className="rounded-brand border border-border-subtle bg-bg-elevated px-3 py-2.5 flex items-center justify-between gap-2">
-                                        <div className="min-w-0">
-                                            <p className="text-[12px] font-medium text-text-primary truncate">{e.nombre}</p>
-                                            <p className="text-[10px] text-text-muted font-mono">{e.ciudad} · SICOM {e.codigoSicom}</p>
-                                        </div>
-                                        <Badge variant="blue" className="shrink-0">{e.zona?.nombre ?? '—'}</Badge>
-                                    </div>
-                                ))}
-                                {estacionesFiltradas.length > 25 && (
-                                    <p className="text-[11px] text-text-muted text-center py-1">
-                                        y {estacionesFiltradas.length - 25} más…
-                                    </p>
-                                )}
-                            </div>
-                        )}
                     </Card>
                 </div>
-            </div>
+            )}
+
+            {activeTab === 'reportes' && (
+                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                    <Card className="p-8 border-border-subtle bg-bg-surface shadow-2xl">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                            <div>
+                                <h2 className="text-2xl font-bold text-text-primary tracking-tight">Centro de Reportes Consolidados</h2>
+                                <p className="text-sm text-text-muted mt-1 leading-relaxed max-w-xl">
+                                    Generación de informes técnicos para entes de control, planeación nacional y análisis de impacto económico.
+                                </p>
+                            </div>
+                            <Button variant="amber" className="rounded-xl font-bold px-6 py-2 shadow-lg shadow-amber-500/20">
+                                <Download className="w-4 h-4 mr-2" /> Nuevo Reporte Ministerial
+                            </Button>
+                        </div>
+                        <div className="rounded-2xl border border-border-subtle overflow-hidden">
+                            <DataTable 
+                                columns={columnsReportes} 
+                                data={reportes} 
+                                loading={loading}
+                                searchPlaceholder="Buscar en el histórico de exportaciones..."
+                            />
+                        </div>
+                    </Card>
+                </div>
+            )}
+
+            {/* Modal de Detalle de Auditoría Pro Max */}
+            <Modal 
+                open={modalOpen} 
+                onClose={() => setModalOpen(false)} 
+                title="Detalle de Inspección Forense"
+                className="max-w-2xl"
+            >
+                {selectedLog && (
+                    <div className="space-y-8 py-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="bg-bg-elevated/40 p-4 rounded-2xl border border-border-subtle group hover:border-amber-500/30 transition-all">
+                                <span className="text-[10px] text-text-muted uppercase font-black tracking-[0.2em]">Responsable</span>
+                                <div className="mt-2 flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
+                                        <Icon name="user" size={18} />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-text-primary">{selectedLog.usuario.nombre}</p>
+                                        <p className="text-[11px] text-text-muted font-mono">{selectedLog.usuario.email}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-bg-elevated/40 p-4 rounded-2xl border border-border-subtle group hover:border-amber-500/30 transition-all">
+                                <span className="text-[10px] text-text-muted uppercase font-black tracking-[0.2em]">Sello de Tiempo</span>
+                                <div className="mt-2 flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20">
+                                        <Icon name="clock" size={18} />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-text-primary">{new Date(selectedLog.createdAt).toLocaleDateString()}</p>
+                                        <p className="text-[11px] text-text-muted font-mono">{new Date(selectedLog.createdAt).toLocaleTimeString()}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-6 bg-bg-base rounded-3xl border border-border-subtle relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4">
+                                <ShieldAlert size={40} className="text-amber-500/10" />
+                            </div>
+                            <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <div className="space-y-1">
+                                    <span className="text-[10px] text-text-muted uppercase font-bold tracking-widest">Módulo</span>
+                                    <p className="text-base font-black text-text-primary uppercase">{selectedLog.modulo}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <span className="text-[10px] text-text-muted uppercase font-bold tracking-widest">Operación</span>
+                                    <p className="text-base font-black text-blue-400 font-mono tracking-tight">{selectedLog.accion}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <span className="text-[10px] text-text-muted uppercase font-bold tracking-widest">Origen IP</span>
+                                    <p className="text-base font-black text-text-primary font-mono">{selectedLog.ip || 'Local/Sistema'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-1.5 bg-sky-500/10 rounded-lg text-sky-500">
+                                    <Eye size={16} />
+                                </div>
+                                <span className="text-xs font-black text-text-primary uppercase tracking-widest">Comparativa de Integridad</span>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between px-1">
+                                        <span className="text-[9px] text-text-muted uppercase font-bold tracking-tighter">Pre-Estado</span>
+                                        <span className="text-[8px] bg-bg-elevated px-1.5 py-0.5 rounded border border-border-subtle text-text-muted font-mono">Snapshot</span>
+                                    </div>
+                                    <pre className="text-[10px] bg-bg-base border border-border-default p-4 rounded-2xl h-48 overflow-auto text-text-secondary font-mono leading-relaxed custom-scrollbar">
+                                        {JSON.stringify(selectedLog.datosAntes, null, 2) || '// Operación sin datos previos'}
+                                    </pre>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between px-1">
+                                        <span className="text-[9px] text-emerald-500 uppercase font-bold tracking-tighter">Post-Estado</span>
+                                        <span className="text-[8px] bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 text-emerald-500 font-mono">Actualizado</span>
+                                    </div>
+                                    <pre className="text-[10px] bg-bg-base border border-emerald-500/10 p-4 rounded-2xl h-48 overflow-auto text-emerald-400 font-mono leading-relaxed custom-scrollbar">
+                                        {JSON.stringify(selectedLog.datosDespues, null, 2) || '// No se registraron cambios adicionales'}
+                                    </pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="pt-2 flex justify-end">
+                            <Button 
+                                variant="ghost" 
+                                className="rounded-xl px-8 hover:bg-bg-elevated text-text-muted hover:text-text-primary"
+                                onClick={() => setModalOpen(false)}
+                            >
+                                Cerrar Inspección
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </div>
     );
 }

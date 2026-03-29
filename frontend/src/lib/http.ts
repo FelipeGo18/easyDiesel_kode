@@ -15,10 +15,35 @@ export function getErrorMessage(error: unknown, fallback = 'Ocurrió un error in
     if (error instanceof AxiosError) {
         const data = error.response?.data as ApiErrorBody | undefined;
 
-        if (Array.isArray(data?.errors) && data.errors.length > 0) {
-            return data.errors.map((issue) => issue.message || issue.mensaje).filter(Boolean).join(', ');
+        // 1. Errores de validación (Zod devuelto como 'details' o 'errors')
+        const details = (data as any)?.details;
+        if (Array.isArray(details) && details.length > 0) {
+            return details
+                .map((issue: any) => {
+                    if (typeof issue === 'string') return issue;
+                    return issue.mensaje || issue.message || null;
+                })
+                .filter(Boolean)
+                .join(', ');
         }
 
+        const errors = (data as any)?.errors;
+        if (Array.isArray(errors) && errors.length > 0) {
+            return errors
+                .map((issue: any) => {
+                    if (typeof issue === 'string') return issue;
+                    return issue.mensaje || issue.message || null;
+                })
+                .filter(Boolean)
+                .join(', ');
+        }
+
+        // 2. Errores con campo 'message' directo (Estructura estándar)
+        if (data?.message) {
+            return data.message;
+        }
+
+        // 3. Errores anidados en campo 'error'
         if (typeof data?.error === 'string') {
             return data.error;
         }
@@ -27,13 +52,16 @@ export function getErrorMessage(error: unknown, fallback = 'Ocurrió un error in
             return data.error.message;
         }
 
-        if (data?.message) {
-            return data.message;
+        // 4. Mensaje de error de Axios (si no hay respuesta del servidor o estructura desconocida)
+        // Solo si no hay respuesta del servidor, mostramos el mensaje de error de red/axios
+        if (!error.response) {
+            if (error.code === 'ECONNABORTED') return 'La conexión ha expirado. Intente de nuevo.';
+            if (error.message === 'Network Error') return 'Error de red. Verifique su conexión.';
+            return error.message || fallback;
         }
 
-        if (error.message) {
-            return error.message;
-        }
+        // Si hay respuesta pero no pudimos extraer el mensaje, usamos el fallback
+        return fallback;
     }
 
     if (error instanceof Error) {

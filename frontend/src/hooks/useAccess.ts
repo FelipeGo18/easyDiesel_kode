@@ -8,8 +8,8 @@ const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     ],
     estacion: ['actores:leer', 'tanques:leer', 'tanques:escribir', 'inventario:leer', 'inventario:escribir', 'precios:leer', 'decretos:leer', 'auditoria:leer', 'reportes:leer', 'reportes:generar', 'panel:leer', 'estadisticas:leer'],
     distribuidor: ['actores:leer', 'inventario:leer', 'inventario:escribir', 'precios:leer', 'decretos:leer', 'auditoria:leer', 'reportes:leer', 'reportes:generar', 'panel:leer', 'estadisticas:leer'],
-    regulador: ['precios:leer', 'zonas:leer', 'decretos:leer', 'reportes:leer', 'panel:leer', 'auditoria:leer', 'estadisticas:leer'],
-    auditor: ['auditoria:leer', 'reportes:leer', 'panel:leer', 'estadisticas:leer'],
+    regulador: ['precios:leer', 'zonas:leer', 'decretos:leer', 'reportes:leer', 'reportes:generar', 'panel:leer', 'auditoria:leer', 'estadisticas:leer', 'actores:leer'],
+    auditor: ['auditoria:leer', 'reportes:leer', 'reportes:generar', 'panel:leer', 'estadisticas:leer'],
     particular: ['precios:leer', 'panel:leer', 'estadisticas:leer'],
     distribuidor_regulado: ['inventario:leer', 'inventario:escribir', 'precios:leer', 'decretos:leer', 'auditoria:leer', 'reportes:leer', 'reportes:generar', 'panel:leer', 'estadisticas:leer'],
 };

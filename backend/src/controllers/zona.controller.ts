@@ -25,7 +25,11 @@ export const obtenerZonaPorIdHandler = async (req: Request, res: Response) => {
 export const crearZonaHandler = async (req: Request, res: Response) => {
     try {
         const validData = crearZonaSchema.parse(req.body);
-        const zona = await zonaService.crearZona(validData);
+        const zona = await zonaService.crearZona(validData, {
+            usuarioId: (req as any).user?.userId || 'sistema',
+            ip: req.ip || '127.0.0.1',
+            userAgent: req.get('user-agent')
+        });
         res.status(201).json({ success: true, message: 'Zona creada', data: zona });
     } catch (error: any) {
         if (error instanceof ZodError) { res.status(400).json({ success: false, errors: error.issues }); return; }
@@ -36,7 +40,11 @@ export const crearZonaHandler = async (req: Request, res: Response) => {
 export const actualizarZonaHandler = async (req: Request, res: Response) => {
     try {
         const validData = actualizarZonaSchema.parse(req.body);
-        const zona = await zonaService.actualizarZona(req.params.id as string, validData);
+        const zona = await zonaService.actualizarZona(req.params.id as string, validData, {
+            usuarioId: (req as any).user?.userId || 'sistema',
+            ip: req.ip || '127.0.0.1',
+            userAgent: req.get('user-agent')
+        });
         res.json({ success: true, message: 'Zona actualizada', data: zona });
     } catch (error: any) {
         if (error instanceof ZodError) { res.status(400).json({ success: false, errors: error.issues }); return; }

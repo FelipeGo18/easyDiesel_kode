@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { BellRing, ClipboardList, Fuel, Loader2, Minus, Plus, Receipt, ShieldCheck, TimerReset, Truck } from 'lucide-react';
+import { BellRing, ClipboardList, Fuel, Loader2, Minus, Plus, Receipt, ShieldCheck, TimerReset, Truck, BookOpen, ShieldAlert, History } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -104,7 +105,7 @@ export function StationOperationsPage() {
         } finally {
             setLoading(false);
         }
-    }, [stationId]); // toast excluded — stable after ToastProvider useMemo fix
+    }, [stationId]);
 
     const fetchPendingDeliveries = useCallback(async () => {
         if (!stationId) {
@@ -122,7 +123,7 @@ export function StationOperationsPage() {
         } finally {
             setPendingDeliveriesLoading(false);
         }
-    }, [stationId]); // toast excluded — stable after ToastProvider useMemo fix
+    }, [stationId]);
 
     const fetchVentas = useCallback(async () => {
         if (!stationId) { setVentas([]); return; }
@@ -131,7 +132,7 @@ export function StationOperationsPage() {
             const result = await inventarioService.listarTransacciones({ estacionId: stationId, limit: 20 });
             setVentas(result.data ?? []);
         } catch {
-            // non-critical — no toast to avoid noise
+            // non-critical
         } finally {
             setVentasLoading(false);
         }
@@ -264,13 +265,13 @@ export function StationOperationsPage() {
 
     const unitPrice = Number(pricePreview?.precioGalon ?? 0);
     const subsidy = Number(pricePreview?.subsidioGalon ?? 0);
-    const basePrice = unitPrice + subsidy; // Valor configurado en el surtidor (sin subsidio)
+    const basePrice = unitPrice + subsidy;
 
     const gallons = inputMode === 'PRECIO' 
         ? (basePrice > 0 ? (Number(form.precioTotalInput) || 0) / basePrice : 0)
         : (Number(form.galones) || 0);
     
-    const estimatedTotal = gallons * unitPrice; // Lo que realmente paga el cliente
+    const estimatedTotal = gallons * unitPrice;
     const lowTanks = tanques.filter((tanque) => Number(tanque.nivelActual) <= Number(tanque.nivelMinimo));
     const selectedServiceMeta = tipoServicioOptions.find((option) => option.value === form.tipoServicio);
     const totalAsignado = distribuciones.reduce((s, d) => s + (Number(d.galones) || 0), 0);
@@ -353,16 +354,13 @@ export function StationOperationsPage() {
     const updateDistribucion = (index: number, field: 'tanqueId' | 'galones', value: string) => {
         setDistribuciones(prev => {
             const next = prev.map((d, i) => i === index ? { ...d, [field]: value } : d);
-            // Auto-redistribute remainder when galones change
             if (field === 'galones' && next.length > 1 && esperado > 0) {
                 const changed = Number(value) || 0;
                 const otherIndexes = next.map((_, i) => i).filter(i => i !== index);
                 const remainder = Math.max(0, esperado - changed);
-                // If only 1 other tank, assign all remainder to it
                 if (otherIndexes.length === 1) {
                     next[otherIndexes[0]] = { ...next[otherIndexes[0]], galones: String(Number(remainder.toFixed(2))) };
                 } else {
-                    // Split remainder evenly across other tanks
                     const perTank = Number((remainder / otherIndexes.length).toFixed(2));
                     otherIndexes.forEach(i => {
                         next[i] = { ...next[i], galones: String(perTank) };
@@ -492,820 +490,730 @@ export function StationOperationsPage() {
     };
 
     return (
-        <div className="space-y-5 animate-enter">
+        <div className="space-y-8 animate-enter pb-12 max-w-[1440px] mx-auto">
+            {/* ── Header Pro Max Estación ── */}
+            <section className="relative overflow-hidden rounded-[32px] bg-bg-surface border border-border-subtle p-8 md:p-10 shadow-2xl group transition-all duration-500 hover:border-amber-500/30">
+                {/* Background effects */}
+                <div className="absolute top-0 right-0 w-1/2 h-full bg-linear-to-bl from-amber-500/10 via-transparent to-transparent opacity-50 pointer-events-none" />
+                <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none" />
+                
+                <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                    <div className="space-y-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">
+                                <Fuel className="w-3.5 h-3.5 text-amber-500" />
+                                <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Punto de Servicio: Activo</span>
+                            </div>
+                            <div className="flex items-center gap-2 bg-bg-elevated border border-border-subtle px-3 py-1 rounded-full">
+                                <Badge variant="green" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[8px] px-2 py-0.5">Surtidores Online</Badge>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h1 className="text-4xl md:text-5xl font-display font-bold text-text-primary tracking-tight">
+                                Panel de <span className="text-amber-500">Despacho</span>
+                            </h1>
+                            <p className="mt-3 text-base text-text-secondary max-w-2xl leading-relaxed">
+                                Control operativo de la estación <span className="text-text-primary font-bold">{station?.nombre || 'EasyDiesel'}</span>. 
+                                Registre ventas, gestione inventarios y verifique precios oficiales en tiempo real.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3 min-w-[240px]">
+                        <div className="text-[10px] text-text-muted uppercase font-bold tracking-widest px-1">Indicadores Rápidos</div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-bg-base/50 p-3 rounded-2xl border border-border-subtle backdrop-blur-sm">
+                                <p className="text-[9px] text-text-muted uppercase font-bold">Ventas Hoy</p>
+                                <p className="text-lg font-bold text-text-primary mt-1">{ventas.length}</p>
+                            </div>
+                            <div className="bg-bg-base/50 p-3 rounded-2xl border border-border-subtle backdrop-blur-sm">
+                                <p className="text-[9px] text-text-muted uppercase font-bold">Tanques</p>
+                                <p className="text-lg font-bold text-text-primary mt-1">{tanques.length}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* ── Alerta de niveles críticos ── */}
             {lowTanks.length > 0 && (
-                <div className="flex items-center gap-3 rounded-[14px] border border-red-500/25 bg-red-500/[0.06] px-4 py-3">
-                    <BellRing size={14} className="shrink-0 text-red-400" />
-                    <p className="text-[12px] font-medium text-red-300 flex-1">
-                        {lowTanks.length === 1 ? '1 tanque en nivel crítico' : `${lowTanks.length} tanques en nivel crítico`}
-                        {' · '}{lowTanks.map(t => t.nombre).join(', ')}
-                        <span className="ml-2 font-mono text-[10px] text-red-400/60">Decreto 318/2003</span>
-                    </p>
+                <div className="flex items-center gap-4 rounded-2xl border border-red-500/30 bg-red-500/5 p-5 animate-pulse">
+                    <div className="p-2 bg-red-500/20 rounded-xl text-red-500 border border-red-500/30">
+                        <BellRing size={20} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-red-600 uppercase tracking-tight">Niveles Críticos Detectados</p>
+                        <p className="text-xs text-text-secondary mt-1">
+                            Tanques bajo el mínimo: <span className="text-red-600 font-bold">{lowTanks.map(t => t.nombre).join(', ')}</span>. Requiere reabastecimiento inmediato.
+                        </p>
+                    </div>
+                    <Badge variant="red" className="font-mono text-[9px]">DECRETO 318</Badge>
                 </div>
             )}
 
-
-            {/* ── Main grid: Form + Sidebar ── */}
-            <div className="grid gap-5 lg:grid-cols-1 xl:grid-cols-[1.3fr_0.7fr]">
-
-                {/* Form card */}
-                <Card className="rounded-[22px] border-white/10 bg-white/[0.02] backdrop-blur-md p-0 overflow-hidden">
-                    {/* Card header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/5 px-5 py-4">
-                        <div>
-                            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-amber-500/60">Cabina de despacho</p>
-                            <h2 className="mt-1 text-lg font-semibold text-white">Registrar venta</h2>
+            <div className="grid gap-8 lg:grid-cols-1 xl:grid-cols-[1fr_380px]">
+                <div className="space-y-8">
+                    <Card className="rounded-[32px] border-border-subtle bg-bg-surface shadow-xl p-0 overflow-hidden ring-1 ring-white/5">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 border-b border-border-subtle px-8 py-6 bg-bg-elevated/40">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-amber-500/10 rounded-2xl text-amber-500 border border-amber-500/20">
+                                    <Fuel size={24} />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-text-primary tracking-tight">Nueva Transacción</h2>
+                                    <p className="text-xs text-text-muted">Registro oficial de despacho de combustible</p>
+                                </div>
+                            </div>
+                            <div className="rounded-2xl border border-border-subtle bg-bg-base px-6 py-3 text-right shadow-inner">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Total Estimado</p>
+                                <p className="mt-1 text-2xl font-black text-amber-500 tabular-nums">
+                                    {estimatedTotal > 0 ? formatCurrency(estimatedTotal) : '$ —'}
+                                </p>
+                            </div>
                         </div>
-                        <div className="rounded-[12px] border border-white/8 bg-white/4 px-4 py-2 text-right">
-                            <p className="text-[10px] font-mono uppercase tracking-wider text-white/35">Total estimado</p>
-                            <p className="mt-0.5 text-[18px] font-semibold text-white tabular-nums">
-                                {estimatedTotal > 0 ? formatCurrency(estimatedTotal) : '—'}
-                            </p>
-                        </div>
-                    </div>
 
-                    <form onSubmit={handleSubmit} className="p-5 space-y-5">
-                        {/* Section: Tank picker */}
-                        <div>
-                            <p className="mb-2.5 text-[10px] font-mono uppercase tracking-[0.2em] text-white/35">Seleccionar tanque</p>
-                            <div className="grid gap-2.5 sm:grid-cols-2">
-                                {tanques.map((tanque) => {
-                                    const percentage = ((Number(tanque.nivelActual) || 0) / (Number(tanque.capacidadGalones) || 1)) * 100;
-                                    const isSelected = tanque.id === selectedTanque?.id;
-                                    const isLow = Number(tanque.nivelActual) <= Number(tanque.nivelMinimo);
+                        <form onSubmit={handleSubmit} className="p-8 space-y-8">
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2 px-1">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted">Seleccionar Tanque</span>
+                                    <div className="h-px flex-1 bg-border-subtle/50" />
+                                </div>
+                                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                    {tanques.map((tanque) => {
+                                        const percentage = ((Number(tanque.nivelActual) || 0) / (Number(tanque.capacidadGalones) || 1)) * 100;
+                                        const isSelected = tanque.id === selectedTanque?.id;
+                                        const isLow = Number(tanque.nivelActual) <= Number(tanque.nivelMinimo);
 
-                                    return (
-                                        <button
-                                            key={tanque.id}
-                                            type="button"
-                                            onClick={() => setForm((current) => ({ ...current, tanqueId: tanque.id }))}
-                                            className={[
-                                                'rounded-[16px] border p-3.5 text-left transition-all cursor-pointer',
-                                                isSelected
-                                                    ? 'border-amber-500/40 bg-amber-500/8 ring-1 ring-amber-500/20'
-                                                    : 'border-white/8 bg-white/[0.02] hover:border-white/14 hover:bg-white/4',
-                                            ].join(' ')}
-                                        >
-                                            <div className="flex items-center justify-between gap-2">
-                                                <div className="min-w-0">
-                                                    <p className="text-[13px] font-semibold text-white truncate">{tanque.nombre}</p>
-                                                    <p className="text-[10px] font-mono text-white/40 mt-0.5">{tanque.tipoCombustible}</p>
+                                        return (
+                                            <button
+                                                key={tanque.id}
+                                                type="button"
+                                                onClick={() => setForm((current) => ({ ...current, tanqueId: tanque.id }))}
+                                                className={[
+                                                    'rounded-[24px] border p-5 text-left transition-all duration-300 cursor-pointer group relative overflow-hidden',
+                                                    isSelected
+                                                        ? 'border-amber-500/40 bg-amber-500/5 ring-1 ring-amber-500/20 shadow-lg'
+                                                        : 'border-border-subtle bg-bg-base hover:border-amber-500/30 hover:bg-bg-elevated/40 hover:shadow-md',
+                                                ].join(' ')}
+                                            >
+                                                {isSelected && <div className="absolute top-0 right-0 p-3"><Badge variant="amber" className="text-[8px]">SELECTED</Badge></div>}
+                                                <div className="flex items-center justify-between gap-3 mb-4">
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-bold text-text-primary truncate group-hover:text-amber-500 transition-colors">{tanque.nombre}</p>
+                                                        <p className="text-[10px] font-mono text-text-muted mt-1 uppercase tracking-tighter">{tanque.tipoCombustible}</p>
+                                                    </div>
+                                                    <div className={cn(
+                                                        "text-lg font-black font-mono",
+                                                        isLow ? "text-red-500" : isSelected ? "text-amber-500" : "text-text-muted"
+                                                    )}>
+                                                        {Math.round(percentage)}%
+                                                    </div>
                                                 </div>
-                                                <Badge variant={isLow ? 'red' : isSelected ? 'amber' : 'blue'} className="text-[10px] shrink-0">
-                                                    {Math.round(percentage)}%
-                                                </Badge>
-                                            </div>
-                                            <div className="mt-3 h-1.5 rounded-full bg-white/8">
-                                                <div
-                                                    className={`h-1.5 rounded-full transition-all ${isLow ? 'bg-red-500' : 'bg-amber-500'}`}
-                                                    style={{ width: `${Math.min(100, Math.max(0, percentage))}%` }}
-                                                />
-                                            </div>
-                                            <p className="mt-2 text-[11px] text-white/45">
-                                                {formatGallons(Number(tanque.nivelActual))} / {formatGallons(Number(tanque.capacidadGalones))} gal
-                                            </p>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            {!loading && tanques.length === 0 && (
-                                <div className="rounded-[16px] border border-dashed border-white/10 bg-white/[0.02] p-5 text-[13px] text-white/50">
-                                    No hay tanques configurados. Crea al menos uno para operar el panel.
+                                                <div className="h-1.5 rounded-full bg-bg-elevated overflow-hidden">
+                                                    <div
+                                                        className={cn(
+                                                            "h-full rounded-full transition-all duration-1000",
+                                                            isLow ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-amber-500 shadow-[0_0_8px_rgba(245,166,35,0.5)]'
+                                                        )}
+                                                        style={{ width: `${Math.min(100, Math.max(0, percentage))}%` }}
+                                                    />
+                                                </div>
+                                                <div className="mt-4 flex justify-between items-end">
+                                                    <p className="text-[10px] text-text-muted font-medium">
+                                                        <span className="text-text-primary font-bold">{formatGallons(Number(tanque.nivelActual))}</span> / {formatGallons(Number(tanque.capacidadGalones))} gal
+                                                    </p>
+                                                    {isLow && <ShieldAlert size={12} className="text-red-500 animate-pulse" />}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
-                            )}
-                        </div>
-
-                        {/* Divider */}
-                        <div className="border-t border-white/5" />
-
-                        {/* Section: Service + fields */}
-                        <div className="space-y-3.5">
-                            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/35">Datos del despacho</p>
-
-                            <SelectField
-                                label="Tipo de servicio"
-                                value={form.tipoServicio}
-                                onChange={(event) => setForm((current) => ({ ...current, tipoServicio: event.target.value as TipoServicio }))}
-                                options={tipoServicioOptions.map((option) => ({ value: option.value, label: option.label }))}
-                            />
-
-                            {selectedServiceMeta && (
-                                <p className="text-[11px] text-white/45 leading-4 pl-1">{selectedServiceMeta.helper}</p>
-                            )}
-
-                            {/* Auto-detected Gran Consumidor Badge */}
-                            {form.esGranConsumidor && (
-                                <div className="flex items-center gap-3 rounded-[14px] border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 animate-in fade-in slide-in-from-top-1">
-                                    <ShieldCheck size={18} className="text-red-400 shrink-0" />
-                                    <div>
-                                        <p className="text-[12px] font-medium text-white">
-                                            Gran Consumidor Autodetectado
-                                            <span className="ml-1.5 font-mono text-[9px] text-red-400/70">Decreto 763/2024</span>
-                                        </p>
-                                        <p className="text-[11px] text-red-200/60 mt-0.5">&gt;20.000 gal/mes (Aplica tarifa plena sin subsidio).</p>
+                                {!loading && tanques.length === 0 && (
+                                    <div className="rounded-2xl border-2 border-dashed border-border-subtle p-10 text-center text-text-muted">
+                                        No hay tanques operativos disponibles.
                                     </div>
-                                </div>
-                            )}
-
-                            {/* Input Mode Toggle */}
-                            <div className="flex rounded-[14px] border border-white/10 bg-white/[0.02] p-1">
-                                <button
-                                    type="button"
-                                    onClick={() => setInputMode('PRECIO')}
-                                    className={`flex-1 rounded-[10px] px-3 py-2 text-[12px] font-medium transition-all ${
-                                        inputMode === 'PRECIO' ? 'bg-amber-500/15 text-amber-400 shadow-sm' : 'text-white/45 hover:text-white/75'
-                                    }`}
-                                >
-                                    Por Valor ($)
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setInputMode('GALONES')}
-                                    className={`flex-1 rounded-[10px] px-3 py-2 text-[12px] font-medium transition-all ${
-                                        inputMode === 'GALONES' ? 'bg-amber-500/15 text-amber-400 shadow-sm' : 'text-white/45 hover:text-white/75'
-                                    }`}
-                                >
-                                    Por Galones
-                                </button>
-                            </div>
-
-                            <div className="grid gap-3 sm:grid-cols-2">
-                                {inputMode === 'PRECIO' ? (
-                                    <InputField
-                                        label="Valor marcado en surtidor ($)"
-                                        type="number"
-                                        min="0"
-                                        step="1"
-                                        value={form.precioTotalInput}
-                                        onChange={(event) => setForm((current) => ({ ...current, precioTotalInput: event.target.value }))}
-                                        required
-                                    />
-                                ) : (
-                                    <InputField
-                                        label="Galones a despachar"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={form.galones}
-                                        onChange={(event) => setForm((current) => ({ ...current, galones: event.target.value }))}
-                                        required
-                                    />
                                 )}
-                                <div className="relative">
-                                    <InputField
-                                        label="Placa del vehículo"
-                                        placeholder="ABC123"
-                                        value={form.placaVehiculo}
-                                        onChange={(event) => setForm((current) => ({ ...current, placaVehiculo: normalizePlate(event.target.value) }))}
-                                    />
-                                    {verificandoConsumo && (
-                                        <div className="absolute right-3 top-[34px]">
-                                            <Loader2 size={16} className="animate-spin text-amber-500/60" />
-                                        </div>
-                                    )}
-                                </div>
                             </div>
-                        </div>
 
-                        {/* Price summary strip */}
-                        <div className={`grid ${subsidy > 0 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3'} gap-2 sm:gap-0 sm:divide-x sm:divide-amber-500/10 rounded-[14px] border border-amber-500/12 bg-amber-500/[0.04] overflow-hidden`}>
-                            {[
-                                { label: 'Precio/gal', value: unitPrice ? formatCurrency(unitPrice) : '—', show: true },
-                                { label: 'Subsidio', value: subsidy > 0 ? formatCurrency(subsidy) : '—', show: subsidy > 0 },
-                                { label: 'Galones', value: gallons > 0 ? formatGallons(gallons) : '0', show: true },
-                                { label: 'Total', value: estimatedTotal > 0 ? formatCurrency(estimatedTotal) : '$ 0', show: true },
-                            ]
-                                .filter(item => item.show)
-                                .map(({ label, value }) => (
-                                    <div key={label} className="px-2 py-3 text-center">
-                                        <p className="text-[9px] font-mono uppercase tracking-wider text-amber-200/50">{label}</p>
-                                        <p className="mt-1 px-1 h-5 overflow-hidden text-ellipsis whitespace-nowrap text-[12px] sm:text-[13px] font-semibold text-white tabular-nums">{value}</p>
-                                    </div>
-                                ))}
-                        </div>
-
-                        {/* Compliance note */}
-                        <div className="flex items-center gap-2.5 rounded-[12px] border border-white/6 bg-white/[0.02] px-3.5 py-2.5">
-                            <ShieldCheck size={14} className="shrink-0 text-emerald-400" />
-                            <p className="text-[11px] text-white/45 leading-4">
-                                {pricePreview
-                                    ? `Tarifa ${pricePreview.zona.nombre} · Decreto ${pricePreview.decreto.numero}`
-                                    : 'El backend revalida la tarifa al confirmar. La previsualización es referencial.'}
-                            </p>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-end gap-2.5 pt-1">
-                            <Button type="button" variant="ghost" onClick={fetchTanques}>
-                                Actualizar niveles
-                            </Button>
-                            <Button
-                                type="submit"
-                                isLoading={submitting || loading || pricingLoading}
-                                disabled={!selectedTanque || tanques.length === 0 || !form.placaVehiculo || Number(form.galones) <= 0}
-                            >
-                                Confirmar despacho
-                            </Button>
-                        </div>
-                    </form>
-                </Card>
-
-                {/* ── Totem Digital de Precios ── */}
-                {/* ── Estructura Completa Totem Digital ── */}
-                <div className="flex flex-col items-center self-stretch h-full w-full max-w-[380px] mx-auto">
-                    {/* Cuerpo Principal del Totem */}
-                    <div className="w-full rounded-[24px] border-[4px] border-[#1a1c23] bg-[#050505] shadow-2xl overflow-hidden flex flex-col relative z-20 shrink-0">
-                        {/* Header Totem */}
-                        <div className="bg-[#0a0a0a] py-5 px-6 border-b border-[#1a1c23] flex flex-col items-center justify-center z-10 relative">
-                            <span className="text-white/40 text-[10px] font-sans tracking-[0.3em] uppercase leading-none mb-1">easy</span>
-                            <span className="text-white/80 font-display text-[26px] tracking-[0.15em] leading-none">DIESEL</span>
-                        </div>
-
-                        {/* Modulos de Precios (Body Totem) */}
-                        <div className="p-6 flex flex-col gap-6 justify-center z-10">
-                            {pricesLoading ? (
-                                <div className="flex flex-col items-center justify-center p-10 text-white/40 gap-3">
-                                    <Loader2 size={32} className="animate-spin" />
-                                    <span className="text-[10px] font-mono tracking-[0.3em] uppercase">Conectando...</span>
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-2 px-1">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted">Datos del Despacho</span>
+                                    <div className="h-px flex-1 bg-border-subtle/50" />
                                 </div>
-                            ) : pricesData.particular.length > 0 || pricesData.publico.length > 0 ? (
-                                Array.from(new Set(tanques.map(t => t.tipoCombustible))).map((fuel, idx) => {
-                                    const particularPrice = pricesData.particular.find(p => p.tipoCombustible === fuel);
-                                    const publicoPrice = pricesData.publico.find(p => p.tipoCombustible === fuel);
-                                    
-                                    const valParticular = particularPrice ? Number(particularPrice.precioGalon) + Number(particularPrice.subsidioGalon) : 0;
-                                    const valPublico = publicoPrice ? Number(publicoPrice.precioGalon) + Number(publicoPrice.subsidioGalon) : 0;
-                                    
-                                    const isDiesel = fuel.toUpperCase().includes('DIESEL');
-                                    // Particular colors: Red or Amber
-                                    const colorPart = isDiesel ? 'text-[#F5A623] drop-shadow-[0_0_12px_rgba(245,166,35,0.8)]' : 'text-[#ef4444] drop-shadow-[0_0_12px_rgba(239,68,68,0.8)]';
-                                    // Publico colors: Cyan or Emerald
-                                    const colorPub = isDiesel ? 'text-[#06b6d4] drop-shadow-[0_0_12px_rgba(6,182,212,0.8)]' : 'text-[#10B981] drop-shadow-[0_0_12px_rgba(16,185,129,0.8)]';
-
-                                    return (
-                                        <div key={idx} className="bg-[#0a0a0a] border border-[#1a1c23] rounded-2xl p-6 flex flex-col items-center shadow-inner relative overflow-hidden group">
-                                            <h4 className="text-[13px] font-bold tracking-[0.25em] text-[#e2e8f0]/80 uppercase mb-4 relative z-10">
-                                                {fuel.replace('_', ' ')}
-                                            </h4>
-                                            
-                                            <div className="relative h-[56px] w-full flex justify-center items-center">
-                                                {/* Particular */}
-                                                <div className={`absolute transition-opacity duration-[1500ms] ease-in-out ${activeTarifa === 'PARTICULAR' ? 'opacity-100' : 'opacity-0'} ${colorPart}`}>
-                                                    <div className="font-mono text-[48px] sm:text-[56px] leading-none font-bold tracking-tight text-center">
-                                                        {valParticular ? valParticular.toLocaleString('es-CO') : '----'}
-                                                    </div>
-                                                </div>
-                                                {/* Publico */}
-                                                <div className={`absolute transition-opacity duration-[1500ms] ease-in-out ${activeTarifa === 'PUBLICO' ? 'opacity-100' : 'opacity-0'} ${colorPub}`}>
-                                                     <div className="font-mono text-[48px] sm:text-[56px] leading-none font-bold tracking-tight text-center">
-                                                        {valPublico ? valPublico.toLocaleString('es-CO') : '----'}
-                                                    </div>
+                                <div className="grid gap-6 lg:grid-cols-2">
+                                    <div className="space-y-4">
+                                        <SelectField
+                                            label="Tipo de servicio"
+                                            value={form.tipoServicio}
+                                            onChange={(event) => setForm((current) => ({ ...current, tipoServicio: event.target.value as TipoServicio }))}
+                                            options={tipoServicioOptions.map((option) => ({ value: option.value, label: option.label }))}
+                                            className="rounded-xl border-border-subtle focus:border-amber-500/50"
+                                        />
+                                        {selectedServiceMeta && (
+                                            <div className="p-4 bg-bg-elevated/20 border border-border-subtle rounded-2xl">
+                                                <p className="text-[11px] text-text-secondary leading-relaxed font-medium italic">
+                                                    <BookOpen size={10} className="inline mr-2 text-amber-500" />
+                                                    {selectedServiceMeta.helper}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {form.esGranConsumidor && (
+                                            <div className="flex items-center gap-4 rounded-2xl border border-red-500/30 bg-red-500/5 px-4 py-3 animate-in fade-in slide-in-from-top-1">
+                                                <ShieldCheck size={20} className="text-red-500 shrink-0" />
+                                                <div>
+                                                    <p className="text-xs font-bold text-red-600 uppercase tracking-tight">Gran Consumidor Detectado</p>
+                                                    <p className="text-[10px] text-text-secondary mt-0.5">Aplica tarifa plena (Decreto 763/2024).</p>
                                                 </div>
                                             </div>
-                                        </div>
-                                    );
-                                })
-                            ) : (
-                                <div className="text-center text-red-500/40 font-mono text-[14px] tracking-[0.3em] uppercase animate-pulse border border-red-500/10 p-6 rounded-2xl">
-                                    FUERA DE LÍNEA
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Footer Totem: Información de Decreto/Tarifa */}
-                        <div className="bg-[#0a0a0a] border-t border-[#1a1c23] z-10 relative h-[80px] flex items-center justify-center overflow-hidden shrink-0">
-                            <div className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-[1500ms] ${activeTarifa === 'PARTICULAR' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-                                <span className="text-[11px] font-mono text-[#ef4444]/80 tracking-[0.2em] uppercase flex items-center justify-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-[#ef4444] shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse" />
-                                    TARIFA PARTICULAR
-                                </span>
-                                <span className="text-[10px] font-mono text-white/30 mt-1.5 uppercase tracking-widest">
-                                    {pricesData.particular[0]?.decreto.numero ? `Decreto ${pricesData.particular[0]?.decreto.numero}` : 'PRECIO ESTÁNDAR'}
-                                </span>
-                            </div>
-                            
-                            <div className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-[1500ms] ${activeTarifa === 'PUBLICO' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-                                <span className="text-[11px] font-mono text-[#10B981]/80 tracking-[0.2em] uppercase flex items-center justify-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" />
-                                    TARIFA PUBLICO (SUB)
-                                </span>
-                                <span className="text-[10px] font-mono text-[#10B981]/40 mt-1.5 uppercase tracking-widest">
-                                    {pricesData.publico[0]?.decreto.numero ? `Decreto ${pricesData.publico[0]?.decreto.numero}` : 'APLICA SUBSIDIO'}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    {/* Poste / Soporte Central del Totem */}
-                    <div className="w-[120px] flex-1 min-h-[40px] bg-gradient-to-r from-[#1c1f26] via-[#2d323e] to-[#1c1f26] border-x-2 border-[#111318] z-10 relative shadow-[inset_0_0_15px_rgba(0,0,0,0.8)] -mt-2">
-                        {/* Detalles del poste */}
-                        <div className="absolute inset-x-0 top-6 h-px bg-[#0a0a0a]" />
-                        <div className="absolute inset-x-0 top-12 h-px bg-[#0a0a0a]" />
-                    </div>
-                    
-                    {/* Base Cimiento del Totem */}
-                    <div className="w-full max-w-[280px] h-[30px] bg-gradient-to-b from-[#1c1f26] to-[#050505] rounded-t-[12px] border-t-2 border-x-2 border-[#2d323e] shadow-[0_10px_30px_rgba(0,0,0,0.8)] z-20 relative flex justify-center -mt-1 shrink-0">
-                        {/* Remache/Detalle de la base */}
-                        <div className="w-[200px] h-[6px] bg-[#111318] rounded-b-md mt-0 shadow-inner" />
-                    </div>
-                </div>
-            </div>
-
-            {/* ── Componentes Operativos Reubicados (Moved Sidebar) ── */}
-            <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
-
-                {/* Entregas pendientes */}
-                <Card className="rounded-[22px] border-white/10 bg-white/[0.02] backdrop-blur-md h-full flex flex-col">
-                    <div className="flex items-center justify-between gap-3 shrink-0">
-                        <div className="flex items-center gap-2.5">
-                            <div className="rounded-[12px] border border-emerald-500/20 bg-emerald-500/8 p-2.5 text-emerald-400">
-                                <Truck size={15} />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-mono uppercase tracking-wider text-white/35">Recepción</p>
-                                <h3 className="text-[14px] font-semibold text-white">Entregas pendientes</h3>
-                            </div>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setDirectEntryForm({ tanqueId: tanques[0]?.id ?? '', galones: '0', precioUnitario: '0', observaciones: '' });
-                                setDirectEntryOpen(true);
-                            }}
-                            className="flex items-center gap-1 rounded-[10px] border border-emerald-500/22 bg-emerald-500/[0.06] px-2.5 py-1.5 text-[11px] font-medium text-emerald-300 transition-colors hover:bg-emerald-500/12 cursor-pointer shrink-0"
-                        >
-                            <Plus size={12} />
-                            Entrada directa
-                        </button>
-                    </div>
-
-                    <div className="mt-4 space-y-2.5 flex-1 overflow-y-auto">
-                        {pendingDeliveriesLoading && (
-                            <div className="rounded-[12px] bg-white/[0.03] px-4 py-4 text-[12px] text-white/45 animate-pulse">
-                                Cargando entregas…
-                            </div>
-                        )}
-                        {!pendingDeliveriesLoading && pendingDeliveries.length === 0 && (
-                            <div className="rounded-[12px] border border-emerald-500/15 bg-emerald-500/[0.04] px-4 py-3 text-[12px] text-emerald-200/70">
-                                Sin entregas pendientes para confirmar.
-                            </div>
-                        )}
-                        {pendingDeliveries.map((delivery) => (
-                            <div key={delivery.id} className="rounded-[14px] border border-white/7 bg-white/[0.02] px-4 py-3.5">
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="min-w-0">
-                                        <p className="text-[13px] font-semibold text-white truncate">Rem. {delivery.numeroRemision}</p>
-                                        <p className="mt-0.5 text-[11px] text-white/45 truncate">
-                                            {delivery.distribuidor?.nombre || 'Distribuidor'} · {delivery.tipoCombustible} · {formatGallons(Number(delivery.galones))} gal
-                                        </p>
+                                        )}
                                     </div>
-                                    <Badge variant="blue" className="text-[10px] shrink-0">Pendiente</Badge>
+                                    <div className="space-y-4">
+                                        <div className="flex rounded-2xl border border-border-subtle bg-bg-base p-1.5 shadow-inner">
+                                            <button
+                                                type="button"
+                                                onClick={() => setInputMode('PRECIO')}
+                                                className={`flex-1 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 ${
+                                                    inputMode === 'PRECIO' 
+                                                        ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' 
+                                                        : 'text-text-muted hover:text-text-primary hover:bg-bg-elevated'
+                                                }`}
+                                            >
+                                                Monto en Pesos ($)
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setInputMode('GALONES')}
+                                                className={`flex-1 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 ${
+                                                    inputMode === 'GALONES' 
+                                                        ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' 
+                                                        : 'text-text-muted hover:text-text-primary hover:bg-bg-elevated'
+                                                }`}
+                                            >
+                                                Cantidad Galones
+                                            </button>
+                                        </div>
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            {inputMode === 'PRECIO' ? (
+                                                <InputField
+                                                    label="Valor Surtidor ($)"
+                                                    type="number"
+                                                    min="0"
+                                                    value={form.precioTotalInput}
+                                                    onChange={(event) => setForm((current) => ({ ...current, precioTotalInput: event.target.value }))}
+                                                    required
+                                                    className="rounded-xl border-border-subtle focus:border-amber-500/50"
+                                                />
+                                            ) : (
+                                                <InputField
+                                                    label="Galones a despachar"
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.01"
+                                                    value={form.galones}
+                                                    onChange={(event) => setForm((current) => ({ ...current, galones: event.target.value }))}
+                                                    required
+                                                    className="rounded-xl border-border-subtle focus:border-amber-500/50"
+                                                />
+                                            )}
+                                            <div className="relative group">
+                                                <InputField
+                                                    label="Placa Vehículo"
+                                                    placeholder="ABC-123"
+                                                    value={form.placaVehiculo}
+                                                    onChange={(event) => setForm((current) => ({ ...current, placaVehiculo: normalizePlate(event.target.value) }))}
+                                                    className="rounded-xl border-border-subtle focus:border-amber-500/50 uppercase font-mono font-bold"
+                                                />
+                                                {verificandoConsumo && (
+                                                    <div className="absolute right-3 top-[34px] animate-spin">
+                                                        <Loader2 size={16} className="text-amber-500" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="mt-3 flex items-center justify-between gap-2">
-                                    <p className="text-[10px] text-white/35">
-                                        {new Date(delivery.fechaEntrega).toLocaleDateString('es-CO')}
+                            </div>
+
+                            <div className="relative overflow-hidden rounded-[24px] bg-bg-elevated/40 border border-border-subtle p-1 shadow-inner">
+                                <div className="absolute top-0 right-0 p-4 opacity-5">
+                                    <Receipt size={80} className="text-amber-500" />
+                                </div>
+                                <div className={`relative z-10 grid ${subsidy > 0 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3'} gap-px bg-border-subtle/30 overflow-hidden`}>
+                                    {[
+                                        { label: 'Precio/gal', value: unitPrice ? formatCurrency(unitPrice) : '—', show: true },
+                                        { label: 'Subsidio', value: subsidy > 0 ? formatCurrency(subsidy) : '—', show: subsidy > 0 },
+                                        { label: 'Galones', value: gallons > 0 ? formatGallons(gallons) : '0', show: true },
+                                        { label: 'Total Neto', value: estimatedTotal > 0 ? formatCurrency(estimatedTotal) : '$ 0', show: true },
+                                    ]
+                                        .filter(item => item.show)
+                                        .map(({ label, value }) => (
+                                            <div key={label} className="bg-bg-surface px-4 py-6 text-center">
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted mb-2">{label}</p>
+                                                <p className="text-lg sm:text-xl font-black text-text-primary tabular-nums tracking-tight">{value}</p>
+                                            </div>
+                                        ))}
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-4 border-t border-border-subtle/50">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-500">
+                                        <ShieldCheck size={16} />
+                                    </div>
+                                    <p className="text-[11px] text-text-muted leading-relaxed font-medium">
+                                        {pricePreview
+                                            ? <><span className="text-text-primary font-bold">{pricePreview.zona.nombre}</span> · Decreto {pricePreview.decreto.numero}</>
+                                            : 'Validación regulatoria activa en tiempo real.'}
                                     </p>
-                                    <Button type="button" variant="ghost" onClick={() => openConfirmDelivery(delivery)} className="text-[11px] px-2.5 py-1">
-                                        Confirmar
+                                </div>
+                                <div className="flex gap-3 w-full sm:w-auto">
+                                    <Button type="button" variant="ghost" onClick={fetchTanques} className="rounded-xl px-6 border-border-subtle hover:bg-bg-elevated">
+                                        Actualizar Niveles
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        isLoading={submitting || loading || pricingLoading}
+                                        disabled={!selectedTanque || tanques.length === 0 || !form.placaVehiculo || Number(form.galones) <= 0}
+                                        className="rounded-xl px-10 bg-amber-500 text-black font-bold shadow-lg shadow-amber-500/20 hover:scale-[1.02] transition-transform flex-1 sm:flex-none"
+                                    >
+                                        Registrar Venta
                                     </Button>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                </Card>
+                        </form>
+                    </Card>
 
-                {/* Checklist + Cierre (merged card) */}
-                <Card className="rounded-[22px] border-white/10 bg-white/[0.02] backdrop-blur-md h-full flex flex-col">
-                    <div className="flex items-center gap-2.5 mb-4 shrink-0">
-                        <div className="rounded-[12px] border border-white/8 bg-white/4 p-2.5 text-amber-400">
-                            <TimerReset size={15} />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-mono uppercase tracking-wider text-white/35">Foco operativo</p>
-                            <h3 className="text-[14px] font-semibold text-white">Checklist de turno</h3>
-                        </div>
-                    </div>
-                    <ul className="space-y-2 flex-1">
-                        {[
-                            'Verificar placa y tipo de servicio antes de confirmar.',
-                            'Despachar solo desde el tanque correcto.',
-                            'Escalar si un tanque cae por debajo del mínimo.',
-                        ].map((item, i) => (
-                            <li key={i} className="flex items-start gap-2.5 text-[12px] text-white/55">
-                                <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500/50 mt-1.5" />
-                                {item}
-                            </li>
-                        ))}
-                    </ul>
-
-                    <div className="mt-4 border-t border-white/5 pt-4 shrink-0">
-                        <div className="flex items-center gap-2.5 mb-2">
-                            <div className="rounded-[12px] border border-amber-500/18 bg-amber-500/6 p-2.5 text-amber-400">
-                                <ClipboardList size={15} />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-mono uppercase tracking-wider text-amber-500/50">Operativo</p>
-                                <h3 className="text-[14px] font-semibold text-white">Cierre de turno</h3>
-                            </div>
-                        </div>
-                        <p className="text-[11px] text-white/40 leading-4 mb-3">
-                            Compara nivel físico vs. inventario teórico y registra la diferencia.
-                        </p>
-                        <button
-                            type="button"
-                            className="w-full rounded-[12px] border border-amber-500/22 bg-amber-500/[0.06] px-4 py-2.5 text-[12px] font-medium text-amber-300 transition-colors hover:bg-amber-500/12 cursor-pointer"
-                            onClick={() => {
-                                setCierreResult(null);
-                                setCierreForm({
-                                    tanqueId: tanques[0]?.id ?? '',
-                                    nivelFisico: String(Number(tanques[0]?.nivelActual ?? '0').toFixed(2)),
-                                    observaciones: '',
-                                });
-                                setCierreModalOpen(true);
-                            }}
-                        >
-                            Iniciar cierre de turno
-                        </button>
-                    </div>
-                </Card>
-
-                {/* Tank status */}
-                <Card className="rounded-[22px] border-white/10 bg-white/[0.02] backdrop-blur-md h-full flex flex-col">
-                    <div className="flex items-center gap-2.5 mb-4 shrink-0">
-                        <div className="rounded-[12px] border border-sky-500/18 bg-sky-500/6 p-2.5 text-sky-400">
-                            <Fuel size={15} />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-mono uppercase tracking-wider text-white/35">Señales de riesgo</p>
-                            <h3 className="text-[14px] font-semibold text-white">Estado de tanques</h3>
-                        </div>
-                    </div>
-                    <div className="space-y-2 flex-1 overflow-y-auto">
-                        {loading && (
-                            <div className="rounded-[12px] bg-white/[0.03] px-4 py-3 text-[12px] text-white/40 animate-pulse">Cargando…</div>
-                        )}
-                        {!loading && lowTanks.length === 0 && (
-                            <div className="rounded-[12px] border border-emerald-500/15 bg-emerald-500/[0.04] px-3.5 py-2.5 text-[12px] text-emerald-200/70 h-full flex items-center">
-                                Todos los tanques sobre el mínimo operativo.
-                            </div>
-                        )}
-                        {lowTanks.map((tanque) => (
-                            <div key={tanque.id} className="flex items-center justify-between gap-3 rounded-[12px] border border-red-500/18 bg-red-500/[0.04] px-3.5 py-2.5">
-                                <div>
-                                    <p className="text-[12px] font-semibold text-white">{tanque.nombre}</p>
-                                    <p className="text-[10px] text-white/40 mt-0.5">{formatGallons(Number(tanque.nivelActual))} / {formatGallons(Number(tanque.nivelMinimo))} gal mín.</p>
+                    <Card className="rounded-[32px] border-border-subtle bg-bg-surface shadow-xl p-0 overflow-hidden ring-1 ring-white/5">
+                        <div className="flex items-center justify-between gap-4 border-b border-border-subtle px-8 py-6 bg-bg-elevated/40">
+                            <div className="flex items-center gap-4">
+                                <div className="rounded-2xl border border-border-subtle bg-bg-base p-3 text-amber-500">
+                                    <Receipt size={24} />
                                 </div>
-                                <Badge variant="red" className="text-[10px] shrink-0">Crítico</Badge>
+                                <div>
+                                    <h2 className="text-xl font-bold text-text-primary tracking-tight">Ventas del Turno</h2>
+                                    <p className="text-xs text-text-muted">Últimos registros de despacho</p>
+                                </div>
                             </div>
-                        ))}
-                    </div>
-                </Card>
-
-            </div>
-
-
-
-
-
-            {/* ── Ventas del turno ── */}
-            <Card className="rounded-[28px] border-white/10 bg-white/[0.02] backdrop-blur-md p-0 overflow-hidden">
-                <div className="flex items-center justify-between gap-4 border-b border-white/6 px-6 py-5">
-                    <div className="flex items-center gap-3">
-                        <div className="rounded-[16px] border border-white/8 bg-white/[0.04] p-3 text-amber-400">
-                            <Receipt size={18} />
+                            <button
+                                type="button"
+                                onClick={fetchVentas}
+                                className="group flex items-center gap-2 text-xs font-bold text-amber-500 uppercase tracking-widest hover:text-amber-400 transition-colors"
+                            >
+                                <TimerReset size={14} className="group-hover:rotate-180 transition-transform duration-500" />
+                                Refrescar
+                            </button>
                         </div>
-                        <div>
-                            <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-amber-500/70">Historial</p>
-                            <h2 className="mt-1 text-xl font-semibold text-white">Ventas del turno</h2>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-bg-base/30 text-[10px] text-text-muted uppercase font-bold tracking-[0.2em] border-b border-border-subtle">
+                                        <th className="px-8 py-4 text-left">Hora</th>
+                                        <th className="px-8 py-4 text-left">Vehículo / Placa</th>
+                                        <th className="px-8 py-4 text-left">Combustible</th>
+                                        <th className="px-8 py-4 text-left">Galones</th>
+                                        <th className="px-8 py-4 text-right">Total Facturado</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border-subtle/50">
+                                    {ventasLoading ? (
+                                        [...Array(3)].map((_, i) => (
+                                            <tr key={i} className="animate-pulse">
+                                                <td colSpan={5} className="px-8 py-4"><div className="h-12 bg-bg-elevated/40 rounded-xl" /></td>
+                                            </tr>
+                                        ))
+                                    ) : ventas.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={5} className="px-8 py-12 text-center text-text-muted italic">
+                                                No se registran transacciones en el turno actual.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        ventas.map((v) => (
+                                            <tr key={v.id} className="hover:bg-bg-elevated/20 transition-colors group">
+                                                <td className="px-8 py-5">
+                                                    <span className="font-mono text-xs font-bold text-text-primary">
+                                                        {new Date(v.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                </td>
+                                                <td className="px-8 py-5">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-lg bg-bg-base flex items-center justify-center border border-border-subtle group-hover:border-amber-500/30 transition-colors">
+                                                            <Truck size={14} className="text-text-muted group-hover:text-amber-500 transition-colors" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs font-black font-mono text-text-primary uppercase">{v.placaVehiculo || 'SIN PLACA'}</p>
+                                                            <p className="text-[10px] text-text-muted uppercase tracking-tighter">{v.tipoServicio}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-5">
+                                                    <Badge variant="blue" className="text-[9px] uppercase tracking-wider">{v.tipoCombustible.replace('_', ' ')}</Badge>
+                                                </td>
+                                                <td className="px-8 py-5">
+                                                    <span className="font-mono text-xs font-bold text-text-primary">{formatGallons(Number(v.galones))} GAL</span>
+                                                </td>
+                                                <td className="px-8 py-5 text-right">
+                                                    <span className="font-mono text-sm font-black text-amber-500">{formatCurrency(Number(v.precioTotal))}</span>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={fetchVentas}
-                        className="text-[12px] text-white/45 hover:text-white/75 transition-colors"
-                    >
-                        Actualizar
-                    </button>
+                    </Card>
                 </div>
 
-                {ventasLoading && (
-                    <div className="p-6 space-y-3">
-                        {[1, 2, 3].map(i => <div key={i} className="h-10 rounded-[12px] bg-white/[0.04] animate-pulse" />)}
-                    </div>
-                )}
-
-                {!ventasLoading && ventas.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-14 gap-3 text-white/38">
-                        <Receipt size={32} className="opacity-30" />
-                        <p className="text-sm">No hay registros de venta en este turno.</p>
-                    </div>
-                )}
-
-                {!ventasLoading && ventas.length > 0 && (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-[12px]">
-                            <thead>
-                                <tr className="border-b border-white/6">
-                                    {['Hora', 'Tanque', 'Servicio', 'Combustible', 'Galones', 'Precio/gal', 'Total', 'Placa'].map(h => (
-                                        <th key={h} className="px-4 py-3 text-left text-[10px] font-mono uppercase tracking-wider text-white/38">{h}</th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/[0.04]">
-                                {ventas.map(v => (
-                                    <tr key={v.id} className="hover:bg-white/[0.03] transition-colors">
-                                        <td className="px-4 py-3 font-mono text-white/55">
-                                            {new Date((v as any).createdAt ?? v.fecha).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
-                                        </td>
-                                        <td className="px-4 py-3 text-white/75">{(v as any).tanque?.nombre ?? '\u2014'}</td>
-                                        <td className="px-4 py-3">
-                                            <Badge variant="blue" className="text-[10px]">{v.tipoServicio}</Badge>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <Badge variant="amber" className="text-[10px]">{v.tipoCombustible}</Badge>
-                                        </td>
-                                        <td className="px-4 py-3 font-mono text-white/75">{formatGallons(Number(v.galones))}</td>
-                                        <td className="px-4 py-3 font-mono text-white/55">{formatCurrency(Number(v.precioUnitario))}</td>
-                                        <td className="px-4 py-3 font-mono text-amber-300">{formatCurrency(Number(v.precioTotal))}</td>
-                                        <td className="px-4 py-3 font-mono text-white/45">{v.placaVehiculo || '\u2014'}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </Card>
-
-            <Modal
-                open={confirmDeliveryOpen}
-                onClose={() => {
-                    setConfirmDeliveryOpen(false);
-                    setSelectedDelivery(null);
-                }}
-                title={`Confirmar entrega ${selectedDelivery?.numeroRemision || ''}`}
-            >
-                <form onSubmit={handleConfirmDelivery} className="space-y-4">
-                    <div className="rounded-brand border border-border-subtle bg-bg-elevated px-3 py-3 text-[12px] text-text-secondary">
-                        Esperado: {formatGallons(esperado)} gal · {selectedDelivery?.tipoCombustible || 'Combustible'}
-                    </div>
-
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-white/50">Distribución por tanque</p>
-                            {compatibleTanques.length > distribuciones.length && (
-                                <button
-                                    type="button"
-                                    onClick={addDistribucion}
-                                    className="flex items-center gap-1 rounded-[10px] border border-emerald-500/25 bg-emerald-500/[0.08] px-2.5 py-1 text-[11px] font-medium text-emerald-300 transition-colors hover:bg-emerald-500/[0.14]"
-                                >
-                                    <Plus size={12} /> Agregar tanque
-                                </button>
-                            )}
-                        </div>
-
-                        {distribuciones.map((dist, idx) => {
-                            const tank = tanques.find(t => t.id === dist.tanqueId);
-                            const gals = Number(dist.galones) || 0;
-                            const projected = tank ? Number(tank.nivelActual) + gals : 0;
-                            const cap = tank ? Number(tank.capacidadGalones) : 0;
-                            const over = tank && projected > cap;
-
-                            return (
-                                <div key={idx} className="rounded-[18px] border border-white/8 bg-white/[0.03] p-3 space-y-3">
-                                    <div className="flex items-start gap-2">
-                                        <div className="flex-1">
-                                            <SelectField
-                                                label={`Tanque ${idx + 1}`}
-                                                value={dist.tanqueId}
-                                                onChange={(e) => updateDistribucion(idx, 'tanqueId', e.target.value)}
-                                                options={compatibleTanques.map(t => ({
-                                                    value: t.id,
-                                                    label: `${t.nombre} · ${formatGallons(Number(t.nivelActual))} / ${formatGallons(Number(t.capacidadGalones))} gal`,
-                                                }))}
-                                            />
-                                        </div>
-                                        <div className="w-32">
-                                            <InputField
-                                                label="Galones"
-                                                type="number"
-                                                min="0"
-                                                step="0.01"
-                                                value={dist.galones}
-                                                onChange={(e) => updateDistribucion(idx, 'galones', e.target.value)}
-                                                required
-                                            />
-                                        </div>
-                                        {distribuciones.length > 1 && (
-                                            <button
-                                                type="button"
-                                                onClick={() => removeDistribucion(idx)}
-                                                className="mt-6 rounded-[8px] border border-red-500/25 bg-red-500/[0.08] p-1.5 text-red-400 transition-colors hover:bg-red-500/[0.16]"
-                                            >
-                                                <Minus size={14} />
-                                            </button>
-                                        )}
+                <div className="space-y-8">
+                    <div className="flex flex-col items-center">
+                        <div className="w-full rounded-[32px] border-[6px] border-[#1a1c23] bg-[#050505] shadow-2xl overflow-hidden flex flex-col relative z-20 shrink-0">
+                            <div className="bg-gradient-to-b from-[#111] to-[#050505] py-6 px-8 border-b border-[#1a1c23] flex flex-col items-center justify-center z-10 relative">
+                                <span className="text-amber-500/40 text-[10px] font-black tracking-[0.4em] uppercase mb-1.5">easy</span>
+                                <span className="text-white font-display text-[28px] tracking-[0.2em] font-black leading-none drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">DIESEL</span>
+                            </div>
+                            <div className="p-8 flex flex-col gap-8 justify-center z-10">
+                                {pricesLoading ? (
+                                    <div className="flex flex-col items-center justify-center p-14 text-white/20 gap-4">
+                                        <Loader2 size={40} className="animate-spin text-amber-500" />
+                                        <span className="text-[10px] font-black tracking-[0.3em] uppercase">Sincronizando...</span>
                                     </div>
-                                    {tank && gals > 0 && (
-                                        <div className={`rounded-[10px] border px-2.5 py-1.5 text-[11px] ${
-                                            over
-                                                ? 'border-red-500/25 bg-red-500/[0.07] text-red-300'
-                                                : 'border-white/8 bg-white/[0.03] text-white/55'
-                                        }`}>
-                                            Nivel: {formatGallons(Number(tank.nivelActual))} → {formatGallons(projected)} / {formatGallons(cap)} gal
-                                            {over && ' · Excede capacidad'}
+                                ) : pricesData.particular.length > 0 || pricesData.publico.length > 0 ? (
+                                    Array.from(new Set(tanques.map(t => t.tipoCombustible))).map((fuel, idx) => {
+                                        const particularPrice = pricesData.particular.find(p => p.tipoCombustible === fuel);
+                                        const publicoPrice = pricesData.publico.find(p => p.tipoCombustible === fuel);
+                                        const valParticular = particularPrice ? Number(particularPrice.precioGalon) + Number(particularPrice.subsidioGalon) : 0;
+                                        const valPublico = publicoPrice ? Number(publicoPrice.precioGalon) + Number(publicoPrice.subsidioGalon) : 0;
+                                        const isDiesel = fuel.toUpperCase().includes('DIESEL');
+                                        const colorPart = isDiesel ? 'text-[#F5A623] drop-shadow-[0_0_15px_rgba(245,166,35,0.9)]' : 'text-[#ef4444] drop-shadow-[0_0_15px_rgba(239,68,68,0.9)]';
+                                        const colorPub = isDiesel ? 'text-[#06b6d4] drop-shadow-[0_0_12px_rgba(6,182,212,0.9)]' : 'text-[#10B981] drop-shadow-[0_0_15_rgba(16,185,129,0.9)]';
+                                        return (
+                                            <div key={idx} className="bg-[#0a0a0a] border-2 border-[#1a1c23] rounded-[24px] p-8 flex flex-col items-center shadow-inner relative overflow-hidden group">
+                                                <h4 className="text-[11px] font-black tracking-[0.3em] text-white/50 uppercase mb-6 relative z-10">
+                                                    {fuel.replace('_', ' ')}
+                                                </h4>
+                                                <div className="relative h-[64px] w-full flex justify-center items-center">
+                                                    <div className={`absolute transition-all duration-[1500ms] ease-in-out ${activeTarifa === 'PARTICULAR' ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${colorPart}`}>
+                                                        <div className="font-mono text-[56px] sm:text-[64px] leading-none font-black tracking-tighter text-center">
+                                                            {valParticular ? valParticular.toLocaleString('es-CO') : '----'}
+                                                        </div>
+                                                    </div>
+                                                    <div className={`absolute transition-all duration-[1500ms] ease-in-out ${activeTarifa === 'PUBLICO' ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${colorPub}`}>
+                                                         <div className="font-mono text-[56px] sm:text-[64px] leading-none font-black tracking-tighter text-center">
+                                                            {valPublico ? valPublico.toLocaleString('es-CO') : '----'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="text-center text-red-500/40 font-black text-[14px] tracking-[0.4em] uppercase animate-pulse border-2 border-red-500/10 p-10 rounded-[24px]">
+                                        OFFLINE
+                                    </div>
+                                )}
+                            </div>
+                            <div className="bg-[#080808] border-t-2 border-[#1a1c23] z-10 relative h-[100px] flex items-center justify-center overflow-hidden shrink-0">
+                                <div className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-[1500ms] ${activeTarifa === 'PARTICULAR' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                                    <span className="text-[12px] font-black text-[#ef4444] tracking-[0.3em] uppercase flex items-center justify-center gap-3">
+                                        <div className="w-2 h-2 rounded-full bg-[#ef4444] shadow-[0_0_12px_rgba(239,68,68,1)] animate-pulse" />
+                                        TARIFA PLENA
+                                    </span>
+                                    <span className="text-[10px] font-bold text-white/20 mt-2 uppercase tracking-[0.2em]">
+                                        {pricesData.particular[0]?.decreto.numero ? `Resolución ${pricesData.particular[0]?.decreto.numero}` : 'PRECIO VIGENTE'}
+                                    </span>
+                                </div>
+                                <div className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-[1500ms] ${activeTarifa === 'PUBLICO' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                                    <span className="text-[12px] font-black text-[#10B981] tracking-[0.3em] uppercase flex items-center justify-center gap-3">
+                                        <div className="w-2 h-2 rounded-full bg-[#10B981] shadow-[0_0_12px_rgba(16,185,129,1)] animate-pulse" />
+                                        SUBSIDIO ACTIVO
+                                    </span>
+                                    <span className="text-[10px] font-bold text-[#10B981]/30 mt-2 uppercase tracking-[0.2em]">
+                                        {pricesData.publico[0]?.decreto.numero ? `Decreto ${pricesData.publico[0]?.decreto.numero}` : 'TARIFA DIFERENCIAL'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="w-[140px] h-[60px] bg-gradient-to-r from-[#1c1f26] via-[#2d323e] to-[#1c1f26] border-x-[4px] border-[#111318] z-10 relative shadow-[inset_0_0_20px_rgba(0,0,0,0.9)] -mt-2" />
+                        <div className="w-full max-w-[300px] h-[40px] bg-gradient-to-b from-[#1c1f26] to-[#050505] rounded-t-[20px] border-t-4 border-x-4 border-[#2d323e] shadow-2xl z-20 relative -mt-1 shrink-0" />
+                    </div>
+
+                    <div className="space-y-6">
+                        <Card className="rounded-[32px] border-border-subtle bg-bg-surface shadow-xl p-6 relative overflow-hidden group hover:border-emerald-500/30 transition-all">
+                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                                <Truck size={60} className="text-emerald-500" />
+                            </div>
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between gap-3 mb-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-500 border border-emerald-500/20">
+                                            <Truck size={18} />
                                         </div>
+                                        <h3 className="text-base font-bold text-text-primary tracking-tight">Recepción</h3>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setDirectEntryForm({ tanqueId: tanques[0]?.id ?? '', galones: '0', precioUnitario: '0', observaciones: '' });
+                                            setDirectEntryOpen(true);
+                                        }}
+                                        className="p-2 bg-emerald-500 text-black rounded-xl hover:scale-110 transition-transform shadow-lg shadow-emerald-500/20"
+                                        title="Entrada Directa"
+                                    >
+                                        <Plus size={16} />
+                                    </button>
+                                </div>
+                                <div className="space-y-3">
+                                    {pendingDeliveriesLoading ? (
+                                        <div className="h-20 bg-bg-elevated/40 rounded-2xl animate-pulse" />
+                                    ) : pendingDeliveries.length === 0 ? (
+                                        <div className="p-6 text-center rounded-2xl bg-bg-elevated/20 border border-dashed border-border-subtle">
+                                            <p className="text-[11px] text-text-muted font-bold uppercase tracking-widest">Sin remisiones</p>
+                                        </div>
+                                    ) : (
+                                        pendingDeliveries.slice(0, 3).map((delivery) => (
+                                            <div key={delivery.id} className="p-4 rounded-2xl bg-bg-base border border-border-subtle hover:border-emerald-500/30 transition-all group/item">
+                                                <div className="flex items-start justify-between gap-2 mb-3">
+                                                    <div className="min-w-0">
+                                                        <p className="text-xs font-black text-text-primary truncate">REM. {delivery.numeroRemision}</p>
+                                                        <p className="text-[10px] text-text-muted font-mono mt-0.5">{formatGallons(Number(delivery.galones))} GAL · {delivery.tipoCombustible.split('_')[0]}</p>
+                                                    </div>
+                                                    <Badge variant="green" className="text-[8px] animate-pulse">PENDIENTE</Badge>
+                                                </div>
+                                                <Button type="button" variant="amber" onClick={() => openConfirmDelivery(delivery)} className="w-full h-8 text-[10px] font-bold uppercase tracking-widest rounded-lg">Confirmar Recepción</Button>
+                                            </div>
+                                        ))
                                     )}
                                 </div>
-                            );
-                        })}
-                    </div>
-
-                    <div className={`rounded-brand border px-3 py-3 text-[12px] ${
-                        Math.abs(totalAsignado - esperado) < 0.01
-                            ? 'border-emerald-500/25 bg-emerald-500/[0.07] text-emerald-300'
-                            : totalAsignado > esperado
-                                ? 'border-amber-500/25 bg-amber-500/[0.07] text-amber-300'
-                                : 'border-border-subtle bg-bg-elevated text-text-secondary'
-                    }`}>
-                        Total asignado: {formatGallons(totalAsignado)} / {formatGallons(esperado)} gal
-                        {totalAsignado > esperado && ' (sobrepasa lo esperado)'}
-                        {totalAsignado < esperado && totalAsignado > 0 && ` (faltan ${formatGallons(esperado - totalAsignado)} gal)`}
-                    </div>
-
-                    <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="ghost" type="button" onClick={() => {
-                            setConfirmDeliveryOpen(false);
-                            setSelectedDelivery(null);
-                        }}>
-                            Cancelar
-                        </Button>
-                        <Button type="submit" isLoading={submitting} disabled={totalAsignado <= 0}>
-                            Confirmar entrega
-                        </Button>
-                    </div>
-                </form>
-            </Modal>
-
-            <Modal
-                open={directEntryOpen}
-                onClose={() => setDirectEntryOpen(false)}
-                title="Entrada directa de combustible"
-            >
-                <form onSubmit={handleDirectEntry} className="space-y-4">
-                    <div className="rounded-brand border border-emerald-500/20 bg-emerald-500/[0.07] px-3 py-3 text-[12px] text-emerald-200/80">
-                        Registra un ingreso de combustible sin necesidad de una remisión previa de distribuidor. El nivel del tanque se actualiza de inmediato y queda en auditoría.
-                    </div>
-
-                    <SelectField
-                        label="Tanque receptor"
-                        value={directEntryForm.tanqueId}
-                        onChange={(e) => setDirectEntryForm(cur => ({ ...cur, tanqueId: e.target.value }))}
-                        options={tanques.map(t => ({ value: t.id, label: `${t.nombre} · ${t.tipoCombustible} · ${formatGallons(Number(t.nivelActual))} gal` }))}
-                    />
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <InputField
-                            label="Galones a cargar"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={directEntryForm.galones}
-                            onChange={(e) => setDirectEntryForm(cur => ({ ...cur, galones: e.target.value }))}
-                            required
-                        />
-                        <InputField
-                            label="Precio unitario ($/gal)"
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={directEntryForm.precioUnitario}
-                            onChange={(e) => setDirectEntryForm(cur => ({ ...cur, precioUnitario: e.target.value }))}
-                            required
-                        />
-                    </div>
-
-                    <InputField
-                        label="Observaciones (opcional)"
-                        placeholder="Ej: carga de emergencia, proveedor alterno..."
-                        value={directEntryForm.observaciones}
-                        onChange={(e) => setDirectEntryForm(cur => ({ ...cur, observaciones: e.target.value }))}
-                    />
-
-                    {(() => {
-                        const t = tanques.find(tk => tk.id === directEntryForm.tanqueId) ?? tanques[0];
-                        const gals = Number(directEntryForm.galones) || 0;
-                        if (!t || gals <= 0) return null;
-                        const projected = Number(t.nivelActual) + gals;
-                        const cap = Number(t.capacidadGalones);
-                        const over = projected > cap;
-                        return (
-                            <div className={`rounded-brand border px-3 py-3 text-[12px] ${over ? 'border-red-500/25 bg-red-500/[0.07] text-red-300' : 'border-border-subtle bg-bg-elevated text-text-secondary'}`}>
-                                Nivel proyectado: {formatGallons(projected)} / {formatGallons(cap)} gal
-                                {over && ' · Supera la capacidad del tanque'}
                             </div>
-                        );
-                    })()}
+                        </Card>
 
-                    <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="ghost" type="button" onClick={() => setDirectEntryOpen(false)}>
-                            Cancelar
-                        </Button>
-                        <Button type="submit" isLoading={submitting}>
-                            Registrar entrada
-                        </Button>
+                        <Card className="rounded-[32px] border-border-subtle bg-bg-surface shadow-xl p-6 relative overflow-hidden group hover:border-blue-500/30 transition-all">
+                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                                <TimerReset size={60} className="text-blue-500" />
+                            </div>
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2.5 bg-blue-500/10 rounded-xl text-blue-500 border border-blue-500/20">
+                                        <ClipboardList size={18} />
+                                    </div>
+                                    <h3 className="text-base font-bold text-text-primary tracking-tight">Fin de Jornada</h3>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="p-4 rounded-2xl bg-bg-elevated/20 border border-border-subtle">
+                                        <p className="text-[11px] text-text-secondary leading-relaxed font-medium">Verifique el nivel físico de los tanques y registre cualquier novedad antes de finalizar.</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className="w-full py-4 rounded-2xl bg-bg-base border-2 border-dashed border-border-subtle text-xs font-bold text-text-muted hover:border-blue-500/50 hover:text-blue-500 transition-all uppercase tracking-widest"
+                                        onClick={() => {
+                                            setCierreResult(null);
+                                            setCierreForm({
+                                                tanqueId: tanques[0]?.id ?? '',
+                                                nivelFisico: String(Number(tanques[0]?.nivelActual ?? '0').toFixed(2)),
+                                                observaciones: '',
+                                            });
+                                            setCierreModalOpen(true);
+                                        }}
+                                    >
+                                        Iniciar Cierre de Turno
+                                    </button>
+                                </div>
+                            </div>
+                        </Card>
                     </div>
-                </form>
-            </Modal>
+                </div>
+            </div>
 
-            {/* ── Modal: Cierre de turno ── */}
-            <Modal
-                open={cierreModalOpen}
-                onClose={() => { setCierreModalOpen(false); setCierreResult(null); }}
-                title="Cierre de turno"
-            >
-                {cierreResult ? (
-                    <div className="space-y-4">
-                        <div className="rounded-brand border border-emerald-500/25 bg-emerald-500/[0.07] p-4">
-                            <p className="text-[11px] font-mono uppercase tracking-wider text-emerald-300/70 mb-3">Resultado del cierre</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                <div>
-                                    <p className="text-[10px] text-white/45 uppercase tracking-wider">Teórico</p>
-                                    <p className="mt-1 text-lg font-semibold text-white">{formatGallons(cierreResult.nivelTeorico)} gal</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] text-white/45 uppercase tracking-wider">Físico</p>
-                                    <p className="mt-1 text-lg font-semibold text-white">{formatGallons(cierreResult.nivelFisico)} gal</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] text-white/45 uppercase tracking-wider">Diferencia</p>
-                                    <p className={`mt-1 text-lg font-semibold ${Math.abs(cierreResult.diferencia) < 0.01 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                                        {cierreResult.diferencia > 0 ? '+' : ''}{formatGallons(cierreResult.diferencia)} gal
-                                    </p>
-                                </div>
+            <Modal isOpen={confirmDeliveryOpen} onClose={() => setConfirmDeliveryOpen(false)} title="Confirmar Recepción de Combustible">
+                <form onSubmit={handleConfirmDelivery} className="space-y-6">
+                    <div className="bg-bg-elevated/40 p-5 rounded-2xl border border-border-subtle">
+                        <div className="flex justify-between items-center mb-4">
+                            <p className="text-xs font-bold text-text-muted uppercase tracking-widest">Detalles de Remisión</p>
+                            <Badge variant="blue">Rem. {selectedDelivery?.numeroRemision}</Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-[10px] text-text-muted uppercase font-bold">Distribuidor</p>
+                                <p className="text-sm font-bold text-text-primary">{selectedDelivery?.distribuidor?.nombre}</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-text-muted uppercase font-bold">Total Remisionado</p>
+                                <p className="text-sm font-bold text-text-primary">{formatGallons(esperado)} GAL</p>
                             </div>
                         </div>
-                        <Button className="w-full" onClick={() => { setCierreModalOpen(false); setCierreResult(null); }}>
-                            Cerrar
-                        </Button>
                     </div>
-                ) : (
-                    <form onSubmit={handleCierre} className="space-y-4">
-                        <div className="rounded-brand border border-amber-500/20 bg-amber-500/[0.05] px-3 py-3 text-[12px] text-amber-200/75">
-                            Ingresa el nivel físico observado. El sistema calcula la diferencia respecto al inventario teórico y registra el ajuste.
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <p className="text-xs font-bold text-text-muted uppercase tracking-widest">Distribución en Tanques</p>
+                            <Button type="button" variant="ghost" size="sm" onClick={addDistribucion} disabled={distribuciones.length >= compatibleTanques.length} className="text-[10px] h-8">
+                                <Plus size={12} className="mr-1" /> Dividir Carga
+                            </Button>
+                        </div>
+                        
+                        <div className="space-y-3">
+                            {distribuciones.map((dist, i) => (
+                                <div key={i} className="flex gap-3 items-end animate-in slide-in-from-right-2">
+                                    <div className="flex-1">
+                                        <SelectField
+                                            label={i === 0 ? "Tanque destino" : ""}
+                                            value={dist.tanqueId}
+                                            onChange={(e) => updateDistribucion(i, 'tanqueId', e.target.value)}
+                                            options={compatibleTanques.map(t => ({ value: t.id, label: `${t.nombre} (${formatGallons(Number(t.nivelActual))} gal actuales)` }))}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="w-[140px]">
+                                        <InputField
+                                            label={i === 0 ? "Galones" : ""}
+                                            type="number"
+                                            step="0.01"
+                                            value={dist.galones}
+                                            onChange={(e) => updateDistribucion(i, 'galones', e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                    {distribuciones.length > 1 && (
+                                        <Button type="button" variant="ghost" onClick={() => removeDistribucion(i)} className="mb-0.5 h-10 w-10 p-0 text-red-500 hover:bg-red-500/10">
+                                            <Minus size={16} />
+                                        </Button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className={cn(
+                            "p-3 rounded-xl border text-center transition-colors",
+                            Math.abs(totalAsignado - esperado) < 0.1 ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" : "bg-amber-500/10 border-amber-500/20 text-amber-500"
+                        )}>
+                            <p className="text-[10px] font-bold uppercase tracking-widest">
+                                {Math.abs(totalAsignado - esperado) < 0.1 
+                                    ? "Distribución Completa" 
+                                    : `Faltan asignar: ${formatGallons(esperado - totalAsignado)} GAL`}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4">
+                        <Button type="button" variant="ghost" onClick={() => setConfirmDeliveryOpen(false)}>Cancelar</Button>
+                        <Button type="submit" isLoading={submitting} disabled={Math.abs(totalAsignado - esperado) > 0.1} className="bg-emerald-500 text-black font-bold">Confirmar Ingreso</Button>
+                    </div>
+                </form>
+            </Modal>
+
+            <Modal isOpen={directEntryOpen} onClose={() => setDirectEntryOpen(false)} title="Registro de Entrada Directa">
+                <form onSubmit={handleDirectEntry} className="space-y-5">
+                    <SelectField
+                        label="Tanque de destino"
+                        value={directEntryForm.tanqueId}
+                        onChange={(e) => setDirectEntryForm(prev => ({ ...prev, tanqueId: e.target.value }))}
+                        options={tanques.map(t => ({ value: t.id, label: `${t.nombre} (${t.tipoCombustible})` }))}
+                        required
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                        <InputField
+                            label="Galones recibidos"
+                            type="number"
+                            step="0.01"
+                            value={directEntryForm.galones}
+                            onChange={(e) => setDirectEntryForm(prev => ({ ...prev, galones: e.target.value }))}
+                            required
+                        />
+                        <InputField
+                            label="Precio por galón ($)"
+                            type="number"
+                            value={directEntryForm.precioUnitario}
+                            onChange={(e) => setDirectEntryForm(prev => ({ ...prev, precioUnitario: e.target.value }))}
+                            required
+                        />
+                    </div>
+                    <TextAreaField
+                        label="Observaciones / Novedades"
+                        value={directEntryForm.observaciones}
+                        onChange={(e) => setDirectEntryForm(prev => ({ ...prev, observaciones: e.target.value }))}
+                        placeholder="Ej: Ajuste manual, compra local, etc."
+                    />
+                    <div className="flex justify-end gap-3 pt-4">
+                        <Button type="button" variant="ghost" onClick={() => setDirectEntryOpen(false)}>Cancelar</Button>
+                        <Button type="submit" isLoading={submitting} className="bg-emerald-500 text-black font-bold">Registrar Entrada</Button>
+                    </div>
+                </form>
+            </Modal>
+
+            <Modal isOpen={cierreModalOpen} onClose={() => setCierreModalOpen(false)} title="Cierre Operativo de Turno">
+                {!cierreResult ? (
+                    <form onSubmit={handleCierre} className="space-y-6">
+                        <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-2xl">
+                            <p className="text-xs text-amber-600 leading-relaxed font-medium">
+                                El cierre de turno calcula la diferencia entre el inventario teórico del sistema y la medición física real.
+                            </p>
                         </div>
                         <SelectField
                             label="Tanque a cerrar"
                             value={cierreForm.tanqueId}
-                            onChange={e => setCierreForm(c => ({ ...c, tanqueId: e.target.value }))}
-                            options={tanques.map(t => ({
-                                value: t.id,
-                                label: `${t.nombre} · ${t.tipoCombustible} · ${formatGallons(Number(t.nivelActual))} gal (teórico)`,
-                            }))}
-                        />
-                        <InputField
-                            label="Nivel físico observado (galones)"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={cierreForm.nivelFisico}
-                            onChange={e => setCierreForm(c => ({ ...c, nivelFisico: e.target.value }))}
+                            onChange={(e) => setCierreForm(prev => ({ ...prev, tanqueId: e.target.value }))}
+                            options={tanques.map(t => ({ value: t.id, label: t.nombre }))}
                             required
                         />
-                        {(() => {
-                            const t = tanques.find(tk => tk.id === cierreForm.tanqueId);
-                            const nf = Number(cierreForm.nivelFisico) || 0;
-                            if (!t) return null;
-                            const diff = nf - Number(t.nivelActual);
-                            const cls = Math.abs(diff) < 0.01
-                                ? 'border-border-subtle bg-bg-elevated text-text-secondary'
-                                : diff > 0
-                                    ? 'border-emerald-500/25 bg-emerald-500/[0.07] text-emerald-300'
-                                    : 'border-amber-500/25 bg-amber-500/[0.07] text-amber-300';
-                            return (
-                                <div className={`rounded-brand border px-3 py-3 text-[12px] ${cls}`}>
-                                    Diferencia estimada: {diff > 0 ? '+' : ''}{formatGallons(diff)} gal
-                                    {Math.abs(diff) >= 0.01 && (diff > 0 ? ' (sobrante)' : ' (faltante)')}
-                                </div>
-                            );
-                        })()}
-                        <TextAreaField
-                            label="Observaciones (opcional)"
-                            placeholder="Causa de la diferencia, novedades del turno..."
-                            rows={3}
-                            value={cierreForm.observaciones}
-                            onChange={e => setCierreForm(c => ({ ...c, observaciones: e.target.value }))}
+                        <InputField
+                            label="Nivel físico actual (Galones)"
+                            type="number"
+                            step="0.01"
+                            value={cierreForm.nivelFisico}
+                            onChange={(e) => setCierreForm(prev => ({ ...prev, nivelFisico: e.target.value }))}
+                            required
                         />
-                        <div className="flex justify-end gap-2 pt-2">
-                            <Button variant="ghost" type="button" onClick={() => setCierreModalOpen(false)}>
-                                Cancelar
-                            </Button>
-                            <Button type="submit" isLoading={submitting}>
-                                Registrar cierre
-                            </Button>
+                        <TextAreaField
+                            label="Novedades detectadas"
+                            value={cierreForm.observaciones}
+                            onChange={(e) => setCierreForm(prev => ({ ...prev, observaciones: e.target.value }))}
+                            placeholder="Describa cualquier descuadre o novedad en el equipo..."
+                        />
+                        <div className="flex justify-end gap-3 pt-4">
+                            <Button type="button" variant="ghost" onClick={() => setCierreModalOpen(false)}>Cancelar</Button>
+                            <Button type="submit" isLoading={submitting} className="bg-blue-500 text-black font-bold">Procesar Cierre</Button>
                         </div>
                     </form>
+                ) : (
+                    <div className="space-y-6 animate-in zoom-in-95">
+                        <div className="flex flex-col items-center text-center p-6 bg-bg-elevated/40 rounded-[32px] border border-border-subtle">
+                            <div className={cn(
+                                "w-16 h-16 rounded-full flex items-center justify-center mb-4",
+                                Math.abs(cierreResult.diferencia) < 5 ? "bg-emerald-500/20 text-emerald-500" : "bg-red-500/20 text-red-500"
+                            )}>
+                                {Math.abs(cierreResult.diferencia) < 5 ? <ShieldCheck size={32} /> : <ShieldAlert size={32} />}
+                            </div>
+                            <h3 className="text-xl font-bold text-text-primary">Resultado del Cierre</h3>
+                            <p className="text-xs text-text-muted mt-1 uppercase tracking-widest font-bold">Tanque: {cierreResult.tanqueNombre}</p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-bg-base p-4 rounded-2xl border border-border-subtle">
+                                <p className="text-[10px] text-text-muted uppercase font-bold">Teórico</p>
+                                <p className="text-lg font-mono font-bold text-text-primary">{formatGallons(cierreResult.nivelTeorico)}</p>
+                            </div>
+                            <div className="bg-bg-base p-4 rounded-2xl border border-border-subtle">
+                                <p className="text-[10px] text-text-muted uppercase font-bold">Físico</p>
+                                <p className="text-lg font-mono font-bold text-text-primary">{formatGallons(cierreResult.nivelFisico)}</p>
+                            </div>
+                        </div>
+
+                        <div className={cn(
+                            "p-6 rounded-[24px] border text-center",
+                            Math.abs(cierreResult.diferencia) < 0.5 ? "bg-emerald-500/10 border-emerald-500/20" : "bg-amber-500/10 border-amber-500/20"
+                        )}>
+                            <p className="text-xs font-bold text-text-muted uppercase tracking-widest">Diferencia Neta</p>
+                            <p className={cn(
+                                "text-3xl font-black font-mono mt-2",
+                                cierreResult.diferencia >= 0 ? "text-emerald-500" : "text-red-500"
+                            )}>
+                                {cierreResult.diferencia > 0 ? '+' : ''}{formatGallons(cierreResult.diferencia)} GAL
+                            </p>
+                        </div>
+
+                        <Button className="w-full h-12 rounded-xl font-bold" onClick={() => setCierreModalOpen(false)}>Finalizar y Salir</Button>
+                    </div>
                 )}
             </Modal>
         </div>

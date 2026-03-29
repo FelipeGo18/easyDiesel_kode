@@ -293,6 +293,18 @@ export class AuthService {
                 },
                 include: { rol: true },
             });
+
+            // Auditoría: Registro por Google
+            await auditoriaService.registrarLog({
+                usuarioId: usuario.id,
+                modulo: 'AUTH',
+                accion: 'REGISTRO_GOOGLE',
+                entidad: 'usuario',
+                entidadId: usuario.id,
+                ip: metadata?.ip,
+                userAgent: metadata?.userAgent,
+                datosDespues: { email: usuario.email, rol: usuario.rol.nombre }
+            });
         }
 
         if (!usuario.rol) {
@@ -304,7 +316,20 @@ export class AuthService {
         }
 
         // Generar token
-        return this.issueSession(usuario, metadata);
+        const session = await this.issueSession(usuario, metadata);
+
+        // Auditoría: Login por Google
+        await auditoriaService.registrarLog({
+            usuarioId: usuario.id,
+            modulo: 'AUTH',
+            accion: 'LOGIN_GOOGLE',
+            entidad: 'usuario',
+            entidadId: usuario.id,
+            ip: metadata?.ip,
+            userAgent: metadata?.userAgent
+        });
+
+        return session;
     }
 
     /**

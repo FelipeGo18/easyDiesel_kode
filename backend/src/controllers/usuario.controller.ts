@@ -35,7 +35,12 @@ export const crearUsuarioHandler = async (req: Request, res: Response) => {
         res.status(201).json({ success: true, message: 'Usuario creado', data: nuevoUsuario });
     } catch (error: any) {
         if (error.name === 'ZodError') {
-            res.status(400).json({ success: false, errors: error.errors });
+            const issues = error.issues || error.errors || [];
+            res.status(400).json({ 
+                success: false, 
+                message: 'Datos de usuario inválidos',
+                errors: issues.map((e: any) => e.message) 
+            });
         } else {
             res.status(400).json({ success: false, message: error.message });
         }
@@ -60,7 +65,12 @@ export const actualizarUsuarioHandler = async (req: Request, res: Response) => {
         res.json({ success: true, message: 'Usuario actualizado', data: usuario });
     } catch (error: any) {
         if (error.name === 'ZodError') {
-            res.status(400).json({ success: false, errors: error.errors });
+            const issues = error.issues || error.errors || [];
+            res.status(400).json({ 
+                success: false, 
+                message: 'Datos de actualización inválidos',
+                errors: issues.map((e: any) => e.message) 
+            });
         } else {
             res.status(400).json({ success: false, message: error.message });
         }

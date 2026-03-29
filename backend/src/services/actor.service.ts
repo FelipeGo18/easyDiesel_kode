@@ -5,6 +5,13 @@ import {
     CrearDistribuidorInput,
     ActualizarDistribuidorInput
 } from '../validators/actor.validator';
+import { auditoriaService } from './auditoria.service';
+
+interface AuditoriaMetadata {
+    usuarioId: string;
+    ip: string;
+    userAgent?: string;
+}
 
 export class ActorService {
     // ==========================================
@@ -59,7 +66,7 @@ export class ActorService {
         return estacion;
     }
 
-    async crearEstacion(data: CrearEstacionInput) {
+    async crearEstacion(data: CrearEstacionInput, meta?: AuditoriaMetadata) {
         const existeNit = await prisma.estacionServicio.findUnique({ where: { nit: data.nit } });
         if (existeNit) throw new Error('Ya existe una estación con este NIT');
 
@@ -69,7 +76,7 @@ export class ActorService {
         const existeUsuario = await prisma.estacionServicio.findUnique({ where: { usuarioId: data.usuarioId } });
         if (existeUsuario) throw new Error('Este usuario ya está asignado a otra estación');
 
-        return prisma.estacionServicio.create({
+        const estacion = await prisma.estacionServicio.create({
             data: {
                 nombre: data.nombre,
                 nit: data.nit,
@@ -85,23 +92,54 @@ export class ActorService {
             },
             include: { zona: true, usuario: true, distribuidor: true }
         });
+
+        if (meta) {
+            await auditoriaService.registrarLog({
+                usuarioId: meta.usuarioId,
+                modulo: 'ACTORES',
+                accion: 'CREAR_ESTACION',
+                entidad: 'estacion_servicio',
+                entidadId: estacion.id,
+                ip: meta.ip,
+                userAgent: meta.userAgent,
+                datosDespues: { nombre: estacion.nombre, nit: estacion.nit, sicom: estacion.codigoSicom }
+            });
+        }
+
+        return estacion;
     }
 
-    async actualizarZonaEstacion(estacionId: string, zonaId: string) {
+    async actualizarZonaEstacion(estacionId: string, zonaId: string, meta?: AuditoriaMetadata) {
         const existe = await prisma.estacionServicio.findUnique({ where: { id: estacionId } });
         if (!existe) throw new Error('Estación no encontrada');
 
         const zona = await prisma.zonaDistribucion.findUnique({ where: { id: zonaId } });
         if (!zona) throw new Error('Zona no encontrada');
 
-        return prisma.estacionServicio.update({
+        const estacion = await prisma.estacionServicio.update({
             where: { id: estacionId },
             data: { zona: { connect: { id: zonaId } } },
             include: { zona: true },
         });
+
+        if (meta) {
+            await auditoriaService.registrarLog({
+                usuarioId: meta.usuarioId,
+                modulo: 'ACTORES',
+                accion: 'ACTUALIZAR_ZONA_ESTACION',
+                entidad: 'estacion_servicio',
+                entidadId: estacionId,
+                ip: meta.ip,
+                userAgent: meta.userAgent,
+                datosAntes: { zonaId: existe.zonaId },
+                datosDespues: { zonaId: zona.id, zonaNombre: zona.nombre }
+            });
+        }
+
+        return estacion;
     }
 
-    async actualizarEstacion(id: string, data: ActualizarEstacionInput) {
+    async actualizarEstacion(id: string, data: ActualizarEstacionInput, meta?: AuditoriaMetadata) {
         const existe = await prisma.estacionServicio.findUnique({ where: { id } });
         if (!existe) throw new Error('Estación no encontrada');
 
@@ -134,11 +172,27 @@ export class ActorService {
             }
         }
 
-        return prisma.estacionServicio.update({
+        const estacion = await prisma.estacionServicio.update({
             where: { id },
             data: updatePayload,
             include: { zona: true, distribuidor: true }
         });
+
+        if (meta) {
+            await auditoriaService.registrarLog({
+                usuarioId: meta.usuarioId,
+                modulo: 'ACTORES',
+                accion: 'ACTUALIZAR_ESTACION',
+                entidad: 'estacion_servicio',
+                entidadId: id,
+                ip: meta.ip,
+                userAgent: meta.userAgent,
+                datosAntes: existe,
+                datosDespues: { cambios: Object.keys(data) }
+            });
+        }
+
+        return estacion;
     }
 
     // ==========================================
@@ -187,14 +241,14 @@ export class ActorService {
         return distribuidor;
     }
 
-    async crearDistribuidor(data: CrearDistribuidorInput) {
+    async crearDistribuidor(data: CrearDistribuidorInput, meta?: AuditoriaMetadata) {
         const existeNit = await prisma.distribuidor.findUnique({ where: { nit: data.nit } });
         if (existeNit) throw new Error('Ya existe un distribuidor con este NIT');
 
         const existeUsuario = await prisma.distribuidor.findUnique({ where: { usuarioId: data.usuarioId } });
         if (existeUsuario) throw new Error('Este usuario ya está asignado a otro distribuidor');
 
-        return prisma.distribuidor.create({
+        const distribuidor = await prisma.distribuidor.create({
             data: {
                 nombre: data.nombre,
                 nit: data.nit,
@@ -206,9 +260,24 @@ export class ActorService {
             },
             include: { usuario: true }
         });
+
+        if (meta) {
+            await auditoriaService.registrarLog({
+                usuarioId: meta.usuarioId,
+                modulo: 'ACTORES',
+                accion: 'CREAR_DISTRIBUIDOR',
+                entidad: 'distribuidor',
+                entidadId: distribuidor.id,
+                ip: meta.ip,
+                userAgent: meta.userAgent,
+                datosDespues: { nombre: distribuidor.nombre, nit: distribuidor.nit, tipo: distribuidor.tipo }
+            });
+        }
+
+        return distribuidor;
     }
 
-    async actualizarDistribuidor(id: string, data: ActualizarDistribuidorInput) {
+    async actualizarDistribuidor(id: string, data: ActualizarDistribuidorInput, meta?: AuditoriaMetadata) {
         const existe = await prisma.distribuidor.findUnique({ where: { id } });
         if (!existe) throw new Error('Distribuidor no encontrado');
 
@@ -224,11 +293,27 @@ export class ActorService {
             updatePayload.usuario = { connect: { id: usuarioId } };
         }
 
-        return prisma.distribuidor.update({
+        const distribuidor = await prisma.distribuidor.update({
             where: { id },
             data: updatePayload,
             include: { usuario: true }
         });
+
+        if (meta) {
+            await auditoriaService.registrarLog({
+                usuarioId: meta.usuarioId,
+                modulo: 'ACTORES',
+                accion: 'ACTUALIZAR_DISTRIBUIDOR',
+                entidad: 'distribuidor',
+                entidadId: id,
+                ip: meta.ip,
+                userAgent: meta.userAgent,
+                datosAntes: existe,
+                datosDespues: { cambios: Object.keys(data) }
+            });
+        }
+
+        return distribuidor;
     }
 }
 
