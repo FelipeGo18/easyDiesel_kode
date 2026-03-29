@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
     BookOpen, 
     Building2, 
@@ -14,7 +15,8 @@ import {
     Download,
     Eye,
     User,
-    Clock
+    Clock,
+    ExternalLink
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -60,6 +62,7 @@ function formatCurrency(value: number) {
 
 export function ReguladorPanelPage() {
     const toast = useToast();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'resumen' | 'auditoria' | 'reportes'>('resumen');
     
@@ -458,55 +461,64 @@ export function ReguladorPanelPage() {
             )}
 
             {activeTab === 'auditoria' && (
-                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-                    <Card className="p-8 border-border-subtle bg-bg-surface shadow-2xl">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                            <div>
-                                <h2 className="text-2xl font-bold text-text-primary tracking-tight">Trazabilidad de Alta Integridad</h2>
-                                <p className="text-sm text-text-muted mt-1 leading-relaxed max-w-xl">
-                                    Registro cronológico inmutable de cada interacción con el sistema. 
-                                    Diseñado para auditoría forense y fiscalización ministerial.
-                                </p>
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <Card className="p-0 overflow-hidden border-border-subtle shadow-xl bg-bg-surface">
+                        <div className="flex items-center justify-between border-b border-border-subtle px-6 py-5 bg-bg-elevated/40">
+                            <div className="flex items-center gap-4">
+                                <div className="p-2.5 bg-amber-500/10 rounded-xl text-amber-500 border border-amber-500/20">
+                                    <ShieldAlert className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-bold text-text-primary tracking-tight">Rastro Auditor de Operaciones</h2>
+                                    <p className="text-xs text-text-muted">Bitácora inmutable de cambios en el sistema</p>
+                                </div>
                             </div>
-                            <Button variant="ghost" className="rounded-xl border border-border-subtle hover:border-amber-500/30" onClick={fetchData}>
-                                <History className="w-4 h-4 mr-2" /> Sincronizar Logs
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-[11px] h-9 gap-2 border-amber-500/20 text-amber-500 hover:bg-amber-500/10"
+                                onClick={() => navigate('/auditoria')}
+                            >
+                                Ver historial completo <ExternalLink className="w-3.5 h-3.5" />
                             </Button>
                         </div>
-                        <div className="rounded-2xl border border-border-subtle overflow-hidden">
-                            <DataTable 
-                                columns={columnsAuditoria} 
-                                data={logs} 
-                                loading={loading}
-                                onRowClick={handleViewDetail}
-                                searchPlaceholder="Filtrar por responsable, acción o módulo..."
-                            />
-                        </div>
+                        <DataTable 
+                            columns={columnsAuditoria} 
+                            data={logs} 
+                            loading={loading}
+                            onRowClick={handleViewDetail}
+                        />
                     </Card>
                 </div>
             )}
 
             {activeTab === 'reportes' && (
-                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-                    <Card className="p-8 border-border-subtle bg-bg-surface shadow-2xl">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                            <div>
-                                <h2 className="text-2xl font-bold text-text-primary tracking-tight">Centro de Reportes Consolidados</h2>
-                                <p className="text-sm text-text-muted mt-1 leading-relaxed max-w-xl">
-                                    Generación de informes técnicos para entes de control, planeación nacional y análisis de impacto económico.
-                                </p>
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <Card className="p-0 overflow-hidden border-border-subtle shadow-xl bg-bg-surface">
+                        <div className="flex items-center justify-between border-b border-border-subtle px-6 py-5 bg-bg-elevated/40">
+                            <div className="flex items-center gap-4">
+                                <div className="p-2.5 bg-amber-500/10 rounded-xl text-amber-500 border border-amber-500/20">
+                                    <FileText className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-bold text-text-primary tracking-tight">Centro de Reportes Analíticos</h2>
+                                    <p className="text-xs text-text-muted">Exportación de datos para cumplimiento normativo</p>
+                                </div>
                             </div>
-                            <Button variant="primary" className="rounded-xl font-bold px-6 py-2 shadow-lg shadow-amber-500/20 bg-amber-500 hover:bg-amber-600 text-black">
-                                <Download className="w-4 h-4 mr-2" /> Nuevo Reporte Ministerial
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-[11px] h-9 gap-2 border-amber-500/20 text-amber-500 hover:bg-amber-500/10"
+                                onClick={() => navigate('/analitica')}
+                            >
+                                Ver analítica completa <ExternalLink className="w-3.5 h-3.5" />
                             </Button>
                         </div>
-                        <div className="rounded-2xl border border-border-subtle overflow-hidden">
-                            <DataTable 
-                                columns={columnsReportes} 
-                                data={reportes} 
-                                loading={loading}
-                                searchPlaceholder="Buscar en el histórico de exportaciones..."
-                            />
-                        </div>
+                        <DataTable 
+                            columns={columnsReportes} 
+                            data={reportes} 
+                            loading={loading}
+                        />
                     </Card>
                 </div>
             )}

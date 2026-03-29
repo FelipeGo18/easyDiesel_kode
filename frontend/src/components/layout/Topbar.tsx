@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/useAuth';
 import { useAccess } from '@/hooks/useAccess';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { 
-    User, 
+    User as UserIcon, 
     Settings, 
     LogOut, 
     Home, 
@@ -120,36 +120,30 @@ export function Topbar() {
                                         <p className="text-[12px] text-text-primary font-sans truncate">{user.nombre}</p>
                                         <p className="text-[9px] font-mono text-amber-500/60 uppercase tracking-wider truncate">{typeof user.rol === 'object' ? user.rol.nombre : user.rol}</p>
                                     </div>
-                                    <button
-                                        onClick={() => {
-                                            setMenuOpen(false);
-                                            navigate('/');
-                                        }}
+                                    <Link
+                                        to="/"
+                                        onClick={() => setMenuOpen(false)}
                                         className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-text-secondary hover:bg-bg-elevated transition-colors text-left"
                                     >
                                         <Home size={14} />
                                         Ir al Inicio
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setMenuOpen(false);
-                                            navigate('/perfil');
-                                        }}
+                                    </Link>
+                                    <Link
+                                        to="/perfil"
+                                        onClick={() => setMenuOpen(false)}
                                         className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-text-secondary hover:bg-bg-elevated transition-colors text-left"
                                     >
-                                        <User size={14} />
+                                        <UserIcon size={14} />
                                         Mi Perfil
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setMenuOpen(false);
-                                            navigate('/configuracion');
-                                        }}
+                                    </Link>
+                                    <Link
+                                        to="/configuracion"
+                                        onClick={() => setMenuOpen(false)}
                                         className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-text-secondary hover:bg-bg-elevated transition-colors text-left"
                                     >
                                         <Settings size={14} />
                                         Configuración
-                                    </button>
+                                    </Link>
                                     <div className="border-t border-border-subtle mt-1 pt-1">
                                         <button
                                             onClick={handleLogout}
