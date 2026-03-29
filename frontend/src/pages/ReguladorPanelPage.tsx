@@ -12,7 +12,9 @@ import {
     History,
     ChevronRight,
     Download,
-    Eye
+    Eye,
+    User,
+    Clock
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -493,7 +495,7 @@ export function ReguladorPanelPage() {
                                     Generación de informes técnicos para entes de control, planeación nacional y análisis de impacto económico.
                                 </p>
                             </div>
-                            <Button variant="amber" className="rounded-xl font-bold px-6 py-2 shadow-lg shadow-amber-500/20">
+                            <Button variant="primary" className="rounded-xl font-bold px-6 py-2 shadow-lg shadow-amber-500/20 bg-amber-500 hover:bg-amber-600 text-black">
                                 <Download className="w-4 h-4 mr-2" /> Nuevo Reporte Ministerial
                             </Button>
                         </div>
@@ -523,7 +525,7 @@ export function ReguladorPanelPage() {
                                 <span className="text-[10px] text-text-muted uppercase font-black tracking-[0.2em]">Responsable</span>
                                 <div className="mt-2 flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
-                                        <Icon name="user" size={18} />
+                                        <User size={18} />
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-text-primary">{selectedLog.usuario.nombre}</p>
@@ -535,7 +537,7 @@ export function ReguladorPanelPage() {
                                 <span className="text-[10px] text-text-muted uppercase font-black tracking-[0.2em]">Sello de Tiempo</span>
                                 <div className="mt-2 flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20">
-                                        <Icon name="clock" size={18} />
+                                        <Clock size={18} />
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-text-primary">{new Date(selectedLog.createdAt).toLocaleDateString()}</p>

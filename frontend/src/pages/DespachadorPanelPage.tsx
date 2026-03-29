@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { BellRing, ClipboardList, Fuel, Loader2, Minus, Plus, Receipt, ShieldCheck, TimerReset, Truck, BookOpen, ShieldAlert, History } from 'lucide-react';
+import { BellRing, ClipboardList, Fuel, Loader2, Minus, Plus, Receipt, ShieldCheck, TimerReset, Truck, BookOpen, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -833,7 +833,7 @@ export function StationOperationsPage() {
                                             <tr key={v.id} className="hover:bg-bg-elevated/20 transition-colors group">
                                                 <td className="px-8 py-5">
                                                     <span className="font-mono text-xs font-bold text-text-primary">
-                                                        {new Date(v.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        {new Date(v.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </span>
                                                 </td>
                                                 <td className="px-8 py-5">
@@ -868,7 +868,7 @@ export function StationOperationsPage() {
                 <div className="space-y-8">
                     <div className="flex flex-col items-center">
                         <div className="w-full rounded-[32px] border-[6px] border-[#1a1c23] bg-[#050505] shadow-2xl overflow-hidden flex flex-col relative z-20 shrink-0">
-                            <div className="bg-gradient-to-b from-[#111] to-[#050505] py-6 px-8 border-b border-[#1a1c23] flex flex-col items-center justify-center z-10 relative">
+                            <div className="bg-linear-to-b from-[#111] to-[#050505] py-6 px-8 border-b border-[#1a1c23] flex flex-col items-center justify-center z-10 relative">
                                 <span className="text-amber-500/40 text-[10px] font-black tracking-[0.4em] uppercase mb-1.5">easy</span>
                                 <span className="text-white font-display text-[28px] tracking-[0.2em] font-black leading-none drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">DIESEL</span>
                             </div>
@@ -893,12 +893,12 @@ export function StationOperationsPage() {
                                                     {fuel.replace('_', ' ')}
                                                 </h4>
                                                 <div className="relative h-[64px] w-full flex justify-center items-center">
-                                                    <div className={`absolute transition-all duration-[1500ms] ease-in-out ${activeTarifa === 'PARTICULAR' ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${colorPart}`}>
+                                                    <div className={`absolute transition-all duration-1500 ease-in-out ${activeTarifa === 'PARTICULAR' ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${colorPart}`}>
                                                         <div className="font-mono text-[56px] sm:text-[64px] leading-none font-black tracking-tighter text-center">
                                                             {valParticular ? valParticular.toLocaleString('es-CO') : '----'}
                                                         </div>
                                                     </div>
-                                                    <div className={`absolute transition-all duration-[1500ms] ease-in-out ${activeTarifa === 'PUBLICO' ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${colorPub}`}>
+                                                    <div className={`absolute transition-all duration-1500 ease-in-out ${activeTarifa === 'PUBLICO' ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${colorPub}`}>
                                                          <div className="font-mono text-[56px] sm:text-[64px] leading-none font-black tracking-tighter text-center">
                                                             {valPublico ? valPublico.toLocaleString('es-CO') : '----'}
                                                         </div>
@@ -914,7 +914,7 @@ export function StationOperationsPage() {
                                 )}
                             </div>
                             <div className="bg-[#080808] border-t-2 border-[#1a1c23] z-10 relative h-[100px] flex items-center justify-center overflow-hidden shrink-0">
-                                <div className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-[1500ms] ${activeTarifa === 'PARTICULAR' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                                <div className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-1500 ${activeTarifa === 'PARTICULAR' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                                     <span className="text-[12px] font-black text-[#ef4444] tracking-[0.3em] uppercase flex items-center justify-center gap-3">
                                         <div className="w-2 h-2 rounded-full bg-[#ef4444] shadow-[0_0_12px_rgba(239,68,68,1)] animate-pulse" />
                                         TARIFA PLENA
@@ -923,7 +923,7 @@ export function StationOperationsPage() {
                                         {pricesData.particular[0]?.decreto.numero ? `Resolución ${pricesData.particular[0]?.decreto.numero}` : 'PRECIO VIGENTE'}
                                     </span>
                                 </div>
-                                <div className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-[1500ms] ${activeTarifa === 'PUBLICO' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                                <div className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-1500 ${activeTarifa === 'PUBLICO' ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                                     <span className="text-[12px] font-black text-[#10B981] tracking-[0.3em] uppercase flex items-center justify-center gap-3">
                                         <div className="w-2 h-2 rounded-full bg-[#10B981] shadow-[0_0_12px_rgba(16,185,129,1)] animate-pulse" />
                                         SUBSIDIO ACTIVO
@@ -934,8 +934,8 @@ export function StationOperationsPage() {
                                 </div>
                             </div>
                         </div>
-                        <div className="w-[140px] h-[60px] bg-gradient-to-r from-[#1c1f26] via-[#2d323e] to-[#1c1f26] border-x-[4px] border-[#111318] z-10 relative shadow-[inset_0_0_20px_rgba(0,0,0,0.9)] -mt-2" />
-                        <div className="w-full max-w-[300px] h-[40px] bg-gradient-to-b from-[#1c1f26] to-[#050505] rounded-t-[20px] border-t-4 border-x-4 border-[#2d323e] shadow-2xl z-20 relative -mt-1 shrink-0" />
+                        <div className="w-[140px] h-[60px] bg-linear-to-r from-[#1c1f26] via-[#2d323e] to-[#1c1f26] border-x-4 border-[#111318] z-10 relative shadow-[inset_0_0_20px_rgba(0,0,0,0.9)] -mt-2" />
+                        <div className="w-full max-w-[300px] h-[40px] bg-linear-to-b from-[#1c1f26] to-[#050505] rounded-t-[20px] border-t-4 border-x-4 border-[#2d323e] shadow-2xl z-20 relative -mt-1 shrink-0" />
                     </div>
 
                     <div className="space-y-6">
@@ -980,7 +980,7 @@ export function StationOperationsPage() {
                                                     </div>
                                                     <Badge variant="green" className="text-[8px] animate-pulse">PENDIENTE</Badge>
                                                 </div>
-                                                <Button type="button" variant="amber" onClick={() => openConfirmDelivery(delivery)} className="w-full h-8 text-[10px] font-bold uppercase tracking-widest rounded-lg">Confirmar Recepción</Button>
+                                                <Button type="button" variant="primary" onClick={() => openConfirmDelivery(delivery)} className="w-full h-8 text-[10px] font-bold uppercase tracking-widest rounded-lg bg-amber-500 hover:bg-amber-600 text-black">Confirmar Recepción</Button>
                                             </div>
                                         ))
                                     )}
@@ -1025,7 +1025,7 @@ export function StationOperationsPage() {
                 </div>
             </div>
 
-            <Modal isOpen={confirmDeliveryOpen} onClose={() => setConfirmDeliveryOpen(false)} title="Confirmar Recepción de Combustible">
+            <Modal open={confirmDeliveryOpen} onClose={() => setConfirmDeliveryOpen(false)} title="Confirmar Recepción de Combustible">
                 <form onSubmit={handleConfirmDelivery} className="space-y-6">
                     <div className="bg-bg-elevated/40 p-5 rounded-2xl border border-border-subtle">
                         <div className="flex justify-between items-center mb-4">
@@ -1102,7 +1102,7 @@ export function StationOperationsPage() {
                 </form>
             </Modal>
 
-            <Modal isOpen={directEntryOpen} onClose={() => setDirectEntryOpen(false)} title="Registro de Entrada Directa">
+            <Modal open={directEntryOpen} onClose={() => setDirectEntryOpen(false)} title="Registro de Entrada Directa">
                 <form onSubmit={handleDirectEntry} className="space-y-5">
                     <SelectField
                         label="Tanque de destino"
@@ -1141,7 +1141,7 @@ export function StationOperationsPage() {
                 </form>
             </Modal>
 
-            <Modal isOpen={cierreModalOpen} onClose={() => setCierreModalOpen(false)} title="Cierre Operativo de Turno">
+            <Modal open={cierreModalOpen} onClose={() => setCierreModalOpen(false)} title="Cierre Operativo de Turno">
                 {!cierreResult ? (
                     <form onSubmit={handleCierre} className="space-y-6">
                         <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-2xl">
@@ -1185,7 +1185,7 @@ export function StationOperationsPage() {
                                 {Math.abs(cierreResult.diferencia) < 5 ? <ShieldCheck size={32} /> : <ShieldAlert size={32} />}
                             </div>
                             <h3 className="text-xl font-bold text-text-primary">Resultado del Cierre</h3>
-                            <p className="text-xs text-text-muted mt-1 uppercase tracking-widest font-bold">Tanque: {cierreResult.tanqueNombre}</p>
+                            <p className="text-xs text-text-muted mt-1 uppercase tracking-widest font-bold">Tanque: {cierreResult.nombreTanque}</p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">

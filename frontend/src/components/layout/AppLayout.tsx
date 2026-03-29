@@ -17,8 +17,10 @@ export function AppLayout() {
                 <Topbar />
 
                 {/* Content */}
-                <main className={`flex-1 overflow-y-auto ${isRegulador ? 'p-4 sm:p-6 md:p-8 lg:p-12 max-w-[1600px] mx-auto w-full' : 'p-3 sm:p-4 md:p-6'}`} data-lenis-prevent>
-                    <Outlet />
+                <main className="flex-1 overflow-y-auto w-full" data-lenis-prevent>
+                    <div className={isRegulador ? 'p-4 sm:p-6 md:p-8 lg:p-12 max-w-[1600px] mx-auto w-full' : 'p-3 sm:p-4 md:p-6'}>
+                        <Outlet />
+                    </div>
                 </main>
             </div>
         </div>

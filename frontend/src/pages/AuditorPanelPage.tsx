@@ -8,7 +8,8 @@ import {
     Search,
     Download,
     Eye,
-    History
+    History,
+    ChevronRight
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -16,8 +17,7 @@ import { KpiCard } from '@/components/ui/KpiCard';
 import { useToast } from '@/components/ui/useToast';
 import { getErrorMessage } from '@/lib/http';
 import api from '@/services/api';
-import type { ApiResponse } from '@/types';
-import { Icon } from '@/components/ui/Icon';
+import type { PaginatedResponse } from '@/types';
 import { useNavigate } from 'react-router-dom';
 
 interface AuditoriaSummary {
@@ -45,7 +45,7 @@ export function AuditorPanelPage() {
         setLoading(true);
         try {
             // Obtener logs recientes de TODOS los módulos
-            const response = await api.get<ApiResponse<any[]>>('/auditoria', { 
+            const response = await api.get<PaginatedResponse<any>>('/auditoria', { 
                 params: { limit: 10 } // Aumentamos un poco el límite para el resumen
             });
             
@@ -108,7 +108,7 @@ export function AuditorPanelPage() {
     const handleReviewCritical = () => {
         // Navegar a auditoría con filtro de acciones críticas
         navigate('/auditoria?modulo=AUTH&accion=LOGIN');
-        toast.info('Filtrando por acciones críticas de acceso');
+        toast.success('Filtrando por acciones críticas de acceso');
     };
 
     useEffect(() => { fetchAuditorData(); }, [fetchAuditorData]);
@@ -263,7 +263,7 @@ export function AuditorPanelPage() {
                                     <Download size={16} className="text-text-muted group-hover:text-amber-500" />
                                     <span className="text-xs font-medium text-text-secondary">Exportar Log del Día</span>
                                 </div>
-                                <Icon name="chevron-right" size={12} className="text-text-muted" />
+                                <ChevronRight size={12} className="text-text-muted" />
                             </button>
                             <button 
                                 onClick={handleReviewCritical}
@@ -273,7 +273,7 @@ export function AuditorPanelPage() {
                                     <Eye size={16} className="text-text-muted group-hover:text-amber-500" />
                                     <span className="text-xs font-medium text-text-secondary">Revisar Acciones Críticas</span>
                                 </div>
-                                <Icon name="chevron-right" size={12} className="text-text-muted" />
+                                <ChevronRight size={12} className="text-text-muted" />
                             </button>
                         </div>
                     </Card>

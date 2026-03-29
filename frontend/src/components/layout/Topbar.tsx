@@ -2,7 +2,13 @@ import { useState } from 'react';
 import { useAuth } from '@/context/useAuth';
 import { useAccess } from '@/hooks/useAccess';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Icon } from '@/components/ui/Icon';
+import { 
+    User, 
+    Settings, 
+    LogOut, 
+    Home, 
+    Users
+} from 'lucide-react';
 import { protectedRoutes } from '@/features/routing/appRoutes';
 
 export function Topbar() {
@@ -85,13 +91,13 @@ export function Topbar() {
                             onClick={() => setMenuOpen(!menuOpen)}
                             className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
                         >
-                            <div className="w-8 h-8 rounded-[var(--radius-brand)] bg-amber-dim border border-amber-500/20 flex items-center justify-center overflow-hidden relative shrink-0">
+                            <div className="w-8 h-8 rounded-brand bg-amber-dim border border-amber-500/20 flex items-center justify-center overflow-hidden relative shrink-0">
                                 {user.fotoUrl && (
                                     <img
                                         src={user.fotoUrl}
                                         alt={user.nombre}
                                         referrerPolicy="no-referrer"
-                                        className="w-full h-full rounded-[var(--radius-brand)] object-cover absolute inset-0"
+                                        className="w-full h-full rounded-brand object-cover absolute inset-0"
                                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                     />
                                 )}
@@ -109,7 +115,7 @@ export function Topbar() {
                                     className="fixed inset-0 z-40"
                                     onClick={() => setMenuOpen(false)}
                                 />
-                                <div className="absolute right-0 top-full mt-2 w-48 bg-bg-surface border border-border-subtle rounded-[var(--radius-brand)] shadow-lg z-50 py-1">
+                                <div className="absolute right-0 top-full mt-2 w-48 bg-bg-surface border border-border-subtle rounded-brand shadow-lg z-50 py-1">
                                     <div className="px-3 py-2 border-b border-border-subtle">
                                         <p className="text-[12px] text-text-primary font-sans truncate">{user.nombre}</p>
                                         <p className="text-[9px] font-mono text-amber-500/60 uppercase tracking-wider truncate">{typeof user.rol === 'object' ? user.rol.nombre : user.rol}</p>
@@ -117,11 +123,21 @@ export function Topbar() {
                                     <button
                                         onClick={() => {
                                             setMenuOpen(false);
+                                            navigate('/');
+                                        }}
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-text-secondary hover:bg-bg-elevated transition-colors text-left"
+                                    >
+                                        <Home size={14} />
+                                        Ir al Inicio
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setMenuOpen(false);
                                             navigate('/perfil');
                                         }}
                                         className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-text-secondary hover:bg-bg-elevated transition-colors text-left"
                                     >
-                                        <Icon name="user" size={14} />
+                                        <User size={14} />
                                         Mi Perfil
                                     </button>
                                     <button
@@ -131,15 +147,22 @@ export function Topbar() {
                                         }}
                                         className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-text-secondary hover:bg-bg-elevated transition-colors text-left"
                                     >
-                                        <Icon name="settings" size={14} />
+                                        <Settings size={14} />
                                         Configuración
                                     </button>
                                     <div className="border-t border-border-subtle mt-1 pt-1">
                                         <button
                                             onClick={handleLogout}
+                                            className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-text-secondary hover:bg-bg-elevated transition-colors text-left"
+                                        >
+                                            <Users size={14} />
+                                            Cambiar Cuenta
+                                        </button>
+                                        <button
+                                            onClick={handleLogout}
                                             className="w-full flex items-center gap-2 px-3 py-2 text-[12px] text-red-400 hover:bg-red-500/10 transition-colors text-left"
                                         >
-                                            <Icon name="logout" size={14} />
+                                            <LogOut size={14} />
                                             Cerrar Sesión
                                         </button>
                                     </div>
