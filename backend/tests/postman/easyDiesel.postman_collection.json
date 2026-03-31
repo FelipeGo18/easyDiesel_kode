@@ -1,0 +1,583 @@
+{
+  "info": {
+    "_postman_id": "easydiesel-collection-v1",
+    "name": "easyDiesel — Flujo Maestro de Pruebas",
+    "description": "Coleccion completa para probar easyDiesel.\nFlujo de ejecucion en Collection Runner:\n1-Auth → 2-Zonas → 3-Decretos → 4-Actores → 5-Tanques → 6-Precios → 7-Inventario → 8-Reportes → 9-Auditoria → 10-Dashboard\n\nImportar tambien: easyDiesel.postman_environment.json",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "token",          "value": "" },
+    { "key": "zonaId",         "value": "" },
+    { "key": "decretoId",      "value": "" },
+    { "key": "estacionId",     "value": "" },
+    { "key": "distribuidorId", "value": "" },
+    { "key": "tanqueId",       "value": "" },
+    { "key": "entregaId",      "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1 - Auth",
+      "item": [
+        {
+          "name": "Login — captura token",
+          "event": [
+            { "listen": "prerequest", "script": { "exec": [
+              "const id = Date.now().toString().slice(-7);",
+              "pm.environment.set('testRunId', id);",
+              "pm.environment.set('nitEstacion', '9001' + id);",
+              "pm.environment.set('codigoSicom', 'SIC' + id);",
+              "pm.environment.set('nitDistribuidor', '8003' + id);",
+              "pm.environment.set('decretoNumero', 'DEC-PM-' + id);",
+              "pm.environment.set('zonaName', 'Zona PM ' + id);",
+              "pm.environment.set('remisionNumero', 'REM-PM-' + id);",
+              "pm.environment.set('emailEstacion', 'estacion.' + id + '@test.com');",
+              "pm.environment.set('emailDistribuidor', 'dist.' + id + '@test.com');"
+            ]}},
+            { "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Token presente', () => {",
+            "  const d = pm.response.json().data;",
+            "  pm.expect(d.token).to.be.a('string');",
+            "  pm.environment.set('token', d.token);",
+            "  pm.environment.set('refreshToken', d.refreshToken);",
+            "  pm.environment.set('userId', d.usuario.id);",
+            "});",
+            "pm.test('Usuario tiene rol', () => {",
+            "  pm.expect(pm.response.json().data.usuario.rol).to.exist;",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}" },
+            "url": "{{url}}/api/auth/login"
+          }
+        },
+        {
+          "name": "GET /me — perfil autenticado",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Retorna email y rol', () => {",
+            "  const d = pm.response.json().data;",
+            "  pm.expect(d.email).to.be.a('string');",
+            "  pm.expect(d.rol).to.exist;",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{url}}/api/auth/me"
+          }
+        },
+        {
+          "name": "Login credenciales incorrectas — espera 401",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 401', () => pm.response.to.have.status(401));",
+            "pm.test('success=false', () => pm.expect(pm.response.json().success).to.equal(false));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"noexiste@test.com\",\n  \"password\": \"wrong\"\n}" },
+            "url": "{{url}}/api/auth/login"
+          }
+        },
+        {
+          "name": "GET /me sin token — espera 401",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 401 sin token', () => pm.response.to.have.status(401));"
+          ]}}],
+          "request": { "method": "GET", "header": [], "url": "{{url}}/api/auth/me" }
+        }
+      ]
+    },
+    {
+      "name": "2 - Zonas",
+      "item": [
+        {
+          "name": "Crear Zona — captura zonaId",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('ID capturado', () => {",
+            "  const d = pm.response.json().data;",
+            "  pm.expect(d.id).to.be.a('string');",
+            "  pm.environment.set('zonaId', d.id);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"{{zonaName}}\",\n  \"tipoZona\": \"INTERCONECTADA\",\n  \"departamentos\": [\"Cundinamarca\"],\n  \"municipios\": [\"Bogota\"],\n  \"descripcion\": \"Creada desde pruebas Postman\"\n}" },
+            "url": "{{url}}/api/zonas"
+          }
+        },
+        {
+          "name": "Listar Zonas",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Array con al menos 1 zona', () => {",
+            "  pm.expect(pm.response.json().data).to.be.an('array').with.lengthOf.at.least(1);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{url}}/api/zonas"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3 - Decretos",
+      "item": [
+        {
+          "name": "Crear Decreto — captura decretoId",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('ID capturado', () => {",
+            "  const d = pm.response.json().data;",
+            "  pm.expect(d.id).to.be.a('string');",
+            "  pm.environment.set('decretoId', d.id);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"numero\": \"{{decretoNumero}}\",\n  \"titulo\": \"Decreto Prueba Postman\",\n  \"fechaExpedicion\": \"2025-01-01T00:00:00.000Z\",\n  \"fechaVigencia\": \"2025-12-31T23:59:59.000Z\"\n}" },
+            "url": "{{url}}/api/decretos"
+          }
+        },
+        {
+          "name": "Listar Decretos",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Retorna array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{url}}/api/decretos"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4 - Actores",
+      "item": [
+        {
+          "name": "Crear Usuario para Estacion",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('ID usuario estacion capturado', () => {",
+            "  pm.environment.set('usuarioEstacionId', pm.response.json().data.id);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{emailEstacion}}\",\n  \"nombre\": \"Usuario Estacion Test\",\n  \"password\": \"Test1234!\"\n}" },
+            "url": "{{url}}/api/usuarios"
+          }
+        },
+        {
+          "name": "Crear Usuario para Distribuidor",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('ID usuario distribuidor capturado', () => {",
+            "  pm.environment.set('usuarioDistribuidorId', pm.response.json().data.id);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{emailDistribuidor}}\",\n  \"nombre\": \"Usuario Distribuidor Test\",\n  \"password\": \"Test1234!\"\n}" },
+            "url": "{{url}}/api/usuarios"
+          }
+        },
+        {
+          "name": "Crear Estacion — captura estacionId",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('Estacion creada', () => {",
+            "  const d = pm.response.json().data;",
+            "  pm.expect(d.id).to.be.a('string');",
+            "  pm.expect(d.nombre).to.be.a('string');",
+            "  pm.environment.set('estacionId', d.id);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Estacion Postman Test\",\n  \"nit\": \"{{nitEstacion}}\",\n  \"direccion\": \"Calle 100 # 50-10\",\n  \"ciudad\": \"Bogota\",\n  \"departamento\": \"Cundinamarca\",\n  \"codigoSicom\": \"{{codigoSicom}}\",\n  \"zonaId\": \"{{zonaId}}\",\n  \"usuarioId\": \"{{usuarioEstacionId}}\"\n}" },
+            "url": "{{url}}/api/actores/estaciones"
+          }
+        },
+        {
+          "name": "Listar Estaciones",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Array con al menos 1', () => {",
+            "  pm.expect(pm.response.json().data).to.be.an('array').with.lengthOf.at.least(1);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{url}}/api/actores/estaciones"
+          }
+        },
+        {
+          "name": "Crear Distribuidor — captura distribuidorId",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('Distribuidor creado', () => {",
+            "  const d = pm.response.json().data;",
+            "  pm.expect(d.id).to.be.a('string');",
+            "  pm.environment.set('distribuidorId', d.id);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Distribuidor Postman Test\",\n  \"nit\": \"{{nitDistribuidor}}\",\n  \"tipo\": \"MAYORISTA\",\n  \"direccion\": \"Zona Industrial Sur\",\n  \"ciudad\": \"Bogota\",\n  \"departamento\": \"Cundinamarca\",\n  \"usuarioId\": \"{{usuarioDistribuidorId}}\"\n}" },
+            "url": "{{url}}/api/actores/distribuidores"
+          }
+        },
+        {
+          "name": "NIT duplicado — espera 4xx",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Rechaza NIT duplicado (4xx)', () => {",
+            "  pm.expect(pm.response.code).to.be.within(400, 499);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Duplicado\",\n  \"nit\": \"{{nitDistribuidor}}\",\n  \"tipo\": \"MAYORISTA\",\n  \"direccion\": \"Calle 1\",\n  \"ciudad\": \"Bogota\",\n  \"departamento\": \"Cundinamarca\",\n  \"usuarioId\": \"{{userId}}\"\n}" },
+            "url": "{{url}}/api/actores/distribuidores"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5 - Tanques",
+      "item": [
+        {
+          "name": "Crear Tanque ACPM — captura tanqueId",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('Nivel inicial es 0', () => {",
+            "  const d = pm.response.json().data;",
+            "  pm.expect(Number(d.nivelActual)).to.equal(0);",
+            "  pm.expect(d.tipoCombustible).to.equal('ACPM');",
+            "  pm.environment.set('tanqueId', d.id);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Tanque ACPM Postman\",\n  \"capacidadGalones\": 10000,\n  \"nivelMinimo\": 500,\n  \"tipoCombustible\": \"ACPM\",\n  \"estacionId\": \"{{estacionId}}\"\n}" },
+            "url": "{{url}}/api/tanques"
+          }
+        },
+        {
+          "name": "GET Tanque por ID",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('ID coincide', () => {",
+            "  pm.expect(pm.response.json().data.id).to.equal(pm.environment.get('tanqueId'));",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{url}}/api/tanques/{{tanqueId}}"
+          }
+        },
+        {
+          "name": "Tanque ID inexistente — espera 404",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 404', () => pm.response.to.have.status(404));"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{url}}/api/tanques/00000000-0000-0000-0000-000000000000"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6 - Precios",
+      "item": [
+        {
+          "name": "Crear Precio ACPM-CARGA",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('Precio activo creado', () => {",
+            "  const d = pm.response.json().data;",
+            "  pm.expect(d.activo).to.equal(true);",
+            "  pm.expect(Number(d.precioGalon)).to.be.above(0);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"tipoCombustible\": \"ACPM\",\n  \"tipoServicio\": \"CARGA\",\n  \"zonaId\": \"{{zonaId}}\",\n  \"precioGalon\": 11800,\n  \"subsidioGalon\": 0,\n  \"decretoId\": \"{{decretoId}}\",\n  \"vigenciaDesde\": \"2025-01-01T00:00:00.000Z\",\n  \"activo\": true\n}" },
+            "url": "{{url}}/api/precios"
+          }
+        },
+        {
+          "name": "Crear Precio ACPM-PARTICULAR",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"tipoCombustible\": \"ACPM\",\n  \"tipoServicio\": \"PARTICULAR\",\n  \"zonaId\": \"{{zonaId}}\",\n  \"precioGalon\": 12500,\n  \"subsidioGalon\": 0,\n  \"decretoId\": \"{{decretoId}}\",\n  \"vigenciaDesde\": \"2025-01-01T00:00:00.000Z\",\n  \"activo\": true\n}" },
+            "url": "{{url}}/api/precios"
+          }
+        },
+        {
+          "name": "Consultar Precio Vigente (publico)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('precioGalon > 0', () => {",
+            "  pm.expect(Number(pm.response.json().data.precioGalon)).to.be.above(0);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{url}}/api/precios/consultar?zonaId={{zonaId}}&tipoCombustible=ACPM&tipoServicio=PARTICULAR"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7 - Inventario",
+      "item": [
+        {
+          "name": "Registrar Entrega — captura entregaId",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const _r = pm.response.json();",
+            "pm.test('Status 201 — ' + (_r.message || JSON.stringify(_r.errors || '')), () => pm.response.to.have.status(201));",
+            "pm.test('Entrega pendiente creada', () => {",
+            "  const d = _r.data;",
+            "  pm.expect(d.confirmada).to.equal(false);",
+            "  pm.expect(Number(d.galones)).to.equal(3000);",
+            "  pm.environment.set('entregaId', d.id);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"distribuidorId\": \"{{distribuidorId}}\",\n  \"estacionId\": \"{{estacionId}}\",\n  \"tanqueId\": \"{{tanqueId}}\",\n  \"tipoCombustible\": \"ACPM\",\n  \"galones\": 3000,\n  \"precioUnitario\": 11800,\n  \"numeroRemision\": \"{{remisionNumero}}\",\n  \"fechaEntrega\": \"{{$isoTimestamp}}\"\n}" },
+            "url": "{{url}}/api/inventario/entregas"
+          }
+        },
+        {
+          "name": "Listar Entregas Pendientes",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Al menos 1 entrega pendiente', () => {",
+            "  pm.expect(pm.response.json().data).to.be.an('array').with.lengthOf.at.least(1);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{url}}/api/inventario/entregas/pendientes?estacionId={{estacionId}}"
+          }
+        },
+        {
+          "name": "Confirmar Entrega — tanque sube 3000 gal",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Entrega confirmada', () => {",
+            "  const d = pm.response.json().data;",
+            "  pm.expect(d.entrega.confirmada).to.equal(true);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"estacionId\": \"{{estacionId}}\",\n  \"tanqueId\": \"{{tanqueId}}\",\n  \"galonesRecibidos\": 3000\n}" },
+            "url": "{{url}}/api/inventario/entregas/{{entregaId}}/confirmar"
+          }
+        },
+        {
+          "name": "Verificar Nivel Tanque subio",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Nivel mayor a 0 tras entrega', () => {",
+            "  pm.expect(Number(pm.response.json().data.nivelActual)).to.be.above(0);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{url}}/api/tanques/{{tanqueId}}"
+          }
+        },
+        {
+          "name": "Registrar Venta (Transaccion PARTICULAR)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('Transaccion SALIDA creada', () => {",
+            "  const d = pm.response.json().data;",
+            "  pm.expect(d.tipo).to.equal('SALIDA');",
+            "  pm.expect(Number(d.galones)).to.equal(50);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"estacionId\": \"{{estacionId}}\",\n  \"tanqueId\": \"{{tanqueId}}\",\n  \"tipoCombustible\": \"ACPM\",\n  \"tipoServicio\": \"PARTICULAR\",\n  \"galones\": 50,\n  \"precioUnitario\": 12500,\n  \"placaVehiculo\": \"ABC123\",\n  \"subsidioAplicado\": false\n}" },
+            "url": "{{url}}/api/inventario/transacciones"
+          }
+        },
+        {
+          "name": "Venta galones negativos — espera 400",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 400 con galones negativos', () => pm.response.to.have.status(400));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"estacionId\": \"{{estacionId}}\",\n  \"tanqueId\": \"{{tanqueId}}\",\n  \"tipoCombustible\": \"ACPM\",\n  \"tipoServicio\": \"PARTICULAR\",\n  \"galones\": -10,\n  \"precioUnitario\": 12500,\n  \"subsidioAplicado\": false\n}" },
+            "url": "{{url}}/api/inventario/transacciones"
+          }
+        },
+        {
+          "name": "Listar Transacciones de la Estacion",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Array paginado con data y total', () => {",
+            "  const json = pm.response.json();",
+            "  pm.expect(json.data).to.be.an('array');",
+            "  pm.expect(json.pagination.total).to.be.a('number');",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{url}}/api/inventario/transacciones?estacionId={{estacionId}}&page=1&limit=20"
+          }
+        },
+        {
+          "name": "Cierre de Turno",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Diferencia calculada', () => {",
+            "  const d = pm.response.json().data;",
+            "  pm.expect(d).to.have.property('diferencia');",
+            "  pm.expect(d.diferencia).to.be.a('number');",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"estacionId\": \"{{estacionId}}\",\n  \"tanqueId\": \"{{tanqueId}}\",\n  \"nivelFisico\": 2940,\n  \"observaciones\": \"Cierre prueba Postman\"\n}" },
+            "url": "{{url}}/api/inventario/cierre-turno"
+          }
+        }
+      ]
+    },
+    {
+      "name": "8 - Reportes",
+      "item": [
+        {
+          "name": "Generar Reporte INVENTARIO",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200 o 201', () => {",
+            "  pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+            "});"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"tipo\": \"INVENTARIO\",\n  \"formato\": \"PDF\",\n  \"periodoInicio\": \"2025-01-01T00:00:00.000Z\",\n  \"periodoFin\": \"2026-12-31T23:59:59.000Z\",\n  \"parametros\": { \"estacionId\": \"{{estacionId}}\" }\n}" },
+            "url": "{{url}}/api/reportes"
+          }
+        },
+        {
+          "name": "Listar Reportes Generados",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Retorna lista paginada', () => {",
+            "  const json = pm.response.json();",
+            "  pm.expect(json.data).to.be.an('array');",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{url}}/api/reportes"
+          }
+        },
+        {
+          "name": "Generar Reporte sin permiso — espera 403",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Sin token retorna 401', () => pm.response.to.have.status(401));"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"tipo\": \"INVENTARIO\",\n  \"formato\": \"PDF\"\n}" },
+            "url": "{{url}}/api/reportes"
+          }
+        }
+      ]
+    },
+    {
+      "name": "9 - Auditoria",
+      "item": [
+        {
+          "name": "Listar Logs de Auditoria",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Retorna array paginado', () => {",
+            "  const json = pm.response.json();",
+            "  pm.expect(json.data).to.be.an('array');",
+            "  pm.expect(json.pagination.total).to.be.a('number');",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{url}}/api/auditoria?page=1&limit=20"
+          }
+        },
+        {
+          "name": "Auditoria sin token — espera 401",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 401 sin token', () => pm.response.to.have.status(401));"
+          ]}}],
+          "request": { "method": "GET", "header": [], "url": "{{url}}/api/auditoria" }
+        }
+      ]
+    },
+    {
+      "name": "10 - Dashboard",
+      "item": [
+        {
+          "name": "GET Dashboard — KPIs globales",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Contiene metricas', () => {",
+            "  const json = pm.response.json();",
+            "  pm.expect(json.data).to.be.an('object');",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{url}}/api/dashboard"
+          }
+        }
+      ]
+    }
+  ]
+}

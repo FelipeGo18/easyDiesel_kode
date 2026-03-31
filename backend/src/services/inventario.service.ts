@@ -149,7 +149,7 @@ export class InventarioService {
                     galones: data.galones,
                     precioUnitario: precioUnitario,
                     precioTotal: precioTotal,
-                    numeroRemision: nuevoNumeroRemision,
+                    numeroRemision: data.numeroRemision || nuevoNumeroRemision,
                     fechaEntrega: new Date(data.fechaEntrega),
                     confirmada: false
                 }

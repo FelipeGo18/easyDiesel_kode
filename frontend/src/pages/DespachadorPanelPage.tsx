@@ -304,7 +304,7 @@ export function StationOperationsPage() {
             } satisfies RegistrarTransaccionData);
 
             const totalFacturado = Number(result.transaccion.precioTotal);
-            toast.success(`Venta registrada por ${formatCurrency(totalFacturado)}`);
+            toast.success(`Despacho registrado por ${formatCurrency(totalFacturado)}`);
 
             if (result.alerta) {
                 toast.error(result.alerta);
@@ -320,7 +320,7 @@ export function StationOperationsPage() {
             await fetchTanques();
             fetchVentas();
         } catch (error: unknown) {
-            toast.error(getErrorMessage(error, 'No fue posible registrar la venta'));
+            toast.error(getErrorMessage(error, 'No fue posible registrar el despacho'));
         } finally {
             setSubmitting(false);
         }
@@ -724,11 +724,16 @@ export function StationOperationsPage() {
                                                     onChange={(event) => setForm((current) => ({ ...current, placaVehiculo: normalizePlate(event.target.value) }))}
                                                     className="rounded-xl border-border-subtle focus:border-amber-500/50 uppercase font-mono font-bold"
                                                 />
-                                                {verificandoConsumo && (
-                                                    <div className="absolute right-3 top-[34px] animate-spin">
-                                                        <Loader2 size={16} className="text-amber-500" />
+                                                <div className="absolute right-3 top-[34px] flex items-center gap-2">
+                                                    {verificandoConsumo && (
+                                                        <div className="animate-spin">
+                                                            <Loader2 size={16} className="text-amber-500" />
+                                                        </div>
+                                                    )}
+                                                    <div className="group-hover:block hidden absolute bottom-full mb-2 right-0 w-48 p-2 bg-bg-elevated border border-border-subtle rounded-lg text-[10px] text-text-secondary shadow-xl z-50">
+                                                        Validación automática contra base de datos RUNT.
                                                     </div>
-                                                )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -777,7 +782,7 @@ export function StationOperationsPage() {
                                         disabled={!selectedTanque || tanques.length === 0 || !form.placaVehiculo || Number(form.galones) <= 0}
                                         className="rounded-xl px-10 bg-amber-500 text-black font-bold shadow-lg shadow-amber-500/20 hover:scale-[1.02] transition-transform flex-1 sm:flex-none"
                                     >
-                                        Registrar Venta
+                                        Registrar Despacho
                                     </Button>
                                 </div>
                             </div>
@@ -791,8 +796,8 @@ export function StationOperationsPage() {
                                     <Receipt size={24} />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold text-text-primary tracking-tight">Ventas del Turno</h2>
-                                    <p className="text-xs text-text-muted">Últimos registros de despacho</p>
+                                    <h2 className="text-xl font-bold text-text-primary tracking-tight">Despachos del Turno</h2>
+                                    <p className="text-xs text-text-muted">Últimos registros de despacho oficial</p>
                                 </div>
                             </div>
                             <button
@@ -992,16 +997,16 @@ export function StationOperationsPage() {
                             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
                                 <TimerReset size={60} className="text-blue-500" />
                             </div>
-                            <div className="relative z-10">
+                            <div className="space-y-4">
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="p-2.5 bg-blue-500/10 rounded-xl text-blue-500 border border-blue-500/20">
                                         <ClipboardList size={18} />
                                     </div>
-                                    <h3 className="text-base font-bold text-text-primary tracking-tight">Fin de Jornada</h3>
+                                    <h3 className="text-base font-bold text-text-primary tracking-tight">Acta de Cierre</h3>
                                 </div>
                                 <div className="space-y-4">
                                     <div className="p-4 rounded-2xl bg-bg-elevated/20 border border-border-subtle">
-                                        <p className="text-[11px] text-text-secondary leading-relaxed font-medium">Verifique el nivel físico de los tanques y registre cualquier novedad antes de finalizar.</p>
+                                        <p className="text-[11px] text-text-secondary leading-relaxed font-medium">Verifique el nivel físico de los tanques y registre cualquier novedad para generar el acta digital.</p>
                                     </div>
                                     <button
                                         type="button"
@@ -1016,7 +1021,7 @@ export function StationOperationsPage() {
                                             setCierreModalOpen(true);
                                         }}
                                     >
-                                        Iniciar Cierre de Turno
+                                        Generar Acta de Cierre
                                     </button>
                                 </div>
                             </div>

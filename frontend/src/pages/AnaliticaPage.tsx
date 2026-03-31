@@ -32,7 +32,7 @@ interface ReporteRegistro {
 
 const tiposReporteBase = [
     { id: 'INVENTARIO', label: 'Estado de Inventarios', icon: 'pie-chart', description: 'Niveles actuales de tanques y capacidad disponible.', roles: ['admin'] },
-    { id: 'TRANSACCIONES', label: 'Ventas y Despachos', icon: 'history', description: 'Registro detallado de entradas y salidas de combustible.', roles: ['admin', 'estacion', 'distribuidor'] },
+    { id: 'TRANSACCIONES', label: 'Despachos Realizados', icon: 'history', description: 'Registro detallado de entradas y salidas de combustible.', roles: ['admin', 'estacion', 'distribuidor'] },
     { id: 'PRECIOS', label: 'Histórico de Precios', icon: 'spreadsheet', description: 'Evolución de precios por zona y tipo de combustible.', roles: ['admin', 'estacion', 'distribuidor', 'regulador'] },
     { id: 'NORMATIVO', label: 'Cumplimiento Normativo', icon: 'normativa', description: 'Decretos vigentes y resoluciones aplicadas.', roles: ['admin', 'estacion', 'distribuidor', 'regulador'] },
     { id: 'AUDITORIA', label: 'Rastreo de Seguridad', icon: 'audit', description: 'Reporte consolidado de logs y acciones de usuarios.', roles: ['admin', 'auditor'] },
