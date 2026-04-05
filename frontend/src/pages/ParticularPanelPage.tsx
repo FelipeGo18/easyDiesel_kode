@@ -7,7 +7,7 @@ import { InputField } from '@/components/ui/FormFields';
 import { useToast } from '@/components/ui/useToast';
 import { useAuth } from '@/context/useAuth';
 import { getErrorMessage } from '@/lib/http';
-import { inventarioService } from '@/services/inventario';
+import api from '@/services/api';
 import type { TransaccionCombustible } from '@/types';
 
 function formatCurrency(value: number) {
@@ -52,8 +52,8 @@ export function ParticularPanelPage() {
         setSearched(true);
         setPlaca(normalized);
         try {
-            const result = await inventarioService.listarTransacciones({ placaVehiculo: normalized, limit: 50 });
-            setTransactions(result.data ?? []);
+            const res = await api.get<any>('/publico/transacciones', { params: { placaVehiculo: normalized, limit: 50 } });
+            setTransactions(res.data.data ?? []);
         } catch (error: unknown) {
             toast.error(getErrorMessage(error, 'No fue posible consultar el historial'));
             setTransactions([]);

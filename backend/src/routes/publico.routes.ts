@@ -5,6 +5,7 @@ import {
     getZonasHandler,
     getDecretosHandler,
     getEstacionesCercanasHandler,
+    getTransaccionesPorPlacaHandler,
 } from '../controllers/publico.controller';
 import { publicReadRateLimiter } from '../middleware/rate-limit';
 
@@ -56,5 +57,14 @@ publicoRouter.get('/zonas', getZonasHandler);
  *     tags: [Público]
  */
 publicoRouter.get('/decretos/vigentes', getDecretosHandler);
+
+/**
+ * @swagger
+ * /api/publico/transacciones:
+ *   get:
+ *     summary: Consulta historial de consumos por placa de vehículo
+ *     tags: [Público]
+ */
+publicoRouter.get('/transacciones', getTransaccionesPorPlacaHandler);
 
 export { publicoRouter };

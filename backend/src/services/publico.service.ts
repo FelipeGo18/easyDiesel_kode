@@ -230,6 +230,45 @@ export class PublicoService {
                 };
             });
     }
+
+    async getTransaccionesPorPlaca(placaVehiculo: string, page = 1, limit = 50) {
+        const sanitized = placaVehiculo.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+        if (!sanitized || sanitized.length < 3) {
+            throw Object.assign(new Error('La placa debe tener al menos 3 caracteres alfanuméricos'), { statusCode: 400 });
+        }
+        const safeLimit = Math.min(100, Math.max(1, limit));
+        const safePage = Math.max(1, page);
+        const skip = (safePage - 1) * safeLimit;
+
+        const where = {
+            placaVehiculo: { contains: sanitized, mode: 'insensitive' as const },
+        };
+
+        const [data, total] = await Promise.all([
+            prisma.transaccionCombustible.findMany({
+                where,
+                select: {
+                    id: true,
+                    tipo: true,
+                    tipoCombustible: true,
+                    tipoServicio: true,
+                    galones: true,
+                    precioUnitario: true,
+                    precioTotal: true,
+                    placaVehiculo: true,
+                    estado: true,
+                    createdAt: true,
+                    estacion: { select: { id: true, nombre: true, ciudad: true } },
+                },
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: safeLimit,
+            }),
+            prisma.transaccionCombustible.count({ where }),
+        ]);
+
+        return { data, pagination: { page: safePage, limit: safeLimit, total, totalPages: Math.ceil(total / safeLimit) } };
+    }
 }
 
 export const publicoService = new PublicoService();
