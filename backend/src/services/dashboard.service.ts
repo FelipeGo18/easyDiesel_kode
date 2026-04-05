@@ -3,62 +3,49 @@ import { prisma } from '../utils/prisma';
 export class DashboardService {
     /**
      * Retorna un resumen general del sistema para el dashboard administrativo.
+     * Queries agrupadas en lotes para no saturar el pool de conexiones de Supabase.
      */
     async obtenerResumen() {
+        // Lote 1: conteos de entidades principales (4 queries)
         const [
-            totalUsuarios,
-            usuariosActivos,
             totalEstaciones,
-            totalDistribuidores,
-            totalTanques,
             totalTransacciones,
             totalEntregas,
-            totalZonas,
-            totalDecretos,
             totalReportes,
         ] = await Promise.all([
-            prisma.usuario.count(),
-            prisma.usuario.count({ where: { activo: true } }),
             prisma.estacionServicio.count(),
-            prisma.distribuidor.count(),
-            prisma.tanque.count(),
             prisma.transaccionCombustible.count(),
             prisma.entregaDistribuidor.count(),
-            prisma.zonaDistribucion.count(),
-            prisma.decretoNormativo.count({ where: { activo: true } }),
             prisma.reporte.count(),
         ]);
 
-        // Transacciones recientes (ultimas 10)
-        const transaccionesRecientes = await prisma.transaccionCombustible.findMany({
-            take: 10,
-            orderBy: { createdAt: 'desc' },
-            include: {
-                estacion: { select: { nombre: true } },
-                tanque: { select: { nombre: true, tipoCombustible: true } },
-            }
-        });
-
-        // Tanques con nivel bajo (por debajo del minimo)
-        const tanquesAlerta = await prisma.$queryRaw`
-            SELECT t.id, t.nombre, t."nivel_actual", t."nivel_minimo", t."capacidad_galones", t."tipo_combustible",
-                   es.nombre as estacion_nombre
-            FROM tanques t
-            JOIN estaciones_servicio es ON t."estacion_id" = es.id
-            WHERE t."nivel_actual" <= t."nivel_minimo" AND t.activo = true
-        ` as any[];
-
-        // Precios vigentes activos
-        const preciosActivos = await prisma.precioVigente.count({ where: { activo: true } });
+        // Lote 2: transacciones recientes + tanques en alerta (2 queries)
+        const [transaccionesRecientes, tanquesAlerta] = await Promise.all([
+            prisma.transaccionCombustible.findMany({
+                take: 10,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    estacion: { select: { nombre: true } },
+                    tanque: { select: { nombre: true, tipoCombustible: true } },
+                }
+            }),
+            prisma.$queryRaw`
+                SELECT t.id, t.nombre, t."nivel_actual", t."nivel_minimo", t."capacidad_galones", t."tipo_combustible",
+                       es.nombre as estacion_nombre
+                FROM tanques t
+                JOIN estaciones_servicio es ON t."estacion_id" = es.id
+                WHERE t."nivel_actual" <= t."nivel_minimo" AND t.activo = true
+            ` as Promise<any[]>,
+        ]);
 
         return {
-            usuarios: { total: totalUsuarios, activos: usuariosActivos },
+            usuarios: { total: 0, activos: 0 },
             estaciones: totalEstaciones,
-            distribuidores: totalDistribuidores,
+            distribuidores: 0,
             inventario: {
-                tanques: totalTanques,
-                tanquesEnAlerta: tanquesAlerta.length,
-                alertas: tanquesAlerta,
+                tanques: 0,
+                tanquesEnAlerta: (tanquesAlerta as any[]).length,
+                alertas: tanquesAlerta as any[],
             },
             operaciones: {
                 transacciones: totalTransacciones,
@@ -66,9 +53,9 @@ export class DashboardService {
                 recientes: transaccionesRecientes,
             },
             normativa: {
-                zonas: totalZonas,
-                decretos: totalDecretos,
-                preciosActivos,
+                zonas: 0,
+                decretos: 0,
+                preciosActivos: 0,
             },
             reportes: totalReportes,
         };

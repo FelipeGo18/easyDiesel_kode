@@ -101,6 +101,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log(`Supabase Auth Event: ${event}`, !!session);
             
             if (session?.access_token && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED')) {
+                // Si ya tenemos un JWT local (login tradicional), ignorar INITIAL_SESSION de Supabase
+                // para evitar que la pantalla de carga parpadee varias veces
+                if (event === 'INITIAL_SESSION' && localStorage.getItem('token')) return;
                 await syncWithBackend(session.access_token);
             } else if (event === 'INITIAL_SESSION' && !session) {
                 // Si no hay sesión inicial y no hay hash, terminar carga

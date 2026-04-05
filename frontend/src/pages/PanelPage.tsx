@@ -95,25 +95,23 @@ export function PanelPage() {
         <div className="space-y-8 animate-enter pb-12 max-w-[1440px] mx-auto">
             {/* ── Header Pro Max ── */}
             <section className="relative overflow-hidden rounded-[32px] bg-bg-surface border border-border-subtle p-8 md:p-10 shadow-2xl group transition-all duration-500 hover:border-white/10">
-                {/* Background effects */}
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-linear-to-bl from-blue-500/10 via-transparent to-transparent opacity-50 pointer-events-none" />
-                <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-amber-500/5 blur-[100px] rounded-full pointer-events-none" />
                 
                 <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
                     <div className="space-y-4">
                         <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full">
-                                <Activity className="w-3.5 h-3.5 text-blue-500" />
-                                <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Sistema: Operativo</span>
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04]">
+                                <span className="relative flex h-1.5 w-1.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-40" />
+                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white/70" />
+                                </span>
+                                <span className="text-[10px] font-semibold text-white/50 uppercase tracking-widest">Sistema: Operativo</span>
                             </div>
-                            <div className="flex items-center gap-2 bg-bg-elevated border border-border-subtle px-3 py-1 rounded-full">
-                                <Badge variant="green" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[8px] px-2 py-0.5">ONLINE</Badge>
-                            </div>
+                            <span className="text-[8px] bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/20 text-emerald-400 font-bold tracking-widest uppercase">Online</span>
                         </div>
                         
                         <div>
                             <h1 className="text-4xl md:text-5xl font-display font-bold text-text-primary tracking-tight">
-                                {greeting()}, <span className="text-blue-500">{user?.nombre?.split(' ')[0] || 'Administrador'}</span>
+                                {greeting()}, <span className="text-amber-500">{user?.nombre?.split(' ')[0] || 'Administrador'}</span>
                             </h1>
                             <p className="mt-3 text-base text-text-secondary max-w-2xl leading-relaxed">
                                 Bienvenido al centro de control operativo de <span className="text-text-primary font-bold">EasyDiesel</span>. 
@@ -124,7 +122,7 @@ export function PanelPage() {
 
                     <div className="flex flex-col gap-2 min-w-[200px]">
                         <div className="text-[10px] text-text-muted uppercase font-bold tracking-widest mb-1 px-1">Sesión Actual</div>
-                        <div className="bg-bg-base/50 p-4 rounded-2xl border border-border-subtle backdrop-blur-sm">
+                        <div className="bg-bg-base p-4 rounded-2xl border border-border-subtle">
                             <p className="text-sm font-bold text-text-primary">{user?.email}</p>
                             <p className="text-[10px] text-text-muted mt-1 font-mono uppercase">{roleName} · {user?.estacion?.nombre || 'Sede Central'}</p>
                         </div>
@@ -177,7 +175,7 @@ export function PanelPage() {
                 <div className="lg:col-span-2 space-y-6">
                     <div className="flex items-center justify-between px-2">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
+                            <div className="p-2 bg-white/5 rounded-lg text-white/40">
                                 <img src="/icons/dashboard.svg" alt="Módulos" className="w-5 h-5" />
                             </div>
                             <h2 className="text-xl font-bold text-text-primary tracking-tight">Módulos de Gestión</h2>
@@ -212,7 +210,7 @@ export function PanelPage() {
                                         </p>
                                     </div>
 
-                                    <div className="flex items-center text-[10px] font-bold text-text-muted group-hover:text-blue-500 transition-colors uppercase tracking-widest pt-4 border-t border-border-subtle/50">
+                                    <div className="flex items-center text-[10px] font-bold text-text-muted group-hover:text-amber-500 transition-colors uppercase tracking-widest pt-4 border-t border-border-subtle/50">
                                         Acceder ahora
                                     </div>
                                 </Card>
@@ -265,7 +263,7 @@ export function PanelPage() {
                                                     {item.estacion?.nombre || '—'}
                                                 </p>
                                                 <div className="flex items-center gap-2 mt-2">
-                                                    <Badge variant="blue" className="text-[8px] font-mono px-1.5 py-0">{Number(item.galones).toLocaleString()} GAL</Badge>
+                                                    <Badge variant="amber" className="text-[8px] font-mono px-1.5 py-0 bg-white/5 text-white/50 border-white/10">{Number(item.galones).toLocaleString()} GAL</Badge>
                                                     <span className="text-[9px] text-text-muted font-medium">{item.tanque?.tipoCombustible || 'Combustible'}</span>
                                                 </div>
                                             </div>
@@ -274,7 +272,7 @@ export function PanelPage() {
                                 ))}
                             </div>
                             <div className="p-4 bg-bg-elevated/20 border-t border-border-subtle text-center">
-                                <button onClick={() => navigate('/auditoria')} className="text-[10px] font-bold text-blue-500 uppercase tracking-widest hover:underline">Ver bitácora completa</button>
+                                <button onClick={() => navigate('/auditoria')} className="text-[10px] font-bold text-amber-500 uppercase tracking-widest hover:underline">Ver bitácora completa</button>
                             </div>
                         </Card>
                     </div>

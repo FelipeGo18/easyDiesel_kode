@@ -42,6 +42,7 @@ export function Topbar() {
     const userRoleName: string = typeof rol === 'string' ? rol : rol?.nombre ?? '';
     const inlineNavItems = showInlineNav
         ? navigationRoutes.filter((route) => {
+            if (userRoleName === 'particular') return false; // particular: no extra tabs
             if (route.excludeRoles?.includes(userRoleName)) return false;
             return hasAnyPermission(...(route.requiredPermissions || []));
         })
