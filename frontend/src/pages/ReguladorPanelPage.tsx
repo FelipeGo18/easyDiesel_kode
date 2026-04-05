@@ -72,6 +72,9 @@ export function ReguladorPanelPage() {
     const [decretos, setDecretos] = useState<Decreto[]>([]);
     const [estaciones, setEstaciones] = useState<EstacionServicio[]>([]);
     const [filtroZona, setFiltroZona] = useState<string>('');
+    const [searchPrecio, setSearchPrecio] = useState<string>('');
+    const [precioPage, setPrecioPage] = useState(1);
+    const PRECIOS_PER_PAGE = 8;
 
     // Datos de auditoría y reportes
     const [logs, setLogs] = useState<AuditoriaLog[]>([]);
@@ -172,7 +175,18 @@ export function ReguladorPanelPage() {
     ];
 
     const decretoActivos = decretos.filter(d => d.activo);
-    const preciosFiltrados = filtroZona ? precios.filter(p => p.zonaId === filtroZona) : precios;
+    const preciosFiltrados = precios
+        .filter(p => !filtroZona || p.zonaId === filtroZona)
+        .filter(p => {
+            if (!searchPrecio.trim()) return true;
+            const q = searchPrecio.toLowerCase();
+            return (
+                p.zona?.nombre?.toLowerCase().includes(q) ||
+                p.tipoCombustible?.toLowerCase().includes(q)
+            );
+        });
+    const preciosTotalPages = Math.max(1, Math.ceil(preciosFiltrados.length / PRECIOS_PER_PAGE));
+    const preciosPaged = preciosFiltrados.slice((precioPage - 1) * PRECIOS_PER_PAGE, precioPage * PRECIOS_PER_PAGE);
     const estacionesFiltradas = filtroZona ? estaciones.filter(e => e.zonaId === filtroZona) : estaciones;
 
     return (
@@ -292,17 +306,30 @@ export function ReguladorPanelPage() {
                                         </div>
                                     </div>
                                     
-                                    <div className="relative group">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted group-focus-within:text-amber-500 transition-colors" />
-                                        <select 
-                                            value={filtroZona}
-                                            onChange={(e) => setFiltroZona(e.target.value)}
-                                            className="pl-9 pr-8 py-2 bg-bg-base border border-border-subtle rounded-xl text-xs font-medium outline-none text-text-primary appearance-none interactive hover:border-white/10 min-w-[180px]"
-                                        >
-                                            <option value="">Jurisdicción Nacional</option>
-                                            {zonas.map(z => <option key={z.id} value={z.id}>{z.nombre}</option>)}
-                                        </select>
-                                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-text-muted rotate-90 pointer-events-none" />
+                                    <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                                        {/* Buscador texto */}
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
+                                            <input
+                                                type="text"
+                                                value={searchPrecio}
+                                                onChange={(e) => { setSearchPrecio(e.target.value); setPrecioPage(1); }}
+                                                placeholder="Buscar zona o combustible..."
+                                                className="pl-9 pr-4 py-2 bg-bg-base border border-border-subtle rounded-xl text-xs font-medium outline-none text-text-primary placeholder:text-text-muted focus:border-white/20 transition-colors w-[200px]"
+                                            />
+                                        </div>
+                                        {/* Filtro zona */}
+                                        <div className="relative">
+                                            <select 
+                                                value={filtroZona}
+                                                onChange={(e) => { setFiltroZona(e.target.value); setPrecioPage(1); }}
+                                                className="pl-3 pr-8 py-2 bg-bg-base border border-border-subtle rounded-xl text-xs font-medium outline-none text-text-primary appearance-none interactive hover:border-white/10 min-w-[160px]"
+                                            >
+                                                <option value="">Todas las zonas</option>
+                                                {zonas.map(z => <option key={z.id} value={z.id}>{z.nombre}</option>)}
+                                            </select>
+                                            <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-text-muted rotate-90 pointer-events-none" />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -330,7 +357,7 @@ export function ReguladorPanelPage() {
                                                     </td>
                                                 </tr>
                                             ) : (
-                                                preciosFiltrados.map(p => (
+                                                preciosPaged.map(p => (
                                                     <tr key={p.id} className="hover:bg-bg-elevated/30 transition-all duration-200 group">
                                                         <td className="px-6 py-4">
                                                             <p className="font-bold text-text-primary group-hover:text-amber-500 transition-colors">{p.zona?.nombre}</p>
@@ -356,9 +383,36 @@ export function ReguladorPanelPage() {
                                         </tbody>
                                     </table>
                                 </div>
-                                <div className="px-6 py-4 bg-bg-elevated/20 border-t border-border-subtle flex justify-between items-center">
-                                    <p className="text-[10px] text-text-muted">Sincronizado con base de datos ministerial · Última actualización: {new Date().toLocaleDateString()}</p>
-                                    <button onClick={() => navigate('/precios')} className="text-[10px] font-bold text-amber-500 uppercase tracking-wider hover:underline">Ver todos los precios</button>
+                                <div className="px-6 py-3 bg-bg-elevated/20 border-t border-border-subtle flex flex-col sm:flex-row items-center justify-between gap-3">
+                                    {/* Info + nav link */}
+                                    <p className="text-[10px] text-text-muted order-2 sm:order-1">
+                                        {preciosFiltrados.length} registros · mostrando {((precioPage - 1) * PRECIOS_PER_PAGE) + 1}–{Math.min(precioPage * PRECIOS_PER_PAGE, preciosFiltrados.length)}
+                                    </p>
+                                    {/* Pagination */}
+                                    <div className="flex items-center gap-1 order-1 sm:order-2">
+                                        <button
+                                            onClick={() => setPrecioPage(p => Math.max(1, p - 1))}
+                                            disabled={precioPage === 1}
+                                            className="px-2.5 py-1 rounded-lg text-[11px] font-bold border border-border-subtle text-text-muted hover:text-white hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                        >←</button>
+                                        {Array.from({ length: preciosTotalPages }, (_, i) => i + 1).map(n => (
+                                            <button
+                                                key={n}
+                                                onClick={() => setPrecioPage(n)}
+                                                className={`w-7 h-7 rounded-lg text-[11px] font-bold transition-all ${
+                                                    n === precioPage
+                                                        ? 'bg-white/8 text-white border border-white/20'
+                                                        : 'text-text-muted border border-transparent hover:border-white/15 hover:text-slate-300'
+                                                }`}
+                                            >{n}</button>
+                                        ))}
+                                        <button
+                                            onClick={() => setPrecioPage(p => Math.min(preciosTotalPages, p + 1))}
+                                            disabled={precioPage === preciosTotalPages}
+                                            className="px-2.5 py-1 rounded-lg text-[11px] font-bold border border-border-subtle text-text-muted hover:text-white hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                        >→</button>
+                                    </div>
+                                    <button onClick={() => navigate('/precios')} className="text-[10px] font-bold text-amber-500 uppercase tracking-wider hover:underline order-3">Ver en detalle</button>
                                 </div>
                             </Card>
 
@@ -366,7 +420,7 @@ export function ReguladorPanelPage() {
                             <Card className="p-6 border-border-subtle bg-bg-surface shadow-lg">
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center gap-4">
-                                        <div className="p-2.5 bg-blue-500/10 rounded-xl text-blue-500 border border-blue-500/20">
+                                        <div className="p-2.5 bg-white/5 rounded-xl text-white/50 border border-white/10">
                                             <History className="w-5 h-5" />
                                         </div>
                                         <h2 className="text-lg font-bold text-text-primary tracking-tight">Bitácora de Seguridad</h2>
@@ -388,7 +442,7 @@ export function ReguladorPanelPage() {
                                         >
                                             <div className="flex items-center gap-4">
                                                 <div className="w-10 h-10 rounded-xl bg-bg-base flex items-center justify-center border border-border-subtle transition-transform">
-                                                    <ShieldCheck size={18} className="text-emerald-500" />
+                                                    <ShieldCheck size={18} className="text-white/30" />
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-bold text-text-primary">{log.accion.replace(/_/g, ' ')}</p>
@@ -578,7 +632,11 @@ export function ReguladorPanelPage() {
                                 </div>
                                 <div className="space-y-1">
                                     <span className="text-[10px] text-text-muted uppercase font-bold tracking-widest">Origen IP</span>
-                                    <p className="text-base font-black text-text-primary font-mono">{selectedLog.ip || 'Local/Sistema'}</p>
+                                    <p className="text-base font-black text-text-primary font-mono">
+                                        {!selectedLog.ip || selectedLog.ip === '::1' || selectedLog.ip.startsWith('127.') || selectedLog.ip.startsWith('::ffff:127.')
+                                            ? 'Local / Sistema'
+                                            : selectedLog.ip}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -598,7 +656,9 @@ export function ReguladorPanelPage() {
                                         <span className="text-[8px] bg-bg-elevated px-1.5 py-0.5 rounded border border-border-subtle text-text-muted font-mono">Snapshot</span>
                                     </div>
                                     <pre className="text-[10px] bg-bg-base border border-border-default p-4 rounded-2xl h-48 overflow-auto text-text-secondary font-mono leading-relaxed custom-scrollbar">
-                                        {JSON.stringify(selectedLog.datosAntes, null, 2) || '// Operación sin datos previos'}
+                                        {selectedLog.datosAntes != null
+                                            ? JSON.stringify(selectedLog.datosAntes, null, 2)
+                                            : '// Sin estado previo registrado'}
                                     </pre>
                                 </div>
                                 <div className="space-y-2">
@@ -607,7 +667,9 @@ export function ReguladorPanelPage() {
                                         <span className="text-[8px] bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 text-emerald-500 font-mono">Actualizado</span>
                                     </div>
                                     <pre className="text-[10px] bg-bg-base border border-emerald-500/10 p-4 rounded-2xl h-48 overflow-auto text-emerald-400 font-mono leading-relaxed custom-scrollbar">
-                                        {JSON.stringify(selectedLog.datosDespues, null, 2) || '// No se registraron cambios adicionales'}
+                                        {selectedLog.datosDespues != null
+                                            ? JSON.stringify(selectedLog.datosDespues, null, 2)
+                                            : '// Sin cambios de estado registrados'}
                                     </pre>
                                 </div>
                             </div>
