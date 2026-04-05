@@ -420,7 +420,7 @@ export function ReguladorPanelPage() {
                                                     <span className="text-[9px] text-text-muted uppercase font-bold tracking-widest">Vigencia</span>
                                                     <span className="text-[11px] text-text-primary font-mono">{new Date(d.fechaVigencia).toLocaleDateString()}</span>
                                                 </div>
-                                                <button onClick={() => navigate(`/decretos/${d.id}`)} className="p-2 bg-sky-500/10 rounded-lg text-sky-500 hover:bg-sky-500 hover:text-white transition-all shadow-sm">
+                                                <button onClick={() => navigate('/normativa')} className="p-2 bg-sky-500/10 rounded-lg text-sky-500 hover:bg-sky-500 hover:text-white transition-all shadow-sm">
                                                     <Download size={14} />
                                                 </button>
                                             </div>

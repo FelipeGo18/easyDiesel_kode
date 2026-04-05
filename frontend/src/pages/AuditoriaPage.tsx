@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Icon } from '@/components/ui/Icon';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -39,14 +40,15 @@ interface Pagination {
 
 export function AuditoriaPage() {
     const toast = useToast();
+    const [searchParams] = useSearchParams();
     const [logs, setLogs] = useState<AuditoriaLog[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedLog, setSelectedLog] = useState<AuditoriaLog | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: PAGE_LIMIT, total: 0, totalPages: 1 });
 
-    // Filtros
-    const [filterModulo, setFilterModulo] = useState('');
+    // Filtros — inicializados desde URL search params si están presentes
+    const [filterModulo, setFilterModulo] = useState(() => searchParams.get('modulo') ?? '');
     const [filterDesde, setFilterDesde] = useState('');
     const [filterHasta, setFilterHasta] = useState('');
     const [currentPage, setCurrentPage] = useState(1);

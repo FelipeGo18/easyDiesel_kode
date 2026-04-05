@@ -178,10 +178,10 @@ export function AuditorPanelPage() {
                     delay={100}
                 />
                 <KpiCard
-                    label="Sesiones Activas"
+                    label="Usuarios Recientes"
                     value={summary?.usuariosActivos.toString() || '0'}
                     icon={<UserCheck className="w-5 h-5 text-green-500" />}
-                    trend={{ direction: 'neutral', text: 'Usuarios en línea' }}
+                    trend={{ direction: 'neutral', text: 'Activos en los últimos registros' }}
                     delay={200}
                 />
                 <KpiCard
