@@ -8,9 +8,11 @@ import { Badge } from '@/components/ui/Badge';
 import { useToast } from '@/components/ui/useToast';
 import { decretosService, type Decreto } from '@/services/admin';
 import { getErrorMessage } from '@/lib/http';
+import { useAccess } from '@/hooks/useAccess';
 
 export function DecretosPage() {
     const toast = useToast();
+    const { hasAnyPermission } = useAccess();
     const [decretos, setDecretos] = useState<Decreto[]>([]);
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
@@ -133,13 +135,17 @@ export function DecretosPage() {
                 <div>
                     <h1 className="text-h1 text-text-primary">Decretos normativos</h1>
                     <p className="text-small text-text-secondary mt-1">
-                        Gestiona los decretos que regulan los precios de combustibles.
+                        {hasAnyPermission('decretos:escribir')
+                            ? 'Gestiona los decretos que regulan los precios de combustibles.'
+                            : 'Consulta los decretos normativos vigentes del sector de combustibles.'}
                     </p>
                 </div>
-                <Button onClick={openCreate} className="w-full sm:w-auto">
-                    <Icon name="plus" size={14} />
-                    Nuevo decreto
-                </Button>
+                {hasAnyPermission('decretos:escribir') && (
+                    <Button onClick={openCreate} className="w-full sm:w-auto">
+                        <Icon name="plus" size={14} />
+                        Nuevo decreto
+                    </Button>
+                )}
             </div>
 
             <DataTable
@@ -148,7 +154,7 @@ export function DecretosPage() {
                 loading={loading}
                 searchPlaceholder="Buscar por número o título..."
                 emptyMessage="No hay decretos registrados. Crea el primero."
-                actions={(d) => (
+                actions={hasAnyPermission('decretos:escribir') ? (d) => (
                     <button
                         onClick={(e) => { e.stopPropagation(); openEdit(d); }}
                         className="p-1.5 rounded-brand hover:bg-bg-elevated interactive text-text-muted hover:text-amber-500"
@@ -156,7 +162,7 @@ export function DecretosPage() {
                     >
                         <Icon name="pencil" size={14} />
                     </button>
-                )}
+                ) : undefined}
             />
 
             {/* Modal */}

@@ -181,14 +181,17 @@ export function PreciosPage() {
                 <div>
                     <h1 className="text-h1 text-text-primary">Precios vigentes</h1>
                     <p className="text-small text-text-secondary mt-1">
-                        Gestiona los precios por tipo de combustible, servicio y zona.
-                        Al crear un precio nuevo, el anterior se desactiva automáticamente.
+                        {hasAnyPermission('precios:escribir')
+                            ? 'Gestiona los precios por tipo de combustible, servicio y zona. Al crear un precio nuevo, el anterior se desactiva automáticamente.'
+                            : 'Consulta los precios vigentes por tipo de combustible, servicio y zona.'}
                     </p>
                 </div>
-                <Button onClick={openCreate} disabled={zonas.length === 0 || decretos.length === 0 || !hasAnyPermission('precios:escribir')} className="w-full sm:w-auto">
-                    <Icon name="plus" size={14} className="mr-2" />
-                    Nuevo precio
-                </Button>
+                {hasAnyPermission('precios:escribir') && (
+                    <Button onClick={openCreate} disabled={zonas.length === 0 || decretos.length === 0} className="w-full sm:w-auto">
+                        <Icon name="plus" size={14} className="mr-2" />
+                        Nuevo precio
+                    </Button>
+                )}
             </div>
 
             {(zonas.length === 0 || decretos.length === 0) && !loading && (

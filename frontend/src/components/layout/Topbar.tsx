@@ -7,13 +7,16 @@ import {
     Settings, 
     LogOut, 
     Home, 
-    Users
+    Users,
+    ChevronLeft
 } from 'lucide-react';
-import { protectedRoutes } from '@/features/routing/appRoutes';
+import { protectedRoutes, navigationRoutes } from '@/features/routing/appRoutes';
+
+const SIDEBAR_HIDDEN_ROLES = ['estacion', 'distribuidor', 'distribuidor_regulado', 'regulador', 'auditor', 'particular'];
 
 export function Topbar() {
     const { user, logout } = useAuth();
-    const { roleName } = useAccess();
+    const { roleName, hasAnyPermission } = useAccess();
     const navigate = useNavigate();
     const location = useLocation();
     const [menuOpen, setMenuOpen] = useState(false);
@@ -32,6 +35,17 @@ export function Topbar() {
     });
 
     const stationName = user?.estacion?.nombre;
+    const showInlineNav = SIDEBAR_HIDDEN_ROLES.includes(roleName ?? '');
+
+    // Build inline nav items for roles without sidebar
+    const rol = user?.rol;
+    const userRoleName: string = typeof rol === 'string' ? rol : rol?.nombre ?? '';
+    const inlineNavItems = showInlineNav
+        ? navigationRoutes.filter((route) => {
+            if (route.excludeRoles?.includes(userRoleName)) return false;
+            return hasAnyPermission(...(route.requiredPermissions || []));
+        })
+        : [];
 
     // Resolve page title from the current route
     const currentRoute = protectedRoutes.find(r => r.path === location.pathname);
@@ -50,9 +64,35 @@ export function Topbar() {
 
     return (
         <header className="h-14 flex items-center justify-between px-3 sm:px-4 md:px-6 border-b border-border-subtle bg-bg-surface shrink-0">
-            {/* Left — Page title */}
+            {/* Left — Page title + inline nav for sidebar-hidden roles */}
             <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                {showInlineNav && location.pathname !== '/panel' && (
+                    <button
+                        onClick={() => navigate('/panel')}
+                        className="flex items-center justify-center w-8 h-8 rounded-lg bg-bg-elevated border border-border-subtle text-text-muted hover:text-amber-500 hover:border-amber-500/30 transition-all shrink-0"
+                        title="Volver al panel"
+                    >
+                        <ChevronLeft size={16} />
+                    </button>
+                )}
                 <h1 className="font-display text-base sm:text-xl md:text-2xl lg:text-[26px] xl:text-[28px] text-text-primary truncate">{pageTitle}</h1>
+                {showInlineNav && (
+                    <nav className="hidden md:flex items-center gap-1 ml-4">
+                        {inlineNavItems.map((item) => (
+                            <Link
+                                key={item.path}
+                                to={item.path}
+                                className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all ${
+                                    location.pathname === item.path
+                                        ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30'
+                                        : 'text-text-muted hover:text-text-primary hover:bg-bg-elevated'
+                                }`}
+                            >
+                                {item.label}
+                            </Link>
+                        ))}
+                    </nav>
+                )}
             </div>
 
             {/* Right */}

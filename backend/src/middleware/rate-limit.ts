@@ -15,7 +15,7 @@ function createLimiter(options: { windowMs: number; max: number; message: string
 
 export const globalApiRateLimiter = createLimiter({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: 500,
     message: 'Demasiadas solicitudes, intenta de nuevo más tarde.',
 });
 
