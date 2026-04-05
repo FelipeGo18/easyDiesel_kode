@@ -84,8 +84,8 @@ export function Topbar() {
                                 to={item.path}
                                 className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all ${
                                     location.pathname === item.path
-                                        ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30'
-                                        : 'text-text-muted hover:text-text-primary hover:bg-bg-elevated'
+                                        ? 'bg-white/8 text-white border border-white/20'
+                                        : 'text-text-muted border border-transparent hover:text-slate-300 hover:bg-white/5 hover:border-white/15'
                                 }`}
                             >
                                 {item.label}

@@ -179,20 +179,24 @@ export function ReguladorPanelPage() {
         <div className="space-y-8 animate-enter pb-12 max-w-[1440px] mx-auto">
             {/* ── Header Profesional Pro Max ── */}
             <section className="relative overflow-hidden rounded-[32px] bg-bg-surface border border-border-subtle p-8 md:p-10 shadow-2xl group transition-all duration-500 hover:border-white/10">
-                {/* Background effects */}
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-linear-to-bl from-emerald-500/10 via-transparent to-transparent opacity-50 pointer-events-none" />
-                <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-amber-500/5 blur-[100px] rounded-full pointer-events-none" />
+
                 
                 <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
                     <div className="space-y-4">
-                        <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
-                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Estado: Supervisión Activa</span>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {/* Estado con punto pulsante */}
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.04]">
+                                <span className="relative flex h-1.5 w-1.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-40" />
+                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white/70" />
+                                </span>
+                                <span className="text-[10px] font-semibold text-white/50 uppercase tracking-widest">Supervisión Activa</span>
                             </div>
-                            <div className="flex items-center gap-2 bg-bg-elevated border border-border-subtle px-3 py-1 rounded-full">
-                                <Building2 className="w-3.5 h-3.5 text-text-muted" />
-                                <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Ministerio de Minas y Energía</span>
+                            <span className="text-white/15 text-xs">·</span>
+                            {/* Ministerio */}
+                            <div className="flex items-center gap-1.5">
+                                <Building2 className="w-3 h-3 text-white/25" />
+                                <span className="text-[10px] font-medium text-white/30 uppercase tracking-widest">Ministerio de Minas y Energía</span>
                             </div>
                         </div>
                         
@@ -207,13 +211,13 @@ export function ReguladorPanelPage() {
                         </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-stretch gap-3 bg-bg-base/50 p-2 rounded-[20px] border border-border-subtle backdrop-blur-sm">
+                    <div className="flex flex-col sm:flex-row items-stretch gap-3 bg-bg-base p-2 rounded-[20px] border border-border-subtle">
                         <button 
                             onClick={() => setActiveTab('resumen')}
                             className={`flex items-center justify-center gap-2.5 px-6 py-3 rounded-[14px] text-[13px] font-bold transition-all duration-300 ${
                                 activeTab === 'resumen' 
-                                    ? 'bg-amber-500 text-black' 
-                                    : 'text-text-muted hover:text-text-primary hover:bg-bg-elevated'
+                                    ? 'bg-white/8 text-white border border-white/20' 
+                                    : 'text-text-muted border border-transparent hover:text-slate-300 hover:bg-white/5 hover:border-white/15'
                             }`}
                         >
                             <Scale className="w-4 h-4" /> Resumen General
@@ -222,8 +226,8 @@ export function ReguladorPanelPage() {
                             onClick={() => setActiveTab('auditoria')}
                             className={`flex items-center justify-center gap-2.5 px-6 py-3 rounded-[14px] text-[13px] font-bold transition-all duration-300 ${
                                 activeTab === 'auditoria' 
-                                    ? 'bg-amber-500 text-black' 
-                                    : 'text-text-muted hover:text-text-primary hover:bg-bg-elevated'
+                                    ? 'bg-white/8 text-white border border-white/20' 
+                                    : 'text-text-muted border border-transparent hover:text-slate-300 hover:bg-white/5 hover:border-white/15'
                             }`}
                         >
                             <ShieldAlert className="w-4 h-4" /> Rastro Auditor
@@ -232,8 +236,8 @@ export function ReguladorPanelPage() {
                             onClick={() => setActiveTab('reportes')}
                             className={`flex items-center justify-center gap-2.5 px-6 py-3 rounded-[14px] text-[13px] font-bold transition-all duration-300 ${
                                 activeTab === 'reportes' 
-                                    ? 'bg-amber-500 text-black' 
-                                    : 'text-text-muted hover:text-text-primary hover:bg-bg-elevated'
+                                    ? 'bg-white/8 text-white border border-white/20' 
+                                    : 'text-text-muted border border-transparent hover:text-slate-300 hover:bg-white/5 hover:border-white/15'
                             }`}
                         >
                             <FileText className="w-4 h-4" /> Exportación
@@ -403,7 +407,7 @@ export function ReguladorPanelPage() {
                             {/* Decretos Minimalistas */}
                             <div className="space-y-4">
                                 <div className="flex items-center gap-3 px-2">
-                                    <BookOpen className="w-4 h-4 text-sky-500" />
+                                    <BookOpen className="w-4 h-4 text-amber-500" />
                                     <h3 className="text-xs font-bold text-text-muted uppercase tracking-[0.2em]">Normativa Legal</h3>
                                 </div>
                                 
@@ -420,7 +424,7 @@ export function ReguladorPanelPage() {
                                                     <span className="text-[9px] text-text-muted uppercase font-bold tracking-widest">Vigencia</span>
                                                     <span className="text-[11px] text-text-primary font-mono">{new Date(d.fechaVigencia).toLocaleDateString()}</span>
                                                 </div>
-                                                <button onClick={() => navigate('/normativa')} className="p-2 bg-sky-500/10 rounded-lg text-sky-500 hover:bg-sky-500 hover:text-white transition-all shadow-sm">
+                                                <button onClick={() => navigate('/normativa')} className="p-2 bg-white/5 rounded-lg text-white/60 hover:bg-white/10 hover:text-white transition-all shadow-sm">
                                                     <Download size={14} />
                                                 </button>
                                             </div>
@@ -432,7 +436,7 @@ export function ReguladorPanelPage() {
                             {/* Estaciones Supervisadas */}
                             <div className="space-y-4">
                                 <div className="flex items-center gap-3 px-2">
-                                    <Building2 className="w-4 h-4 text-purple-500" />
+                                    <Building2 className="w-4 h-4 text-amber-500" />
                                     <h3 className="text-xs font-bold text-text-muted uppercase tracking-[0.2em]">Red Supervisada</h3>
                                 </div>
                                 
@@ -445,7 +449,7 @@ export function ReguladorPanelPage() {
                                                     <p className="text-[10px] text-text-muted truncate font-medium">{e.ciudad} · {e.departamento}</p>
                                                 </div>
                                                 <div className="flex flex-col items-end gap-1">
-                                                    <Badge variant="blue" className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-[8px] font-mono">{e.codigoSicom}</Badge>
+                                                    <Badge variant="green" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[8px] font-mono">{e.codigoSicom}</Badge>
                                                 </div>
                                             </div>
                                         ))}
