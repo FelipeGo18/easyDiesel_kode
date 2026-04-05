@@ -31,7 +31,7 @@ export const HomeRouteInfo = forwardRef<HTMLElement, {}>((_, ref) => {
                 {/* Feature card */}
                 <div
                     onClick={() => navigate('/ruta-economica')}
-                    className="group relative cursor-pointer overflow-hidden rounded-[4px] border border-border-subtle bg-bg-surface transition-all duration-300 hover:border-amber-500/40"
+                    className="group relative cursor-pointer overflow-hidden rounded-[4px] border border-border-subtle bg-bg-surface transition-all duration-300 hover:border-white/10"
                 >
 
                     <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr]">
@@ -72,7 +72,7 @@ export const HomeRouteInfo = forwardRef<HTMLElement, {}>((_, ref) => {
                             <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); navigate('/ruta-economica'); }}
-                                className="mt-7 flex w-fit items-center gap-2 rounded-brand bg-amber-500 px-5 py-2.5 text-[13px] font-bold text-black transition-all hover:bg-amber-400 active:scale-95"
+                                className="mt-7 flex w-fit items-center gap-2 rounded-brand bg-amber-500 px-5 py-2.5 text-[13px] font-bold text-black transition-all hover:bg-amber-400"
                             >
                                 <Icon name="navigation" size={14} />
                                 Trazar mi ruta

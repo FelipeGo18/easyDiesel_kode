@@ -12,7 +12,7 @@ export function Card({ variant = 'default', children, className, ...props }: Car
         elevated: 'bg-bg-elevated border-border-default',
         interactive: [
             'bg-bg-surface border-border-subtle',
-            'hover:border-white/20 hover:bg-bg-surface',
+            'hover:border-white/10',
             'interactive cursor-pointer',
         ],
     };

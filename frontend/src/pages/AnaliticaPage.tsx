@@ -239,7 +239,7 @@ export function AnaliticaPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {isAuditor ? (
                         <>
-                            <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+                            <Card className="p-5 flex flex-col justify-between hover:border-white/10 transition-colors">
                                 <div className="flex items-start justify-between">
                                     <div>
                                         <p className="text-[12px] text-text-secondary font-medium">Alertas de Seguridad</p>
@@ -254,7 +254,7 @@ export function AnaliticaPage() {
                                     <span className="text-text-muted ml-1">Intentos fallidos / Acciones críticas</span>
                                 </div>
                             </Card>
-                            <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+                            <Card className="p-5 flex flex-col justify-between hover:border-white/10 transition-colors">
                                 <div className="flex items-start justify-between">
                                     <div>
                                         <p className="text-[12px] text-text-secondary font-medium">Trazabilidad Global</p>
@@ -268,7 +268,7 @@ export function AnaliticaPage() {
                                     <span>Logs sin inconsistencias</span>
                                 </div>
                             </Card>
-                            <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+                            <Card className="p-5 flex flex-col justify-between hover:border-white/10 transition-colors">
                                 <div className="flex items-start justify-between">
                                     <div>
                                         <p className="text-[12px] text-text-secondary font-medium">Variación de Precios</p>
@@ -282,7 +282,7 @@ export function AnaliticaPage() {
                                     <span>Desviación vs Decreto 1428</span>
                                 </div>
                             </Card>
-                            <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+                            <Card className="p-5 flex flex-col justify-between hover:border-white/10 transition-colors">
                                 <div className="flex items-start justify-between">
                                     <div>
                                         <p className="text-[12px] text-text-secondary font-medium">Usuarios Privilegiados</p>
@@ -299,7 +299,7 @@ export function AnaliticaPage() {
                         </>
                     ) : (
                         <>
-                            <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+                            <Card className="p-5 flex flex-col justify-between hover:border-white/10 transition-colors">
                                 <div className="flex items-start justify-between">
                                     <div>
                                         <p className="text-[12px] text-text-secondary font-medium">Volumen Total Transado</p>
@@ -315,7 +315,7 @@ export function AnaliticaPage() {
                                     <span className="text-text-muted ml-1">vs mes anterior</span>
                                 </div>
                             </Card>
-                            <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+                            <Card className="p-5 flex flex-col justify-between hover:border-white/10 transition-colors">
                                 <div className="flex items-start justify-between">
                                     <div>
                                         <p className="text-[12px] text-text-secondary font-medium">Estaciones Activas</p>
@@ -329,7 +329,7 @@ export function AnaliticaPage() {
                                     <span>Operativas en 4 zonas</span>
                                 </div>
                             </Card>
-                            <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+                            <Card className="p-5 flex flex-col justify-between hover:border-white/10 transition-colors">
                                 <div className="flex items-start justify-between">
                                     <div>
                                         <p className="text-[12px] text-text-secondary font-medium">Capacidad de Inventario</p>
@@ -343,7 +343,7 @@ export function AnaliticaPage() {
                                     <div className="bg-green-500 h-full rounded-full" style={{ width: '65%' }} />
                                 </div>
                             </Card>
-                            <Card className="p-5 flex flex-col justify-between hover:border-amber-500/30 transition-colors">
+                            <Card className="p-5 flex flex-col justify-between hover:border-white/10 transition-colors">
                                 <div className="flex items-start justify-between">
                                     <div>
                                         <p className="text-[12px] text-text-secondary font-medium">Alertas Normativas</p>

@@ -94,7 +94,7 @@ export function PanelPage() {
     return (
         <div className="space-y-8 animate-enter pb-12 max-w-[1440px] mx-auto">
             {/* ── Header Pro Max ── */}
-            <section className="relative overflow-hidden rounded-[32px] bg-bg-surface border border-border-subtle p-8 md:p-10 shadow-2xl group transition-all duration-500 hover:border-blue-500/30">
+            <section className="relative overflow-hidden rounded-[32px] bg-bg-surface border border-border-subtle p-8 md:p-10 shadow-2xl group transition-all duration-500 hover:border-white/10">
                 {/* Background effects */}
                 <div className="absolute top-0 right-0 w-1/2 h-full bg-linear-to-bl from-blue-500/10 via-transparent to-transparent opacity-50 pointer-events-none" />
                 <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-amber-500/5 blur-[100px] rounded-full pointer-events-none" />
@@ -139,7 +139,7 @@ export function PanelPage() {
                     value={summary?.operaciones.transacciones.toLocaleString() || '0'}
                     icon={<img src="/icons/activity.svg" alt="Ventas" className="w-[20px] h-[20px]" />}
                     trend={{ direction: 'up', text: 'Transacciones' }}
-                    className="bg-bg-surface border-border-subtle hover:border-blue-500/30 transition-all duration-300 rounded-[24px] shadow-sm hover:shadow-xl"
+                    className="bg-bg-surface border-border-subtle hover:border-white/10 transition-all duration-300 rounded-[24px]"
                     delay={0}
                 />
                 <KpiCard
@@ -147,7 +147,7 @@ export function PanelPage() {
                     value={summary?.operaciones.entregas.toLocaleString() || '0'}
                     icon={<img src="/icons/truck.svg" alt="Entradas" className="w-[20px] h-[20px]" />}
                     trend={{ direction: 'up', text: 'Cargas registradas' }}
-                    className="bg-bg-surface border-border-subtle hover:border-blue-500/30 transition-all duration-300 rounded-[24px] shadow-sm hover:shadow-xl"
+                    className="bg-bg-surface border-border-subtle hover:border-white/10 transition-all duration-300 rounded-[24px]"
                     delay={50}
                 />
                 <KpiCard
@@ -155,7 +155,7 @@ export function PanelPage() {
                     value={summary?.estaciones.toLocaleString() || '0'}
                     icon={<img src="/icons/station.svg" alt="Estaciones" className="w-[20px] h-[20px]" />}
                     trend={{ direction: 'neutral', text: 'Puntos de servicio' }}
-                    className="bg-bg-surface border-border-subtle hover:border-blue-500/30 transition-all duration-300 rounded-[24px] shadow-sm hover:shadow-xl"
+                    className="bg-bg-surface border-border-subtle hover:border-white/10 transition-all duration-300 rounded-[24px]"
                     delay={100}
                 />
                 <KpiCard
@@ -165,7 +165,7 @@ export function PanelPage() {
                     trend={{ direction: summary?.inventario.tanquesEnAlerta ? 'down' : 'neutral', text: 'Tanques en alerta' }}
                     delay={150}
                     className={cn(
-                        "bg-bg-surface border-border-subtle hover:border-red-500/30 transition-all duration-300 rounded-[24px] shadow-sm hover:shadow-xl",
+                        "bg-bg-surface border-border-subtle hover:border-white/10 transition-all duration-300 rounded-[24px]",
                         summary?.inventario.tanquesEnAlerta ? 'border-red-500/50 bg-red-500/5' : ''
                     )}
                 />
@@ -191,17 +191,17 @@ export function PanelPage() {
                                 <Card
                                     key={mod.path}
                                     variant="interactive"
-                                    className="animate-enter group rounded-[24px] p-6 border-border-subtle hover:border-blue-500/30 hover:bg-bg-elevated/40 transition-all duration-300 shadow-sm hover:shadow-xl flex flex-col justify-between h-full"
+                                    className="animate-enter group rounded-[24px] p-6 border-border-subtle hover:border-white/10 transition-all duration-300 flex flex-col justify-between h-full"
                                     style={{ animationDelay: `${(i + 1) * 60}ms` }}
                                     onClick={() => navigate(mod.path)}
                                 >
                                     <div>
                                         <div className="flex items-start justify-between mb-4">
-                                            <div className="p-3 bg-bg-base rounded-xl border border-border-subtle group-hover:border-blue-500/30 group-hover:scale-110 transition-all">
-                                                <Icon name={mod.icon || 'dashboard'} size={24} className="text-text-secondary group-hover:text-blue-500 transition-colors" />
+                                            <div className="p-3 bg-bg-base rounded-xl border border-border-subtle group-hover:border-white/10 transition-all">
+                                                <Icon name={mod.icon || 'dashboard'} size={24} className="text-text-secondary group-hover:text-text-primary transition-colors" />
                                             </div>
                                             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <ArrowRight size={16} className="text-blue-500" />
+                                                <ArrowRight size={16} className="text-text-secondary" />
                                             </div>
                                         </div>
                                         <h3 className="text-base font-bold text-text-primary mb-2">
@@ -288,8 +288,8 @@ export function PanelPage() {
                             </div>
                             <div className="space-y-3">
                                 {summary.inventario.alertas.map((alerta: DashboardAlert) => (
-                                    <Card key={alerta.id} className="p-5 bg-red-500/5 border-red-500/20 rounded-[24px] relative overflow-hidden group hover:bg-red-500/10 transition-all">
-                                        <div className="absolute -right-4 -top-4 opacity-10 group-hover:scale-110 transition-transform">
+                                    <Card key={alerta.id} className="p-5 bg-red-500/5 border-red-500/20 rounded-[24px] relative overflow-hidden group hover:border-white/10 transition-all">
+                                        <div className="absolute -right-4 -top-4 opacity-10">
                                             <ShieldAlert size={80} className="text-red-500" />
                                         </div>
                                         <div className="relative z-10">

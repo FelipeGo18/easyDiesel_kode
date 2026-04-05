@@ -502,7 +502,7 @@ export function StationOperationsPage() {
     return (
         <div className="space-y-8 animate-enter pb-12 max-w-[1440px] mx-auto">
             {/* ── Header Pro Max Estación ── */}
-            <section className="relative overflow-hidden rounded-[32px] bg-bg-surface border border-border-subtle p-8 md:p-10 shadow-2xl group transition-all duration-500 hover:border-amber-500/30">
+            <section className="relative overflow-hidden rounded-[32px] bg-bg-surface border border-border-subtle p-8 md:p-10 shadow-2xl group transition-all duration-500 hover:border-white/10">
                 {/* Background effects */}
                 <div className="absolute top-0 right-0 w-1/2 h-full bg-linear-to-bl from-amber-500/10 via-transparent to-transparent opacity-50 pointer-events-none" />
                 <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none" />
@@ -604,7 +604,7 @@ export function StationOperationsPage() {
                                                     'rounded-[24px] border p-5 text-left transition-all duration-300 cursor-pointer group relative overflow-hidden',
                                                     isSelected
                                                         ? 'border-amber-500/40 bg-amber-500/5 ring-1 ring-amber-500/20 shadow-lg'
-                                                        : 'border-border-subtle bg-bg-base hover:border-amber-500/30 hover:bg-bg-elevated/40 hover:shadow-md',
+                                                        : 'border-border-subtle bg-bg-base hover:border-white/10',
                                                 ].join(' ')}
                                             >
                                                 {isSelected && <div className="absolute top-0 right-0 p-3"><Badge variant="amber" className="text-[8px]">SELECTED</Badge></div>}
@@ -685,7 +685,7 @@ export function StationOperationsPage() {
                                                 onClick={() => { setInputMode('PRECIO'); setForm(prev => ({ ...prev, galones: '' })); }}
                                                 className={`flex-1 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 ${
                                                     inputMode === 'PRECIO' 
-                                                        ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' 
+                                                        ? 'bg-amber-500 text-black' 
                                                         : 'text-text-muted hover:text-text-primary hover:bg-bg-elevated'
                                                 }`}
                                             >
@@ -696,7 +696,7 @@ export function StationOperationsPage() {
                                                 onClick={() => { setInputMode('GALONES'); setForm(prev => ({ ...prev, precioTotalInput: '' })); }}
                                                 className={`flex-1 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 ${
                                                     inputMode === 'GALONES' 
-                                                        ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' 
+                                                        ? 'bg-amber-500 text-black' 
                                                         : 'text-text-muted hover:text-text-primary hover:bg-bg-elevated'
                                                 }`}
                                             >
@@ -797,7 +797,7 @@ export function StationOperationsPage() {
                                         type="submit"
                                         isLoading={submitting || loading || pricingLoading}
                                         disabled={!selectedTanque || tanques.length === 0 || !form.placaVehiculo || Number(form.galones) <= 0}
-                                        className="rounded-xl px-10 bg-amber-500 text-black font-bold shadow-lg shadow-amber-500/20 hover:scale-[1.02] transition-transform flex-1 sm:flex-none"
+                                        className="rounded-xl px-10 bg-amber-500 text-black font-bold transition-transform flex-1 sm:flex-none"
                                     >
                                         Registrar Despacho
                                     </Button>
@@ -860,7 +860,7 @@ export function StationOperationsPage() {
                                                 </td>
                                                 <td className="px-8 py-5">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-lg bg-bg-base flex items-center justify-center border border-border-subtle group-hover:border-amber-500/30 transition-colors">
+                                                        <div className="w-8 h-8 rounded-lg bg-bg-base flex items-center justify-center border border-border-subtle transition-colors">
                                                             <Truck size={14} className="text-text-muted group-hover:text-amber-500 transition-colors" />
                                                         </div>
                                                         <div>
@@ -961,8 +961,8 @@ export function StationOperationsPage() {
                     </div>
 
                     <div className="space-y-6">
-                        <Card className="rounded-[32px] border-border-subtle bg-bg-surface shadow-xl p-6 relative overflow-hidden group hover:border-emerald-500/30 transition-all">
-                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                        <Card className="rounded-[32px] border-border-subtle bg-bg-surface shadow-xl p-6 relative overflow-hidden group hover:border-white/10 transition-all">
+                            <div className="absolute top-0 right-0 p-4 opacity-5">
                                 <Truck size={60} className="text-emerald-500" />
                             </div>
                             <div className="relative z-10">
@@ -979,7 +979,7 @@ export function StationOperationsPage() {
                                             setDirectEntryForm({ tanqueId: tanques[0]?.id ?? '', galones: '0', precioUnitario: '0', observaciones: '' });
                                             setDirectEntryOpen(true);
                                         }}
-                                        className="p-2 bg-emerald-500 text-black rounded-xl hover:scale-110 transition-transform shadow-lg shadow-emerald-500/20"
+                                        className="p-2 bg-emerald-500 text-black rounded-xl transition-transform"
                                         title="Entrada Directa"
                                     >
                                         <Plus size={16} />
@@ -994,7 +994,7 @@ export function StationOperationsPage() {
                                         </div>
                                     ) : (
                                         pendingDeliveries.slice(0, 3).map((delivery) => (
-                                            <div key={delivery.id} className="p-4 rounded-2xl bg-bg-base border border-border-subtle hover:border-emerald-500/30 transition-all group/item">
+                                            <div key={delivery.id} className="p-4 rounded-2xl bg-bg-base border border-border-subtle hover:border-white/10 transition-all group/item">
                                                 <div className="flex items-start justify-between gap-2 mb-3">
                                                     <div className="min-w-0">
                                                         <p className="text-xs font-black text-text-primary truncate">REM. {delivery.numeroRemision}</p>
@@ -1010,8 +1010,8 @@ export function StationOperationsPage() {
                             </div>
                         </Card>
 
-                        <Card className="rounded-[32px] border-border-subtle bg-bg-surface shadow-xl p-6 relative overflow-hidden group hover:border-blue-500/30 transition-all">
-                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                        <Card className="rounded-[32px] border-border-subtle bg-bg-surface shadow-xl p-6 relative overflow-hidden group hover:border-white/10 transition-all">
+                            <div className="absolute top-0 right-0 p-4 opacity-5">
                                 <TimerReset size={60} className="text-blue-500" />
                             </div>
                             <div className="space-y-4">
@@ -1027,7 +1027,7 @@ export function StationOperationsPage() {
                                     </div>
                                     <button
                                         type="button"
-                                        className="w-full py-4 rounded-2xl bg-bg-base border-2 border-dashed border-border-subtle text-xs font-bold text-text-muted hover:border-blue-500/50 hover:text-blue-500 transition-all uppercase tracking-widest"
+                                        className="w-full py-4 rounded-2xl bg-bg-base border-2 border-dashed border-border-subtle text-xs font-bold text-text-muted hover:border-white/20 hover:text-text-primary transition-all uppercase tracking-widest"
                                         onClick={() => {
                                             setCierreResult(null);
                                             setCierreForm({

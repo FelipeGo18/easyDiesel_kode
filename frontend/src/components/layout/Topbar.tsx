@@ -69,7 +69,7 @@ export function Topbar() {
                 {showInlineNav && location.pathname !== '/panel' && (
                     <button
                         onClick={() => navigate('/panel')}
-                        className="flex items-center justify-center w-8 h-8 rounded-lg bg-bg-elevated border border-border-subtle text-text-muted hover:text-amber-500 hover:border-amber-500/30 transition-all shrink-0"
+                        className="flex items-center justify-center w-8 h-8 rounded-lg bg-bg-elevated border border-border-subtle text-text-muted hover:text-text-primary hover:border-white/10 transition-all shrink-0"
                         title="Volver al panel"
                     >
                         <ChevronLeft size={16} />

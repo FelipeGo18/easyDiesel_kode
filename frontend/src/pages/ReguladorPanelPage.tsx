@@ -178,7 +178,7 @@ export function ReguladorPanelPage() {
     return (
         <div className="space-y-8 animate-enter pb-12 max-w-[1440px] mx-auto">
             {/* ── Header Profesional Pro Max ── */}
-            <section className="relative overflow-hidden rounded-[32px] bg-bg-surface border border-border-subtle p-8 md:p-10 shadow-2xl group transition-all duration-500 hover:border-emerald-500/30">
+            <section className="relative overflow-hidden rounded-[32px] bg-bg-surface border border-border-subtle p-8 md:p-10 shadow-2xl group transition-all duration-500 hover:border-white/10">
                 {/* Background effects */}
                 <div className="absolute top-0 right-0 w-1/2 h-full bg-linear-to-bl from-emerald-500/10 via-transparent to-transparent opacity-50 pointer-events-none" />
                 <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-amber-500/5 blur-[100px] rounded-full pointer-events-none" />
@@ -212,7 +212,7 @@ export function ReguladorPanelPage() {
                             onClick={() => setActiveTab('resumen')}
                             className={`flex items-center justify-center gap-2.5 px-6 py-3 rounded-[14px] text-[13px] font-bold transition-all duration-300 ${
                                 activeTab === 'resumen' 
-                                    ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' 
+                                    ? 'bg-amber-500 text-black' 
                                     : 'text-text-muted hover:text-text-primary hover:bg-bg-elevated'
                             }`}
                         >
@@ -222,7 +222,7 @@ export function ReguladorPanelPage() {
                             onClick={() => setActiveTab('auditoria')}
                             className={`flex items-center justify-center gap-2.5 px-6 py-3 rounded-[14px] text-[13px] font-bold transition-all duration-300 ${
                                 activeTab === 'auditoria' 
-                                    ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' 
+                                    ? 'bg-amber-500 text-black' 
                                     : 'text-text-muted hover:text-text-primary hover:bg-bg-elevated'
                             }`}
                         >
@@ -232,7 +232,7 @@ export function ReguladorPanelPage() {
                             onClick={() => setActiveTab('reportes')}
                             className={`flex items-center justify-center gap-2.5 px-6 py-3 rounded-[14px] text-[13px] font-bold transition-all duration-300 ${
                                 activeTab === 'reportes' 
-                                    ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' 
+                                    ? 'bg-amber-500 text-black' 
                                     : 'text-text-muted hover:text-text-primary hover:bg-bg-elevated'
                             }`}
                         >
@@ -250,25 +250,25 @@ export function ReguladorPanelPage() {
                             label="Zonas Operativas" 
                             value={String(zonas.length)} 
                             icon={<MapPin className="w-5 h-5" />} 
-                            className="bg-bg-surface border-border-subtle hover:border-amber-500/30 transition-all duration-300"
+                            className="bg-bg-surface border-border-subtle hover:border-white/10 transition-all duration-300"
                         />
                         <KpiCard 
                             label="Estaciones (EDS)" 
                             value={String(estaciones.length)} 
                             icon={<Building2 className="w-5 h-5" />} 
-                            className="bg-bg-surface border-border-subtle hover:border-amber-500/30 transition-all duration-300"
+                            className="bg-bg-surface border-border-subtle hover:border-white/10 transition-all duration-300"
                         />
                         <KpiCard 
                             label="Tarifas Activas" 
                             value={String(precios.length)} 
                             icon={<Fuel className="w-5 h-5" />} 
-                            className="bg-bg-surface border-border-subtle hover:border-amber-500/30 transition-all duration-300"
+                            className="bg-bg-surface border-border-subtle hover:border-white/10 transition-all duration-300"
                         />
                         <KpiCard 
                             label="Marco Normativo" 
                             value={String(decretos.length)} 
                             icon={<BookOpen className="w-5 h-5" />} 
-                            className="bg-bg-surface border-border-subtle hover:border-amber-500/30 transition-all duration-300"
+                            className="bg-bg-surface border-border-subtle hover:border-white/10 transition-all duration-300"
                         />
                     </div>
 
@@ -293,7 +293,7 @@ export function ReguladorPanelPage() {
                                         <select 
                                             value={filtroZona}
                                             onChange={(e) => setFiltroZona(e.target.value)}
-                                            className="pl-9 pr-8 py-2 bg-bg-base border border-border-subtle rounded-xl text-xs font-medium outline-none text-text-primary appearance-none interactive hover:border-amber-500/30 min-w-[180px]"
+                                            className="pl-9 pr-8 py-2 bg-bg-base border border-border-subtle rounded-xl text-xs font-medium outline-none text-text-primary appearance-none interactive hover:border-white/10 min-w-[180px]"
                                         >
                                             <option value="">Jurisdicción Nacional</option>
                                             {zonas.map(z => <option key={z.id} value={z.id}>{z.nombre}</option>)}
@@ -380,10 +380,10 @@ export function ReguladorPanelPage() {
                                         <div 
                                             key={log.id} 
                                             onClick={() => handleViewDetail(log)}
-                                            className="flex items-center justify-between p-4 rounded-2xl bg-bg-elevated/20 border border-border-subtle/50 hover:border-amber-500/30 hover:bg-bg-elevated/40 transition-all cursor-pointer group"
+                                            className="flex items-center justify-between p-4 rounded-2xl bg-bg-elevated/20 border border-border-subtle/50 hover:border-white/10 transition-all cursor-pointer group"
                                         >
                                             <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-xl bg-bg-base flex items-center justify-center border border-border-subtle group-hover:scale-110 transition-transform">
+                                                <div className="w-10 h-10 rounded-xl bg-bg-base flex items-center justify-center border border-border-subtle transition-transform">
                                                     <ShieldCheck size={18} className="text-emerald-500" />
                                                 </div>
                                                 <div>
@@ -409,7 +409,7 @@ export function ReguladorPanelPage() {
                                 
                                 <div className="space-y-4">
                                     {decretoActivos.slice(0, 3).map(d => (
-                                        <div key={d.id} className="p-5 rounded-[24px] bg-bg-surface border border-border-subtle shadow-sm relative overflow-hidden group hover:shadow-xl hover:border-sky-500/30 transition-all duration-300">
+                                        <div key={d.id} className="p-5 rounded-[24px] bg-bg-surface border border-border-subtle shadow-sm relative overflow-hidden group hover:border-white/10 transition-all duration-300">
                                             <div className="absolute top-0 right-0 p-3">
                                                 <Badge variant="green" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[8px] font-bold">ACTIVO</Badge>
                                             </div>
@@ -533,7 +533,7 @@ export function ReguladorPanelPage() {
                 {selectedLog && (
                     <div className="space-y-8 py-2">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="bg-bg-elevated/40 p-4 rounded-2xl border border-border-subtle group hover:border-amber-500/30 transition-all">
+                            <div className="bg-bg-elevated/40 p-4 rounded-2xl border border-border-subtle group hover:border-white/10 transition-all">
                                 <span className="text-[10px] text-text-muted uppercase font-black tracking-[0.2em]">Responsable</span>
                                 <div className="mt-2 flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
@@ -545,7 +545,7 @@ export function ReguladorPanelPage() {
                                     </div>
                                 </div>
                             </div>
-                            <div className="bg-bg-elevated/40 p-4 rounded-2xl border border-border-subtle group hover:border-amber-500/30 transition-all">
+                            <div className="bg-bg-elevated/40 p-4 rounded-2xl border border-border-subtle group hover:border-white/10 transition-all">
                                 <span className="text-[10px] text-text-muted uppercase font-black tracking-[0.2em]">Sello de Tiempo</span>
                                 <div className="mt-2 flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20">

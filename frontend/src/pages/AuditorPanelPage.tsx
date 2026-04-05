@@ -140,7 +140,7 @@ export function AuditorPanelPage() {
                     <div className="mt-6 flex flex-wrap gap-3">
                         <button 
                             onClick={() => navigate('/auditoria')}
-                            className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-black rounded-xl text-sm font-bold hover:bg-amber-400 transition-all active:scale-95 shadow-lg shadow-amber-500/20"
+                            className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-black rounded-xl text-sm font-bold hover:bg-amber-400 transition-all"
                         >
                             <Search size={16} />
                             Rastreador de Logs
