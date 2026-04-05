@@ -75,7 +75,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         description: 'Configuración territorial y cobertura regulatoria',
         requiredPermissions: ['zonas:leer', 'zonas:escribir'],
         showInNavigation: true,
-        excludeRoles: ['distribuidor', 'distribuidor_regulado', 'estacion', 'despachador'],
+        excludeRoles: ['distribuidor', 'distribuidor_regulado', 'estacion', 'particular', 'auditor'],
     },
     {
         path: '/actores',
@@ -86,7 +86,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         description: 'Estaciones y distribuidores registrados',
         requiredPermissions: ['actores:leer', 'actores:escribir'],
         showInNavigation: true,
-        excludeRoles: ['distribuidor', 'distribuidor_regulado', 'estacion', 'despachador'],
+        excludeRoles: ['distribuidor_regulado', 'estacion', 'particular', 'auditor'],
     },
     {
         path: '/precios',
@@ -95,9 +95,9 @@ export const protectedRoutes: AppRouteConfig[] = [
         icon: 'prices',
         moduleId: 'M4',
         description: 'Tarifas vigentes por zona y tipo de servicio',
-        requiredPermissions: ['precios:leer', 'precios:escribir'],
+        requiredPermissions: ['precios:leer'],
         showInNavigation: true,
-        excludeRoles: ['distribuidor', 'distribuidor_regulado', 'estacion', 'despachador'],
+        excludeRoles: ['auditor'],
     },
     {
         path: '/normativa',
@@ -106,9 +106,9 @@ export const protectedRoutes: AppRouteConfig[] = [
         icon: 'normativa',
         moduleId: 'M5',
         description: 'Decretos y reglas regulatorias aplicables',
-        requiredPermissions: ['decretos:leer', 'decretos:escribir'],
+        requiredPermissions: ['decretos:leer'],
         showInNavigation: true,
-        excludeRoles: ['distribuidor', 'distribuidor_regulado', 'estacion', 'despachador'],
+        excludeRoles: ['auditor'],
     },
     {
         path: '/usuarios',
@@ -119,7 +119,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         description: 'Accesos, roles y gobierno de usuarios',
         requiredPermissions: ['usuarios:leer', 'usuarios:escribir'],
         showInNavigation: true,
-        excludeRoles: ['distribuidor', 'distribuidor_regulado', 'estacion', 'despachador'],
+        excludeRoles: ['distribuidor', 'distribuidor_regulado', 'estacion', 'regulador', 'auditor', 'particular'],
     },
     {
         path: '/estacion',
@@ -142,7 +142,7 @@ export const protectedRoutes: AppRouteConfig[] = [
         description: 'Trazabilidad de operaciones y cambios',
         requiredPermissions: ['auditoria:leer'],
         showInNavigation: true,
-        excludeRoles: ['distribuidor', 'distribuidor_regulado', 'estacion', 'despachador'],
+        excludeRoles: ['particular'],
     },
 ];
 

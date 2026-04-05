@@ -354,6 +354,14 @@ export class InventarioService {
             throw new Error('El tanque no pertenece a la estación indicada');
         }
 
+        // Validar que la estación esté activa (B01)
+        const estacion = await prisma.estacionServicio.findUnique({ where: { id: data.estacionId }, select: { activa: true } });
+        if (!estacion || !estacion.activa) {
+            const err: any = new Error('No se pueden registrar transacciones en una estación inactiva');
+            err.statusCode = 422;
+            throw err;
+        }
+
         if (tanque.tipoCombustible !== data.tipoCombustible) {
             throw new Error(`El tipo de combustible vendido no coincide con el tanque de ${tanque.tipoCombustible}`);
         }

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { inventarioService } from '../services/inventario.service';
 import { registrarEntregaSchema, confirmarEntregaSchema, registrarTransaccionSchema, cierreTurnoSchema, entradaDirectaSchema } from '../validators/inventario.validator';
 import { ZodError } from 'zod';
+import { assertEstacionOwnership, assertDistribuidorOwnership } from '../middleware/auth';
 
 export const obtenerTransaccionesHandler = async (req: Request, res: Response) => {
     try {
@@ -11,12 +12,13 @@ export const obtenerTransaccionesHandler = async (req: Request, res: Response) =
             res.status(400).json({ success: false, message: 'Se requiere estacionId o placaVehiculo' });
             return;
         }
+        assertEstacionOwnership(req, estacionId);
         const page = req.query.page ? Number(req.query.page) : undefined;
         const limit = req.query.limit ? Number(req.query.limit) : undefined;
         const result = await inventarioService.listarTransacciones({ estacionId, placaVehiculo, page, limit });
         res.json({ success: true, ...result });
     } catch (error: any) {
-        res.status(400).json({ success: false, message: error.message });
+        res.status(error.statusCode || 400).json({ success: false, message: error.message });
     }
 };
 
@@ -48,13 +50,14 @@ export const obtenerEntregasPendientesHandler = async (req: Request, res: Respon
             res.status(400).json({ success: false, message: 'Se requiere estacionId' });
             return;
         }
+        assertEstacionOwnership(req, estacionId);
 
         const page = req.query.page ? Number(req.query.page) : undefined;
         const limit = req.query.limit ? Number(req.query.limit) : undefined;
         const result = await inventarioService.listarEntregasPendientes(estacionId, { page, limit });
         res.json({ success: true, ...result });
     } catch (error: any) {
-        res.status(400).json({ success: false, message: error.message });
+        res.status(error.statusCode || 400).json({ success: false, message: error.message });
     }
 };
 
@@ -65,12 +68,13 @@ export const obtenerEntregasPorDistribuidorHandler = async (req: Request, res: R
             res.status(400).json({ success: false, message: 'Se requiere distribuidorId' });
             return;
         }
+        assertDistribuidorOwnership(req, distribuidorId);
         const page = req.query.page ? Number(req.query.page) : undefined;
         const limit = req.query.limit ? Number(req.query.limit) : undefined;
         const result = await inventarioService.listarEntregasPorDistribuidor(distribuidorId, { page, limit });
         res.json({ success: true, ...result });
     } catch (error: any) {
-        res.status(400).json({ success: false, message: error.message });
+        res.status(error.statusCode || 400).json({ success: false, message: error.message });
     }
 };
 
@@ -203,6 +207,6 @@ export const registrarTransaccionHandler = async (req: Request, res: Response) =
             res.status(400).json({ success: false, errors: error.issues });
             return;
         }
-        res.status(400).json({ success: false, message: error.message });
+        res.status(error.statusCode || 400).json({ success: false, message: error.message });
     }
 };

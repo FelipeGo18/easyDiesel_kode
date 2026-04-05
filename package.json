@@ -1,0 +1,29 @@
+{
+  "name": "easydiesel",
+  "version": "1.0.0",
+  "private": true,
+  "description": "EasyDiesel — Plataforma de Gestión de Combustibles (monorepo)",
+  "scripts": {
+    "install:all": "cd backend && pnpm install && cd ../frontend && pnpm install",
+    "dev": "concurrently -n BE,FE -c blue,green \"pnpm dev:back\" \"pnpm dev:front\"",
+    "dev:back": "cd backend && pnpm dev",
+    "dev:front": "cd frontend && pnpm dev",
+    "build": "cd backend && pnpm build && cd ../frontend && pnpm build",
+    "build:back": "cd backend && pnpm build",
+    "build:front": "cd frontend && pnpm build",
+    "start": "cd backend && pnpm start",
+    "test": "cd backend && pnpm test",
+    "test:integration": "cd backend && pnpm test:integration",
+    "test:integration:verbose": "cd backend && pnpm test:integration:verbose",
+    "test:coverage": "cd backend && pnpm test:coverage",
+    "lint": "cd frontend && pnpm lint",
+    "prisma:generate": "cd backend && pnpm prisma:generate",
+    "prisma:migrate": "cd backend && pnpm prisma:migrate",
+    "prisma:studio": "cd backend && pnpm prisma:studio",
+    "prisma:seed": "cd backend && pnpm prisma:seed",
+    "report": "cd backend && node scripts/generate-integration-report.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

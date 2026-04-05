@@ -1,0 +1,400 @@
+﻿
+> combustibles-backend@1.0.0 test:integration:verbose C:\Users\DELL\Documents\Easy_Kode\easyDiesel_kode\backend
+> node_modules\.bin\prisma migrate deploy && jest --forceExit --detectOpenHandles --verbose tests/integration
+
+node.exe : warn The configuration property `package.json#prisma` is deprecated 
+and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., 
+`prisma.config.ts`).
+En C:\Users\DELL\AppData\Roaming\npm\pnpm.ps1: 24 Carácter: 5
++     & "node$exe"  "$basedir/node_modules/pnpm/bin/pnpm.cjs" $args
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warn The config...ma.config.ts`). 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+For more information, see: https://pris.ly/prisma-config
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "postgres", schema "public" at "aws-1-us-east-1.pooler.supabase.com:5432"
+
+6 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+  console.log
+    [dotenv@17.3.1] injecting env (0) from .env -- tip: ­ƒøí´©Å auth for agents: https://vestauth.com
+
+      at _log (node_modules/.pnpm/dotenv@17.3.1/node_modules/dotenv/lib/main.js:139:11)
+
+warn The configuration property `package.json#prisma` is deprecated and will 
+be removed in Prisma 7. Please migrate to a Prisma config file (e.g., 
+`prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "postgres", schema "public" at "aws-1-us-east-1.pooler.supabase.com:5432"
+
+6 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+(node:13284) [DEP0169] DeprecationWarning: `url.parse()` behavior is not 
+standardized and prone to errors that have security implications. Use the 
+WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+  console.error
+    [ERROR] 401 ÔÇö Credenciales inv├ílidas
+
+      18 |             : err.message;
+      19 |
+    > 20 |     console.error(`[ERROR] ${statusCode} ÔÇö ${err.message}`);
+         |             ^
+      21 |     if (process.env.NODE_ENV !== 'production') {
+      22 |         console.error(err.stack);
+      23 |     }
+
+      at errorHandler (src/middleware/errorHandler.ts:20:13)
+      at Layer.handleError (node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:116:17)
+      at trimPrefix (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:340:13)
+      at node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:297:9
+      at processParams (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:582:12)
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:291:5)
+      at node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:688:15
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:276:14)
+      at Layer.handleError (node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:111:12)
+      at trimPrefix (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:340:13)
+      at node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:297:9
+      at processParams (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:582:12)
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:291:5)
+      at node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:688:15
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:276:14)
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/lib/route.js:132:14)
+      at loginHandler (src/controllers/auth.controller.ts:121:9)
+
+  console.error
+    Error: Credenciales inv├ílidas
+        at AuthService.login (C:\Users\DELL\Documents\Easy_Kode\easyDiesel_kode\backend\src\services\auth.service.ts:229:33)
+        at loginHandler (C:\Users\DELL\Documents\Easy_Kode\easyDiesel_kode\backend\src\controllers\auth.controller.ts:105:24)
+
+      20 |     console.error(`[ERROR] ${statusCode} ÔÇö ${err.message}`);
+      21 |     if (process.env.NODE_ENV !== 'production') {
+    > 22 |         console.error(err.stack);
+         |                 ^
+      23 |     }
+      24 |
+      25 |     res.status(statusCode).json({
+
+      at errorHandler (src/middleware/errorHandler.ts:22:17)
+      at Layer.handleError (node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:116:17)
+      at trimPrefix (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:340:13)
+      at node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:297:9
+      at processParams (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:582:12)
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:291:5)
+      at node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:688:15
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:276:14)
+      at Layer.handleError (node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:111:12)
+      at trimPrefix (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:340:13)
+      at node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:297:9
+      at processParams (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:582:12)
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:291:5)
+      at node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:688:15
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:276:14)
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/lib/route.js:132:14)
+      at loginHandler (src/controllers/auth.controller.ts:121:9)
+
+  console.error
+    [ERROR] 401 ÔÇö Refresh token inv├ílido o expirado
+
+      18 |             : err.message;
+      19 |
+    > 20 |     console.error(`[ERROR] ${statusCode} ÔÇö ${err.message}`);
+         |             ^
+      21 |     if (process.env.NODE_ENV !== 'production') {
+      22 |         console.error(err.stack);
+      23 |     }
+
+      at errorHandler (src/middleware/errorHandler.ts:20:13)
+      at Layer.handleError (node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:116:17)
+      at trimPrefix (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:340:13)
+      at node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:297:9
+      at processParams (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:582:12)
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:291:5)
+      at node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:688:15
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:276:14)
+      at Layer.handleError (node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:111:12)
+      at trimPrefix (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:340:13)
+      at node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:297:9
+      at processParams (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:582:12)
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:291:5)
+      at node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:688:15
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:276:14)
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/lib/route.js:132:14)
+      at refreshHandler (src/controllers/auth.controller.ts:240:9)
+
+  console.error
+    Error: Refresh token inv├ílido o expirado
+        at AuthService.refreshSession (C:\Users\DELL\Documents\Easy_Kode\easyDiesel_kode\backend\src\services\auth.service.ts:376:33)
+        at refreshHandler (C:\Users\DELL\Documents\Easy_Kode\easyDiesel_kode\backend\src\controllers\auth.controller.ts:223:24)
+
+      20 |     console.error(`[ERROR] ${statusCode} ÔÇö ${err.message}`);
+      21 |     if (process.env.NODE_ENV !== 'production') {
+    > 22 |         console.error(err.stack);
+         |                 ^
+      23 |     }
+      24 |
+      25 |     res.status(statusCode).json({
+
+      at errorHandler (src/middleware/errorHandler.ts:22:17)
+      at Layer.handleError (node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:116:17)
+      at trimPrefix (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:340:13)
+      at node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:297:9
+      at processParams (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:582:12)
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:291:5)
+      at node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:688:15
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:276:14)
+      at Layer.handleError (node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:111:12)
+      at trimPrefix (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:340:13)
+      at node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:297:9
+      at processParams (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:582:12)
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:291:5)
+      at node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:688:15
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:276:14)
+      at next (node_modules/.pnpm/router@2.2.0/node_modules/router/lib/route.js:132:14)
+      at refreshHandler (src/controllers/auth.controller.ts:240:9)
+
+PASS tests/integration/auth.integration.test.ts (24.441 s)
+  Auth Integration Tests
+    POST /api/auth/login
+      ÔêÜ deber├¡a autenticar al usuario y devolver un token JWT (1620 ms)
+      ÔêÜ deber├¡a retornar 401 con credenciales incorrectas (739 ms)
+    GET /api/auth/me
+      ÔêÜ deber├¡a retornar el perfil del usuario con un token v├ílido (956 ms)
+      ÔêÜ deber├¡a retornar 401 sin un token de autenticaci├│n (17 ms)
+      ÔêÜ deber├¡a renovar la sesi├│n con un refresh token v├ílido (1607 ms)
+      ÔêÜ deber├¡a revocar la sesi├│n al hacer logout (1190 ms)
+
+  console.log
+    [dotenv@17.3.1] injecting env (0) from .env -- tip: ÔÜÖ´©Å  write to custom object with { processEnv: myObject }
+
+      at _log (node_modules/.pnpm/dotenv@17.3.1/node_modules/dotenv/lib/main.js:139:11)
+
+warn The configuration property `package.json#prisma` is deprecated and will 
+be removed in Prisma 7. Please migrate to a Prisma config file (e.g., 
+`prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "postgres", schema "public" at "aws-1-us-east-1.pooler.supabase.com:5432"
+
+6 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+  console.warn
+    [CPI-005] BRECHA DOCUMENTADA: El sistema permite transacciones en estaciones inactivas. Requiere validaci├│n en registrarTransaccion().
+
+      71 |              */
+      72 |             if (response.status === 201) {
+    > 73 |                 console.warn(
+         |                         ^
+      74 |                     '[CPI-005] BRECHA DOCUMENTADA: El sistema permite transacciones ' +
+      75 |                     'en estaciones inactivas. Requiere validaci├│n en registrarTransaccion().'
+      76 |                 );
+
+      at Object.<anonymous> (tests/integration/cpi.acceso.integration.test.ts:73:25)
+
+PASS tests/integration/cpi.acceso.integration.test.ts (51.385 s)
+  CPI ÔÇö UC-01/UC-02 con UC-07/UC-09: Control de Acceso y Estado de Estaciones
+    CPI-005: Comportamiento de UC-01 con Estaci├│n Inactiva
+      ÔêÜ Paso 3: El administrador puede actualizar datos de una estaci├│n 
+v├¡a PUT /api/actores/estaciones/:id (3059 ms)
+      ÔêÜ Paso 2: Registrar transacci├│n con estaci├│n inactiva ÔÇö documenta 
+comportamiento actual del sistema (4256 ms)
+      ÔêÜ Paso 4: Reactivar la estaci├│n (activa = true) permite transacciones 
+nuevamente (3604 ms)
+    CPI-006: Control de Acceso por Roles en Historial de Consumos
+      ÔêÜ Usuario sin permisos recibe 403 al consultar GET 
+/api/inventario/transacciones (1204 ms)
+      ÔêÜ Usuario con inventario:leer accede correctamente al historial (2284 
+ms)
+      ÔêÜ Filtro por estacionId solo retorna transacciones de esa estaci├│n 
+(1894 ms)
+      ÔêÜ Solicitud sin token retorna 401 (1199 ms)
+      ÔêÜ Usuario sin auditoria:leer recibe 403 al consultar GET 
+/api/auditoria (1180 ms)
+    CPI-010: Verificaci├│n de Permisos en Administraci├│n de Estaciones
+      ÔêÜ Paso 1: Usuario sin actores:escribir recibe 403 al intentar crear 
+una estaci├│n (1182 ms)
+      ÔêÜ Paso 2: Administrador puede crear una nueva estaci├│n con datos 
+v├ílidos (4437 ms)
+      ÔêÜ Paso 4: Crear estaci├│n con NIT duplicado retorna error de 
+integridad (1561 ms)
+      ÔêÜ Solicitud sin token recibe 401 al intentar crear una estaci├│n (1183 
+ms)
+
+  console.log
+    [dotenv@17.3.1] injecting env (0) from .env -- tip: ÔÜÖ´©Å  suppress all logs with { quiet: true }
+
+      at _log (node_modules/.pnpm/dotenv@17.3.1/node_modules/dotenv/lib/main.js:139:11)
+
+warn The configuration property `package.json#prisma` is deprecated and will 
+be removed in Prisma 7. Please migrate to a Prisma config file (e.g., 
+`prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "postgres", schema "public" at "aws-1-us-east-1.pooler.supabase.com:5432"
+
+6 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+PASS tests/integration/cpi.precios-reportes.integration.test.ts (42.508 s)
+  CPI ÔÇö UC-03/UC-08 con UC-01: Precios Configurados y Reportes
+    CPI-007: Coherencia de Datos en Reportes (UC-03 Ôåö UC-01)
+      ÔêÜ POST /api/reportes genera un reporte TRANSACCIONES y retorna 200/201 
+(2523 ms)
+      ÔêÜ GET /api/reportes lista los reportes generados con paginaci├│n (2224 
+ms)
+      ÔêÜ El reporte INVENTARIO tambi├®n puede ser generado correctamente 
+(2667 ms)
+      ÔêÜ Usuario sin reportes:generar recibe 403 al intentar generar un 
+reporte (1246 ms)
+    CPI-009: Aplicaci├│n de Par├ímetros de Precio Configurados (UC-08 Ôåö 
+UC-01)
+      ÔêÜ Paso 2: La transacci├│n usa el precioGalon configurado (9500 
+COP/gal├│n) (3702 ms)
+      ÔêÜ Paso 3-4: Cambiar precio en UC-08 aplica el nuevo valor en 
+transacciones posteriores (4925 ms)
+      ÔêÜ Los registros hist├│ricos conservan el precio original (no se 
+actualizan retroactivamente) (4220 ms)
+
+  console.log
+    [dotenv@17.3.1] injecting env (0) from .env -- tip: ­ƒøí´©Å auth for agents: https://vestauth.com
+
+      at _log (node_modules/.pnpm/dotenv@17.3.1/node_modules/dotenv/lib/main.js:139:11)
+
+warn The configuration property `package.json#prisma` is deprecated and will 
+be removed in Prisma 7. Please migrate to a Prisma config file (e.g., 
+`prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "postgres", schema "public" at "aws-1-us-east-1.pooler.supabase.com:5432"
+
+6 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+PASS tests/integration/cpi.auditoria.integration.test.ts (41.671 s)
+  CPI ÔÇö UC-01/UC-05 con UC-06: Trazabilidad y Auditor├¡a
+    CPI-004: Auditor├¡a Generada Tras Registro Exitoso
+      ÔêÜ Cada transacci├│n exitosa genera exactamente un log de auditor├¡a 
+nuevo (4502 ms)
+      ÔêÜ El log contiene datosAntes (nivelTanqueAntes) y datosDespues con 
+trazabilidad completa (4114 ms)
+      ÔêÜ Una transacci├│n rechazada por Zod NO genera entrada de auditor├¡a 
+(2156 ms)
+    CPI-008: Auditor├¡a de Operaciones de Validaci├│n (UC-05 Ôåö UC-06)
+      ÔêÜ Transacci├│n inv├ílida NO genera log; transacci├│n v├ílida S├ì 
+genera exactamente un log (4951 ms)
+      ÔêÜ El log de auditor├¡a es inmutable: no existe endpoint DELETE 
+/api/auditoria/:id (1654 ms)
+      ÔêÜ El cierre de turno tambi├®n genera un log de auditor├¡a con acci├│n 
+CIERRE_TURNO (3198 ms)
+
+  console.log
+    [dotenv@17.3.1] injecting env (0) from .env -- tip: ÔÜÖ´©Å  specify custom .env file path with { path: '/custom/path/.env' }
+
+      at _log (node_modules/.pnpm/dotenv@17.3.1/node_modules/dotenv/lib/main.js:139:11)
+
+warn The configuration property `package.json#prisma` is deprecated and will 
+be removed in Prisma 7. Please migrate to a Prisma config file (e.g., 
+`prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "postgres", schema "public" at "aws-1-us-east-1.pooler.supabase.com:5432"
+
+6 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+PASS tests/integration/cpi.registro.integration.test.ts (47.128 s)
+  CPI ÔÇö UC-01 con UC-05: Registro de Consumo y Validaci├│n
+    CPI-001: Registro de Consumo con Validaci├│n Exitosa
+      ÔêÜ Paso 1-3: POST con datos v├ílidos retorna 201 y descuenta el 
+inventario del tanque (4094 ms)
+      ÔêÜ Paso 4: El log de auditor├¡a registra la transacci├│n con acci├│n 
+REGISTRAR_TRANSACCION_SALIDA (4808 ms)
+    CPI-002: Registro con Tipo de Servicio o Combustible Inv├ílido
+      ÔêÜ POST con tipoServicio fuera del enum retorna 400 y no crea ninguna 
+transacci├│n (2045 ms)
+      ÔêÜ POST con tipoCombustible inv├ílido retorna 400 (1261 ms)
+      ÔêÜ POST sin tipoServicio retorna 400 (1230 ms)
+    CPI-003: Registro con Volumen Fuera de Rango
+      ÔêÜ POST con galones negativos retorna 400 (Zod: positive) (1240 ms)
+      ÔêÜ POST con galones = 0 retorna 400 (Zod: positive) (1229 ms)
+      ÔêÜ POST con galones que exceden el stock disponible retorna error de 
+negocio (1636 ms)
+
+  console.log
+    [dotenv@17.3.1] injecting env (0) from .env -- tip: ­ƒöÉ prevent building .env in docker: https://dotenvx.com/prebuild
+
+      at _log (node_modules/.pnpm/dotenv@17.3.1/node_modules/dotenv/lib/main.js:139:11)
+
+warn The configuration property `package.json#prisma` is deprecated and will 
+be removed in Prisma 7. Please migrate to a Prisma config file (e.g., 
+`prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "postgres", schema "public" at "aws-1-us-east-1.pooler.supabase.com:5432"
+
+6 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+PASS tests/integration/inventario.integration.test.ts (33.462 s)
+  Inventario Integration Tests
+    ÔêÜ registra una entrega y aumenta el nivel del tanque tras confirmarla 
+(7936 ms)
+    ÔêÜ registra una salida y avisa cuando el tanque cae al m├¡nimo operativo 
+(4995 ms)
+    ÔêÜ realiza cierre de turno y ajusta el nivel f├¡sico del tanque (3619 ms)
+
+  console.log
+    [dotenv@17.3.1] injecting env (0) from .env -- tip: ­ƒöÉ encrypt with Dotenvx: https://dotenvx.com
+
+      at _log (node_modules/.pnpm/dotenv@17.3.1/node_modules/dotenv/lib/main.js:139:11)
+
+warn The configuration property `package.json#prisma` is deprecated and will 
+be removed in Prisma 7. Please migrate to a Prisma config file (e.g., 
+`prisma.config.ts`).
+For more information, see: https://pris.ly/prisma-config
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "postgres", schema "public" at "aws-1-us-east-1.pooler.supabase.com:5432"
+
+6 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+PASS tests/integration/consumos.integration.test.ts (27.148 s)
+  Consumos Integration Tests (TC-01)
+    POST /api/inventario/transacciones
+      ÔêÜ TC-01: Deber├¡a registrar un consumo exitosamente (3016 ms)
+
+Test Suites: 7 passed, 7 total
+Tests:       43 passed, 43 total
+Snapshots:   0 total
+Time:        268.298 s
+Ran all test suites matching tests/integration.

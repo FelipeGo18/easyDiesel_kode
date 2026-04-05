@@ -8,6 +8,13 @@ describe('Auth Integration Tests', () => {
     let refreshToken: string;
 
     beforeAll(async () => {
+        // Limpiar usuario previo si quedó de una ejecución anterior interrumpida
+        const existing = await prisma.usuario.findUnique({ where: { email: 'admin-integration@test.com' } });
+        if (existing) {
+            await prisma.sessionToken.deleteMany({ where: { usuarioId: existing.id } });
+            await prisma.auditoriaLog.deleteMany({ where: { usuarioId: existing.id } });
+            await prisma.usuario.delete({ where: { id: existing.id } });
+        }
         // Crear un usuario administrador para las pruebas
         const passwordHash = await bcrypt.hash('AdminPassword123!', 10);
         adminUser = await prisma.usuario.create({
@@ -26,7 +33,9 @@ describe('Auth Integration Tests', () => {
     });
 
     afterAll(async () => {
-        // Limpiar la base de datos
+        // Limpiar la base de datos respetando FK: sessions y auditoria primero
+        await prisma.sessionToken.deleteMany({ where: { usuarioId: adminUser.id } });
+        await prisma.auditoriaLog.deleteMany({ where: { usuarioId: adminUser.id } });
         await prisma.usuario.delete({ where: { id: adminUser.id } });
         await prisma.$disconnect();
     });

@@ -181,6 +181,8 @@ export async function teardownCpiContext(ctx: CpiContext): Promise<void> {
     await prisma.precioVigente.deleteMany({ where: { decretoId: ctx.decretoId } });
     await prisma.decretoNormativo.delete({ where: { id: ctx.decretoId } });
     await prisma.zonaDistribucion.delete({ where: { id: ctx.zonaId } });
+    await prisma.auditoriaLog.deleteMany({ where: { usuarioId: ctx.noPermsUserId } });
+    await prisma.reporte.deleteMany({ where: { generadoPor: ctx.noPermsUserId } });
     await prisma.sessionToken.deleteMany({ where: { usuarioId: ctx.userId } });
     await prisma.sessionToken.deleteMany({ where: { usuarioId: ctx.noPermsUserId } });
     await prisma.usuario.delete({ where: { id: ctx.userId } });

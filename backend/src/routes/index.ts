@@ -11,7 +11,7 @@ import decretoRouter from './decreto.routes';
 import auditoriaRouter from './auditoria.routes';
 import reporteRouter from './reporte.routes';
 import dashboardRouter from './dashboard.routes';
-import { auth, can } from '../middleware/auth';
+import { auth, can, resolveOwnership } from '../middleware/auth';
 
 const router = Router();
 
@@ -21,6 +21,7 @@ router.use('/publico', publicoRouter);
 
 // Rutas Protegidas (todas las siguientes requieren estar autenticado)
 router.use(auth);
+router.use(resolveOwnership);
 
 // Modulo 2: Usuarios y Actores
 router.use('/usuarios', can('usuarios:leer', 'usuarios:escribir'), usuarioRouter);

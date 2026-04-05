@@ -4,14 +4,14 @@ const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     admin: [
         'usuarios:leer', 'usuarios:escribir', 'actores:leer', 'actores:escribir', 'tanques:leer', 'tanques:escribir',
         'inventario:leer', 'inventario:escribir', 'zonas:leer', 'zonas:escribir', 'precios:leer', 'precios:escribir',
-        'decretos:leer', 'decretos:escribir', 'auditoria:leer', 'reportes:leer', 'reportes:generar', 'panel:leer', 'estadisticas:leer',
+        'decretos:leer', 'decretos:escribir', 'auditoria:leer', 'reportes:leer', 'reportes:generar', 'dashboard:leer', 'panel:leer', 'estadisticas:leer',
     ],
-    estacion: ['actores:leer', 'tanques:leer', 'tanques:escribir', 'inventario:leer', 'inventario:escribir', 'precios:leer', 'decretos:leer', 'auditoria:leer', 'reportes:leer', 'reportes:generar', 'panel:leer', 'estadisticas:leer'],
-    distribuidor: ['actores:leer', 'inventario:leer', 'inventario:escribir', 'precios:leer', 'decretos:leer', 'auditoria:leer', 'reportes:leer', 'reportes:generar', 'panel:leer', 'estadisticas:leer'],
-    regulador: ['precios:leer', 'zonas:leer', 'decretos:leer', 'reportes:leer', 'reportes:generar', 'panel:leer', 'auditoria:leer', 'estadisticas:leer', 'actores:leer'],
-    auditor: ['auditoria:leer', 'reportes:leer', 'reportes:generar', 'panel:leer', 'estadisticas:leer'],
-    particular: ['precios:leer', 'panel:leer', 'estadisticas:leer'],
-    distribuidor_regulado: ['inventario:leer', 'inventario:escribir', 'precios:leer', 'decretos:leer', 'auditoria:leer', 'reportes:leer', 'reportes:generar', 'panel:leer', 'estadisticas:leer'],
+    estacion: ['actores:leer', 'tanques:leer', 'tanques:escribir', 'inventario:leer', 'inventario:escribir', 'precios:leer', 'decretos:leer', 'auditoria:leer', 'reportes:leer', 'reportes:generar', 'dashboard:leer', 'panel:leer', 'estadisticas:leer'],
+    distribuidor: ['actores:leer', 'inventario:leer', 'inventario:escribir', 'precios:leer', 'decretos:leer', 'auditoria:leer', 'reportes:leer', 'reportes:generar', 'dashboard:leer', 'panel:leer', 'estadisticas:leer'],
+    regulador: ['precios:leer', 'zonas:leer', 'decretos:leer', 'reportes:leer', 'reportes:generar', 'panel:leer', 'auditoria:leer', 'estadisticas:leer', 'actores:leer', 'dashboard:leer'],
+    auditor: ['auditoria:leer', 'reportes:leer', 'reportes:generar', 'panel:leer', 'estadisticas:leer', 'dashboard:leer'],
+    particular: ['precios:leer', 'decretos:leer', 'dashboard:leer', 'panel:leer', 'estadisticas:leer'],
+    distribuidor_regulado: ['inventario:leer', 'inventario:escribir', 'precios:leer', 'decretos:leer', 'auditoria:leer', 'reportes:leer', 'reportes:generar', 'dashboard:leer', 'panel:leer', 'estadisticas:leer'],
 };
 
 function unique(values: string[]) {

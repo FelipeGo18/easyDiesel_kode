@@ -2,12 +2,15 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { hasAnyPermission, normalizePermissions } from '../utils/permissions';
 import { getJwtSecret } from '../config/security';
+import { prisma } from '../utils/prisma';
 
 interface JwtPayload {
     userId: string;
     email: string;
     rol: string;
     permisos?: string[];
+    estacionId?: string;
+    distribuidorId?: string;
 }
 
 // Extiende el tipo Request para incluir el usuario autenticado
@@ -80,3 +83,54 @@ export const can = (...requiredPermisos: string[]) => {
         next();
     };
 };
+
+/**
+ * Middleware que resuelve estacionId / distribuidorId del usuario autenticado
+ * y los inyecta en req.user para que los controllers puedan hacer data-isolation.
+ */
+export const resolveOwnership = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
+    if (!req.user || req.user.rol === 'admin') return next();
+
+    const rolesConRelacion = ['estacion', 'distribuidor', 'distribuidor_regulado'];
+    if (!rolesConRelacion.includes(req.user.rol)) return next();
+
+    try {
+        const usuario = await prisma.usuario.findUnique({
+            where: { id: req.user.userId },
+            select: {
+                estacionGestionada: { select: { id: true } },
+                distribuidorGestionado: { select: { id: true } },
+            },
+        });
+        req.user.estacionId = usuario?.estacionGestionada?.id;
+        req.user.distribuidorId = usuario?.distribuidorGestionado?.id;
+    } catch { /* si falla el lookup se deja sin dato, el controller rechazará */ }
+    next();
+};
+
+/**
+ * Helpers de aislamiento de datos para usar dentro de controllers.
+ * Validan que el recurso solicitado pertenezca al usuario.
+ */
+export function assertEstacionOwnership(req: Request, requestedEstacionId?: string): void {
+    if (!req.user || req.user.rol === 'admin' || req.user.rol === 'regulador' || req.user.rol === 'auditor') return;
+    if (req.user.rol === 'estacion' && req.user.estacionId && requestedEstacionId) {
+        if (req.user.estacionId !== requestedEstacionId) {
+            const err: any = new Error('No tienes acceso a esta estación');
+            err.statusCode = 403;
+            throw err;
+        }
+    }
+}
+
+export function assertDistribuidorOwnership(req: Request, requestedDistribuidorId?: string): void {
+    if (!req.user || req.user.rol === 'admin' || req.user.rol === 'regulador' || req.user.rol === 'auditor') return;
+    const distribuidorRoles = ['distribuidor', 'distribuidor_regulado'];
+    if (distribuidorRoles.includes(req.user.rol) && req.user.distribuidorId && requestedDistribuidorId) {
+        if (req.user.distribuidorId !== requestedDistribuidorId) {
+            const err: any = new Error('No tienes acceso a este distribuidor');
+            err.statusCode = 403;
+            throw err;
+        }
+    }
+}
