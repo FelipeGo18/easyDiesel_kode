@@ -46,23 +46,30 @@ export function PreciosPage() {
     const [vigenciaHasta, setVigenciaHasta] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
+    const canWrite = hasAnyPermission('precios:escribir');
+
     const fetchData = useCallback(async () => {
         try {
             setLoading(true);
-            const [preciosData, zonasData, decretosData] = await Promise.all([
-                preciosService.getAll(),
-                zonasService.getAll(),
-                decretosService.getAll(),
-            ]);
-            setPrecios(preciosData);
-            setZonas(zonasData);
-            setDecretos(decretosData.filter(d => d.activo));
+            if (canWrite) {
+                const [preciosData, zonasData, decretosData] = await Promise.all([
+                    preciosService.getAll(),
+                    zonasService.getAll(),
+                    decretosService.getAll(),
+                ]);
+                setPrecios(preciosData);
+                setZonas(zonasData);
+                setDecretos(decretosData.filter(d => d.activo));
+            } else {
+                const preciosData = await preciosService.getAll();
+                setPrecios(preciosData);
+            }
         } catch (error: unknown) {
             toast.error(getErrorMessage(error, 'Error al cargar datos'));
         } finally {
             setLoading(false);
         }
-    }, [toast]);
+    }, [toast, canWrite]);
 
     useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -194,7 +201,7 @@ export function PreciosPage() {
                 )}
             </div>
 
-            {(zonas.length === 0 || decretos.length === 0) && !loading && (
+            {canWrite && (zonas.length === 0 || decretos.length === 0) && !loading && (
                 <div className="px-4 py-3 mb-4 bg-amber-dim border border-amber-500/20 rounded-brand">
                     <p className="text-[12px] text-amber-500 font-sans">
                         Debes crear al menos una <strong>zona</strong> y un <strong>decreto</strong> antes de agregar precios.
