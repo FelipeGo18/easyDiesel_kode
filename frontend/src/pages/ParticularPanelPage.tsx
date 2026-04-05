@@ -10,6 +10,12 @@ import { getErrorMessage } from '@/lib/http';
 import api from '@/services/api';
 import type { TransaccionCombustible } from '@/types';
 
+/** Shape returned by GET /publico/transacciones (select‑only, includes relation) */
+interface PublicTransaction extends Pick<TransaccionCombustible, 'id' | 'tipo' | 'tipoCombustible' | 'tipoServicio' | 'galones' | 'precioUnitario' | 'precioTotal' | 'placaVehiculo' | 'estado'> {
+    createdAt: string;
+    estacion?: { id: string; nombre: string; ciudad?: string };
+}
+
 function formatCurrency(value: number) {
     return new Intl.NumberFormat('es-CO', {
         style: 'currency',
@@ -34,7 +40,7 @@ export function ParticularPanelPage() {
     const toast = useToast();
     const [placa, setPlaca] = useState('');
     const [inputPlaca, setInputPlaca] = useState('');
-    const [transactions, setTransactions] = useState<TransaccionCombustible[]>([]);
+    const [transactions, setTransactions] = useState<PublicTransaction[]>([]);
     const [loading, setLoading] = useState(false);
     const [searched, setSearched] = useState(false);
 
@@ -52,7 +58,7 @@ export function ParticularPanelPage() {
         setSearched(true);
         setPlaca(normalized);
         try {
-            const res = await api.get<any>('/publico/transacciones', { params: { placaVehiculo: normalized, limit: 50 } });
+            const res = await api.get<{ data: PublicTransaction[] }>('/publico/transacciones', { params: { placaVehiculo: normalized, limit: 50 } });
             setTransactions(res.data.data ?? []);
         } catch (error: unknown) {
             toast.error(getErrorMessage(error, 'No fue posible consultar el historial'));
@@ -171,14 +177,14 @@ export function ParticularPanelPage() {
                                     {transactions.map(t => (
                                         <tr key={t.id} className="hover:bg-bg-elevated/40 transition-colors">
                                             <td className="px-4 py-3 font-mono text-text-muted">
-                                                {new Date((t as any).createdAt ?? t.fecha).toLocaleDateString('es-CO', {
+                                                {new Date(t.createdAt).toLocaleDateString('es-CO', {
                                                     year: 'numeric', month: 'short', day: 'numeric',
                                                 })}
                                             </td>
                                             <td className="px-4 py-3 text-text-primary">
-                                                {(t as any).estacion?.nombre ?? '—'}
-                                                {(t as any).estacion?.ciudad && (
-                                                    <span className="ml-1 text-text-muted">{(t as any).estacion.ciudad}</span>
+                                                {t.estacion?.nombre ?? '—'}
+                                                {t.estacion?.ciudad && (
+                                                    <span className="ml-1 text-text-muted">{t.estacion.ciudad}</span>
                                                 )}
                                             </td>
                                             <td className="px-4 py-3">

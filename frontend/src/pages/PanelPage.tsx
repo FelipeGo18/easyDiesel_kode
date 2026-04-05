@@ -43,7 +43,7 @@ export function PanelPage() {
         } finally {
             setLoading(false);
         }
-    }, [toast]);
+    }, [roleName, toast]);
 
     useEffect(() => {
         fetchData();
@@ -274,7 +274,7 @@ export function PanelPage() {
                                 ))}
                             </div>
                             <div className="p-4 bg-bg-elevated/20 border-t border-border-subtle text-center">
-                                <button className="text-[10px] font-bold text-blue-500 uppercase tracking-widest hover:underline">Ver bitácora completa</button>
+                                <button onClick={() => navigate('/auditoria')} className="text-[10px] font-bold text-blue-500 uppercase tracking-widest hover:underline">Ver bitácora completa</button>
                             </div>
                         </Card>
                     </div>

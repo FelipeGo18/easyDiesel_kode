@@ -19,9 +19,8 @@ export function Sidebar() {
     const { user, logout } = useAuth();
     const { hasAnyPermission } = useAccess();
     const location = useLocation();
-    const userRoleName: string = typeof (user as any)?.rol === 'string'
-        ? (user as any).rol
-        : (user as any)?.rol?.nombre ?? '';
+    const rol = user?.rol;
+    const userRoleName: string = typeof rol === 'string' ? rol : rol?.nombre ?? '';
     const navItems = navigationRoutes.filter((route) => {
         if (route.excludeRoles?.includes(userRoleName)) return false;
         return hasAnyPermission(...(route.requiredPermissions || []));

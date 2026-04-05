@@ -56,7 +56,7 @@ export function StationOperationsPage() {
     const [pricesData, setPricesData] = useState<{ particular: PrecioActual[], publico: PrecioActual[] }>({ particular: [], publico: [] });
     const [pricesLoading, setPricesLoading] = useState(false);
     const [activeTarifa, setActiveTarifa] = useState<'PARTICULAR' | 'PUBLICO'>('PARTICULAR');
-    const [_priceError, setPriceError] = useState<string | null>(null);
+    const [priceError, setPriceError] = useState<string | null>(null);
     const [pendingDeliveries, setPendingDeliveries] = useState<EntregaDistribuidor[]>([]);
     const [confirmDeliveryOpen, setConfirmDeliveryOpen] = useState(false);
     const [selectedDelivery, setSelectedDelivery] = useState<EntregaDistribuidor | null>(null);
@@ -489,6 +489,16 @@ export function StationOperationsPage() {
         }
     };
 
+    if (!stationId) {
+        return (
+            <div className="flex flex-col items-center justify-center h-[60vh] gap-4 text-text-muted">
+                <Fuel className="w-10 h-10 opacity-30" />
+                <p className="text-small">Tu cuenta de estación aún no tiene una estación asignada.</p>
+                <p className="text-[11px] font-mono opacity-60">Contacta al administrador del sistema.</p>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-8 animate-enter pb-12 max-w-[1440px] mx-auto">
             {/* ── Header Pro Max Estación ── */}
@@ -672,7 +682,7 @@ export function StationOperationsPage() {
                                         <div className="flex rounded-2xl border border-border-subtle bg-bg-base p-1.5 shadow-inner">
                                             <button
                                                 type="button"
-                                                onClick={() => setInputMode('PRECIO')}
+                                                onClick={() => { setInputMode('PRECIO'); setForm(prev => ({ ...prev, galones: '' })); }}
                                                 className={`flex-1 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 ${
                                                     inputMode === 'PRECIO' 
                                                         ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' 
@@ -683,7 +693,7 @@ export function StationOperationsPage() {
                                             </button>
                                             <button
                                                 type="button"
-                                                onClick={() => setInputMode('GALONES')}
+                                                onClick={() => { setInputMode('GALONES'); setForm(prev => ({ ...prev, precioTotalInput: '' })); }}
                                                 className={`flex-1 rounded-xl px-4 py-2 text-xs font-bold transition-all duration-300 ${
                                                     inputMode === 'GALONES' 
                                                         ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' 
@@ -739,6 +749,13 @@ export function StationOperationsPage() {
                                     </div>
                                 </div>
                             </div>
+
+                            {priceError && (
+                                <div className="flex items-center gap-3 rounded-2xl border border-red-500/30 bg-red-500/5 px-4 py-3">
+                                    <ShieldAlert size={16} className="text-red-500 shrink-0" />
+                                    <p className="text-xs text-red-400 font-medium">{priceError}</p>
+                                </div>
+                            )}
 
                             <div className="relative overflow-hidden rounded-[24px] bg-bg-elevated/40 border border-border-subtle p-1 shadow-inner">
                                 <div className="absolute top-0 right-0 p-4 opacity-5">

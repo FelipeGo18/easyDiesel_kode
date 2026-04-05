@@ -326,7 +326,7 @@ export function ReguladorPanelPage() {
                                                     </td>
                                                 </tr>
                                             ) : (
-                                                preciosFiltrados.slice(0, 8).map(p => (
+                                                preciosFiltrados.map(p => (
                                                     <tr key={p.id} className="hover:bg-bg-elevated/30 transition-all duration-200 group">
                                                         <td className="px-6 py-4">
                                                             <p className="font-bold text-text-primary group-hover:text-amber-500 transition-colors">{p.zona?.nombre}</p>
@@ -354,7 +354,7 @@ export function ReguladorPanelPage() {
                                 </div>
                                 <div className="px-6 py-4 bg-bg-elevated/20 border-t border-border-subtle flex justify-between items-center">
                                     <p className="text-[10px] text-text-muted">Sincronizado con base de datos ministerial · Última actualización: {new Date().toLocaleDateString()}</p>
-                                    <button className="text-[10px] font-bold text-amber-500 uppercase tracking-wider hover:underline">Ver todos los precios</button>
+                                    <button onClick={() => navigate('/precios')} className="text-[10px] font-bold text-amber-500 uppercase tracking-wider hover:underline">Ver todos los precios</button>
                                 </div>
                             </Card>
 
@@ -420,7 +420,7 @@ export function ReguladorPanelPage() {
                                                     <span className="text-[9px] text-text-muted uppercase font-bold tracking-widest">Vigencia</span>
                                                     <span className="text-[11px] text-text-primary font-mono">{new Date(d.fechaVigencia).toLocaleDateString()}</span>
                                                 </div>
-                                                <button className="p-2 bg-sky-500/10 rounded-lg text-sky-500 hover:bg-sky-500 hover:text-white transition-all shadow-sm">
+                                                <button onClick={() => navigate(`/decretos/${d.id}`)} className="p-2 bg-sky-500/10 rounded-lg text-sky-500 hover:bg-sky-500 hover:text-white transition-all shadow-sm">
                                                     <Download size={14} />
                                                 </button>
                                             </div>

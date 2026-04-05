@@ -62,10 +62,13 @@ export function AuditorPanelPage() {
                 l.modulo === 'AUTH' && l.accion.includes('LOGIN_FAIL')
             ).length;
 
+            // Derive unique active users from the log entries instead of hardcoding
+            const uniqueUsers = new Set(logs.map((l: any) => l.usuario?.id ?? l.usuario?.nombre).filter(Boolean));
+
             setSummary({
                 totalLogs: response.data.pagination?.total || logs.length,
-                logsUltimas24h: logsHoy || 24, // Fallback si no hay muchos hoy
-                usuariosActivos: 4, // Valor simulado ya que no hay endpoint de sesiones
+                logsUltimas24h: logsHoy,
+                usuariosActivos: uniqueUsers.size,
                 alertasSeguridad: alertas,
                 actividadReciente: logs.slice(0, 6).map((l: any) => ({
                     id: l.id,
