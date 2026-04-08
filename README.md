@@ -286,3 +286,5 @@ Las skills se cargan automáticamente desde `.agents/skills/` según el agente c
 ---
 
 *Universidad Piloto de Colombia · 2026*
+
+Actualización menor de documentación del proyecto.
