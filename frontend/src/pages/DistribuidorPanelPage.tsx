@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Building2, Fuel, PackageCheck, PackagePlus, Truck } from 'lucide-react';
+import { Building2, Fuel, PackageCheck, PackagePlus, RefreshCw, Truck } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -49,6 +49,7 @@ export function DistribuidorPanelPage() {
     const [submitting, setSubmitting] = useState(false);
     const [canceling, setCanceling] = useState<string | null>(null);
     const [cancelConfirmId, setCancelConfirmId] = useState<string | null>(null);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
     // Form state
     const [form, setForm] = useState({
@@ -115,6 +116,7 @@ export function DistribuidorPanelPage() {
             ]);
             setEntregas(entregasData.data ?? []);
             setEstaciones(estacionesData.data ?? []);
+            setLastUpdated(new Date());
         } catch (error: unknown) {
             toast.error(`Error al cargar datos: ${getErrorMessage(error)}`);
         } finally {
@@ -243,10 +245,23 @@ export function DistribuidorPanelPage() {
                         Panel de operaciones · Registro y seguimiento de entregas
                     </p>
                 </div>
-                <Button onClick={() => setModalOpen(true)}>
-                    <PackagePlus className="w-4 h-4" />
-                    Nueva entrega
-                </Button>
+                <div className="flex items-center gap-3">
+                    {lastUpdated && (
+                        <span className="text-[11px] font-mono text-text-muted">{lastUpdated.toLocaleTimeString()}</span>
+                    )}
+                    <button
+                        onClick={fetchData}
+                        disabled={loading}
+                        className="p-1.5 rounded-md hover:bg-white/10 transition-colors disabled:opacity-50 text-text-muted"
+                        title="Actualizar datos"
+                    >
+                        <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                    </button>
+                    <Button onClick={() => setModalOpen(true)}>
+                        <PackagePlus className="w-4 h-4" />
+                        Nueva entrega
+                    </Button>
+                </div>
             </div>
 
             {/* ── KPIs ── */}
