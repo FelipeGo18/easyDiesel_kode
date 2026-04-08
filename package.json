@@ -24,6 +24,8 @@
     "report": "cd backend && node scripts/generate-integration-report.js"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "docxtemplater": "^3.68.3",
+    "pizzip": "^3.2.0"
   }
 }

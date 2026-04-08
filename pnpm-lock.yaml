@@ -11,8 +11,18 @@ importers:
       concurrently:
         specifier: ^9.1.2
         version: 9.2.1
+      docxtemplater:
+        specifier: ^3.68.3
+        version: 3.68.3
+      pizzip:
+        specifier: ^3.2.0
+        version: 3.2.0
 
 packages:
+
+  '@xmldom/xmldom@0.9.9':
+    resolution: {integrity: sha512-qycIHAucxy/LXAYIjmLmtQ8q9GPnMbnjG1KXhWm9o5sCr6pOYDATkMPiTNa6/v8eELyqOQ2FsEqeoFYmgv/gJg==}
+    engines: {node: '>=14.6'}
 
   ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
@@ -42,6 +52,10 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  docxtemplater@3.68.3:
+    resolution: {integrity: sha512-hTZfGcHgN60A09w68Qj0EQRCnF5kf2/ohFlZlUVqAOozCFwx9QMm8naCTvmTsXafuO3nG9qpS4pQWSjFdaCWfQ==}
+    engines: {node: '>=0.10'}
+
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
 
@@ -60,6 +74,12 @@ packages:
   is-fullwidth-code-point@3.0.0:
     resolution: {integrity: sha512-zymm5+u+sCsSWyD9qNaejV3DFvhCKclKdizYaJUuHA83RLjb7nSuGnddCHGv0hk+KY7BMAlsWeK4Ueg6EV6XQg==}
     engines: {node: '>=8'}
+
+  pako@2.1.0:
+    resolution: {integrity: sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==}
+
+  pizzip@3.2.0:
+    resolution: {integrity: sha512-X4NPNICxCfIK8VYhF6wbksn81vTiziyLbvKuORVAmolvnUzl1A1xmz9DAWKxPRq9lZg84pJOOAMq3OE61bD8IQ==}
 
   require-directory@2.1.1:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
@@ -113,6 +133,8 @@ packages:
 
 snapshots:
 
+  '@xmldom/xmldom@0.9.9': {}
+
   ansi-regex@5.0.1: {}
 
   ansi-styles@4.3.0:
@@ -145,6 +167,10 @@ snapshots:
       tree-kill: 1.2.2
       yargs: 17.7.2
 
+  docxtemplater@3.68.3:
+    dependencies:
+      '@xmldom/xmldom': 0.9.9
+
   emoji-regex@8.0.0: {}
 
   escalade@3.2.0: {}
@@ -154,6 +180,12 @@ snapshots:
   has-flag@4.0.0: {}
 
   is-fullwidth-code-point@3.0.0: {}
+
+  pako@2.1.0: {}
+
+  pizzip@3.2.0:
+    dependencies:
+      pako: 2.1.0
 
   require-directory@2.1.1: {}
 
