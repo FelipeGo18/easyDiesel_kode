@@ -16,11 +16,11 @@ La plataforma permite rastrear el combustible desde el distribuidor mayorista ha
 
 ## 🏗️ Arquitectura
 
-```
-frontend/          React + Vite + TypeScript + Tailwind CSS + shadcn/ui
-backend/           Node.js + Express + TypeScript + Prisma ORM
-                   └── PostgreSQL 16
-```
+| Capa       | Tecnologías                                                    |
+|------------|----------------------------------------------------------------|
+| Frontend   | React · Vite · TypeScript · Tailwind CSS · shadcn/ui          |
+| Backend    | Node.js · Express · TypeScript · Prisma ORM                   |
+| Base de datos | PostgreSQL 16                                              |
 
 El proyecto es un **monorepo** con frontend y backend como proyectos independientes que se despliegan por separado.
 

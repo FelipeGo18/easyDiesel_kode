@@ -10,6 +10,7 @@ import {
     Activity,
     History,
     ShieldAlert,
+    RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { dashboardService, type DashboardSummary, type DashboardAlert, type DashboardRecentOperation } from '@/services/dashboard';
@@ -30,6 +31,7 @@ export function PanelPage() {
     const toast = useToast();
     const [summary, setSummary] = useState<DashboardSummary | null>(null);
     const [loading, setLoading] = useState(true);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
     const fetchData = useCallback(async () => {
         // Roles with dedicated panels don't use this admin dashboard data
@@ -38,6 +40,7 @@ export function PanelPage() {
             setLoading(true);
             const data = await dashboardService.getSummary();
             setSummary(data);
+            setLastUpdated(new Date());
         } catch (error: unknown) {
             toast.error(`Error al cargar resumen: ${getErrorMessage(error)}`);
         } finally {
@@ -121,7 +124,22 @@ export function PanelPage() {
                     </div>
 
                     <div className="flex flex-col gap-2 min-w-[200px]">
-                        <div className="text-[10px] text-text-muted uppercase font-bold tracking-widest mb-1 px-1">Sesión Actual</div>
+                        <div className="flex items-center justify-between px-1 mb-1">
+                            <div className="text-[10px] text-text-muted uppercase font-bold tracking-widest">Sesión Actual</div>
+                            <div className="flex items-center gap-2 text-text-muted">
+                                {lastUpdated && (
+                                    <span className="text-[10px] font-mono">{lastUpdated.toLocaleTimeString()}</span>
+                                )}
+                                <button
+                                    onClick={fetchData}
+                                    disabled={loading}
+                                    className="p-1.5 rounded-md hover:bg-white/10 transition-colors disabled:opacity-50"
+                                    title="Actualizar datos"
+                                >
+                                    <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+                                </button>
+                            </div>
+                        </div>
                         <div className="bg-bg-base p-4 rounded-2xl border border-border-subtle">
                             <p className="text-sm font-bold text-text-primary">{user?.email}</p>
                             <p className="text-[10px] text-text-muted mt-1 font-mono uppercase">{roleName} · {user?.estacion?.nombre || 'Sede Central'}</p>
