@@ -284,7 +284,9 @@ Este proyecto usa skills de IA en `.agents/skills/`. Cada skill es un `SKILL.md`
 Las skills se cargan automáticamente desde `.agents/skills/` según el agente configurado.
 
 ---
+## Actualización de documentación
+
+Este repositorio continúa en proceso de organización y fortalecimiento de su documentación técnica y descriptiva. La presente actualización se realiza con el propósito de mantener la información del proyecto clara, ordenada y alineada con su desarrollo general, sin introducir cambios en la lógica ni en el funcionamiento del sistema.
 
 *Universidad Piloto de Colombia · 2026*
 
-Actualización menor de documentación del proyecto.
