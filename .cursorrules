@@ -1,0 +1,10 @@
+# Reglas del Proyecto EasyDiesel
+
+## Gestión de Dependencias
+- **NUNCA** utilices el signo elevado (`^`) o tilde (`~`) al agregar o actualizar dependencias en los archivos `package.json`.
+- Todas las versiones de las dependencias deben estar **fijadas (pinned)** a una versión exacta (ejemplo: `"express": "5.2.1"` en lugar de `"express": "^5.2.1"`).
+- Esto aplica tanto para `dependencies` como para `devDependencies` en la raíz, frontend y backend.
+
+## Estilo de Código
+- Mantener la consistencia con el sistema de diseño establecido.
+- Seguir las convenciones de TypeScript y React definidas en el proyecto.
