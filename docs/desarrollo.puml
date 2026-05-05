@@ -1,0 +1,36 @@
+@startuml "Vista de Desarrollo - EasyDiesel"
+
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+
+title Vista de Desarrollo - EasyDiesel
+
+package "Capa de Presentación (Frontend)" as UI #E1F5FE {
+    [Vistas React] as Vistas
+    [Componentes UI] as Comp
+    [Hooks/Context] as Context
+}
+
+package "Capa de Aplicación (API REST)" as API #F3E5F5 {
+    [Routes] as Rutas
+    [Controllers] as Controles
+    [Middlewares] as Middle
+}
+
+package "Capa de Dominio (Negocio)" as Dominio #E8F5E9 {
+    [Servicios (Logic)] as Services
+    [Tipos/Interfaces] as Types
+}
+
+package "Capa de Infraestructura (Datos)" as Infra #FFF3E0 {
+    [Prisma Client] as Prisma
+    database "PostgreSQL" as DB
+}
+
+' Relaciones de dependencia real
+UI ..> API : Comunicación HTTP
+API --> Dominio : Orquestación
+Dominio --> Infra : Persistencia de datos
+
+@enduml
