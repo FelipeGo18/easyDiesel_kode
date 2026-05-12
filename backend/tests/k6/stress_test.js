@@ -126,13 +126,13 @@ export default function (data) {
 
         // GET /api/precios/consultar — precio vigente (endpoint público crítico)
         const queryParams = ZONA_ID
-            ? `?zonaId=${ZONA_ID}&tipoCombustible=ACPM&tipoServicio=PARTICULAR`
+            ? `?zonaId=${ZONA_ID}&tipoCombustible=GASOLINA_CORRIENTE&tipoServicio=PARTICULAR`
             : null;
 
         if (queryParams) {
             const t2 = http.get(
                 `${BASE_URL}/api/precios/consultar${queryParams}`,
-                { tags: { endpoint: 'consulta' } }
+                { headers, tags: { endpoint: 'consulta' } }
             );
             const ok2 = check(t2, {
                 'GET /precios/consultar → 200': (r) => r.status === 200,
@@ -159,12 +159,11 @@ export default function (data) {
         const payload = JSON.stringify({
             estacionId:     ESTACION_ID,
             tanqueId:       TANQUE_ID,
-            tipoCombustible: 'ACPM',
+            tipoCombustible: 'GASOLINA_CORRIENTE',
             tipoServicio:   'PARTICULAR',
             galones:        10,
-            precioUnitario: 12500,
+            precioUnitario: 11349,
             placaVehiculo:  `TEST-${Math.floor(Math.random() * 9000) + 1000}`,
-            subsidioAplicado: false,
         });
 
         const res = http.post(
