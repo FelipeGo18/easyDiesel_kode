@@ -35,7 +35,7 @@ describe('Auditoria Service', () => {
             expect(prisma.auditoriaLog.create).toHaveBeenCalledWith({
                 data: expect.objectContaining({
                     usuarioId: mockData.usuarioId,
-                    modulo: mockData.modulo,
+                    modulo: 'AUTH',
                     accion: mockData.accion,
                     entidad: mockData.entidad,
                 })

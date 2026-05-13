@@ -15,7 +15,7 @@ describe('Precio Controller', () => {
     let mockResponse: Partial<Response>;
 
     beforeEach(() => {
-        mockRequest = { params: {}, body: {}, query: {} };
+        mockRequest = { params: {}, body: {}, query: {}, ip: '127.0.0.1', get: jest.fn().mockReturnValue('test-agent') };
         mockResponse = { status: jest.fn().mockReturnThis(), json: jest.fn() };
     });
 

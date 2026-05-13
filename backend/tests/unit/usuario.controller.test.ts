@@ -19,7 +19,9 @@ describe('Usuario Controller', () => {
         mockRequest = {
             params: {},
             body: {},
-            query: {}
+            query: {},
+            ip: '127.0.0.1',
+            get: jest.fn().mockReturnValue('test-agent'),
         };
         mockResponse = {
             status: jest.fn().mockReturnThis(),
