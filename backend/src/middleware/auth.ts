@@ -94,6 +94,11 @@ export const resolveOwnership = async (req: Request, _res: Response, next: NextF
     const rolesConRelacion = ['estacion', 'distribuidor', 'distribuidor_regulado'];
     if (!rolesConRelacion.includes(req.user.rol)) return next();
 
+    // Si el token ya transporta el ownership id, no hace falta consultar la DB.
+    if (req.user.estacionId || req.user.distribuidorId) {
+        return next();
+    }
+
     try {
         const usuario = await prisma.usuario.findUnique({
             where: { id: req.user.userId },

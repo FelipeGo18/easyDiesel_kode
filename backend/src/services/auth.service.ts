@@ -34,8 +34,12 @@ function buildAuthPayload(usuario: {
     nombre: string;
     fotoUrl?: string | null;
     rol: { nombre: string; permisos?: unknown };
+    estacionGestionada?: { id: string } | null;
+    distribuidorGestionado?: { id: string } | null;
 }) {
     const permisos = normalizePermissions(usuario.rol.nombre, usuario.rol.permisos);
+    const estacionId = usuario.estacionGestionada?.id ?? null;
+    const distribuidorId = usuario.distribuidorGestionado?.id ?? null;
 
     return {
         tokenPayload: {
@@ -43,6 +47,8 @@ function buildAuthPayload(usuario: {
             email: usuario.email,
             rol: usuario.rol.nombre,
             permisos,
+            estacionId,
+            distribuidorId,
         },
         usuario: {
             id: usuario.id,
@@ -51,11 +57,13 @@ function buildAuthPayload(usuario: {
             rol: usuario.rol.nombre,
             fotoUrl: usuario.fotoUrl,
             permisos,
+            estacion: usuario.estacionGestionada ?? null,
+            distribuidor: usuario.distribuidorGestionado ?? null,
         },
     };
 }
 
-function signToken(payload: { userId: string; email: string; rol: string; permisos?: string[] }): string {
+function signToken(payload: { userId: string; email: string; rol: string; permisos?: string[]; estacionId?: string | null; distribuidorId?: string | null }): string {
     const secret = getJwtSecret();
     const expiresIn = process.env.JWT_EXPIRES_IN || '8h';
     return jwt.sign(payload, secret, { expiresIn } as jwt.SignOptions);
@@ -86,6 +94,8 @@ export class AuthService {
             nombre: string;
             fotoUrl?: string | null;
             rol: { nombre: string; permisos?: unknown };
+            estacionGestionada?: { id: string; nombre?: string; codigoSicom?: string; zonaId?: string } | null;
+            distribuidorGestionado?: { id: string; nombre?: string; nit?: string } | null;
         },
         metadata?: SessionMetadata
     ) {
@@ -103,11 +113,12 @@ export class AuthService {
             },
         });
 
-        // Fetch estacion/distribuidor for roles that need them
+        // Fetch estacion/distribuidor for roles that need them only when they are not already available
         const rolesThatNeedRelations = ['estacion', 'distribuidor', 'distribuidor_regulado'];
-        let estacion = null;
-        let distribuidor = null;
-        if (rolesThatNeedRelations.includes(session.usuario.rol as string)) {
+        let estacion = usuario.estacionGestionada ?? null;
+        let distribuidor = usuario.distribuidorGestionado ?? null;
+
+        if (rolesThatNeedRelations.includes(session.usuario.rol as string) && !estacion && !distribuidor) {
             const fullUser = await prisma.usuario.findUnique({
                 where: { id: usuario.id },
                 select: {
@@ -200,7 +211,11 @@ export class AuthService {
         // Buscar usuario
         const usuario = await prisma.usuario.findUnique({
             where: { email: data.email },
-            include: { rol: true },
+            include: {
+                rol: true,
+                estacionGestionada: { select: { id: true, nombre: true, codigoSicom: true, zonaId: true } },
+                distribuidorGestionado: { select: { id: true, nombre: true, nit: true } },
+            },
         });
 
         if (!usuario) {
@@ -252,7 +267,11 @@ export class AuthService {
     async loginWithGoogle(data: { email: string; nombre: string; googleId: string; fotoUrl?: string }, metadata?: SessionMetadata) {
         let usuario = await prisma.usuario.findUnique({
             where: { email: data.email },
-            include: { rol: true },
+            include: {
+                rol: true,
+                estacionGestionada: { select: { id: true, nombre: true, codigoSicom: true, zonaId: true } },
+                distribuidorGestionado: { select: { id: true, nombre: true, nit: true } },
+            },
         });
 
         if (usuario) {
@@ -270,7 +289,11 @@ export class AuthService {
                         authProvider: 'GOOGLE',
                         fotoUrl: data.fotoUrl || usuario.fotoUrl,
                     },
-                    include: { rol: true },
+                    include: {
+                        rol: true,
+                        estacionGestionada: { select: { id: true, nombre: true, codigoSicom: true, zonaId: true } },
+                        distribuidorGestionado: { select: { id: true, nombre: true, nit: true } },
+                    },
                 });
             }
         } else {
@@ -291,7 +314,11 @@ export class AuthService {
                     fotoUrl: data.fotoUrl,
                     rolId: defaultRol.id,
                 },
-                include: { rol: true },
+                include: {
+                    rol: true,
+                    estacionGestionada: { select: { id: true, nombre: true, codigoSicom: true, zonaId: true } },
+                    distribuidorGestionado: { select: { id: true, nombre: true, nit: true } },
+                },
             });
 
             // Auditoría: Registro por Google
@@ -367,7 +394,11 @@ export class AuthService {
             where: { tokenHash },
             include: {
                 usuario: {
-                    include: { rol: true },
+                    include: {
+                        rol: true,
+                        estacionGestionada: { select: { id: true, nombre: true, codigoSicom: true, zonaId: true } },
+                        distribuidorGestionado: { select: { id: true, nombre: true, nit: true } },
+                    },
                 },
             },
         });
