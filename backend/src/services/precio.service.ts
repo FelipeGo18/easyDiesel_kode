@@ -8,30 +8,69 @@ interface AuditoriaMetadata {
     userAgent?: string;
 }
 
+// Cache simple en memoria para precios vigentes
+interface CacheEntry {
+    data: any[];
+    timestamp: number;
+}
+
+const preciosCache: Map<string, CacheEntry> = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
 export class PrecioService {
     /**
      * Obtener precios vigentes, opcionalmente filtrando por zona y tipo de combustible.
+     * Usa cache en memoria para mejorar rendimiento.
      */
     async obtenerPrecios(filtros?: { zonaId?: string; tipoCombustible?: string; soloActivos?: boolean }) {
+        const cacheKey = JSON.stringify(filtros || {});
+        const cached = preciosCache.get(cacheKey);
+
+        if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
+            return cached.data;
+        }
+
         const where: any = {};
         if (filtros?.zonaId) where.zonaId = filtros.zonaId;
         if (filtros?.tipoCombustible) where.tipoCombustible = filtros.tipoCombustible;
         if (filtros?.soloActivos !== false) where.activo = true; // por defecto solo activos
 
-        return prisma.precioVigente.findMany({
+        const data = await prisma.precioVigente.findMany({
             where,
-            include: {
+            select: {
+                id: true,
+                tipoCombustible: true,
+                tipoServicio: true,
+                precioUnitario: true,
+                vigenciaDesde: true,
+                vigenciaHasta: true,
+                activo: true,
                 zona: { select: { nombre: true, tipoZona: true } },
                 decreto: { select: { numero: true, titulo: true } }
             },
             orderBy: { vigenciaDesde: 'desc' }
         });
+
+        preciosCache.set(cacheKey, { data, timestamp: Date.now() });
+        return data;
     }
 
     async obtenerPrecioPorId(id: string) {
         const precio = await prisma.precioVigente.findUnique({
             where: { id },
-            include: { zona: true, decreto: true }
+            select: {
+                id: true,
+                tipoCombustible: true,
+                tipoServicio: true,
+                precioUnitario: true,
+                vigenciaDesde: true,
+                vigenciaHasta: true,
+                activo: true,
+                zonaId: true,
+                decretoId: true,
+                zona: { select: { id: true, nombre: true, tipoZona: true } },
+                decreto: { select: { id: true, numero: true, titulo: true, fechaPublicacion: true } }
+            }
         });
         if (!precio) throw new Error('Precio no encontrado');
         return precio;
@@ -101,6 +140,9 @@ export class PrecioService {
             });
         }
 
+        // Invalidar cache de precios
+        preciosCache.clear();
+
         return nuevoPrecio;
     }
 
@@ -139,6 +181,9 @@ export class PrecioService {
             });
         }
 
+        // Invalidar cache de precios
+        preciosCache.clear();
+
         return precio;
     }
 
@@ -153,9 +198,16 @@ export class PrecioService {
                 zonaId,
                 activo: true
             },
-            include: {
+            select: {
+                id: true,
+                precioUnitario: true,
+                vigenciaDesde: true,
+                vigenciaHasta: true,
                 zona: { select: { nombre: true } },
                 decreto: { select: { numero: true, titulo: true } }
+            },
+            orderBy: { vigenciaDesde: 'desc' }
+        });
             }
         });
 

@@ -241,10 +241,22 @@ export class ReporteService {
     private async datosNormativo() {
         const decretos = await prisma.decretoNormativo.findMany({
             where: { activo: true },
-            include: {
+            select: {
+                id: true,
+                numero: true,
+                titulo: true,
+                fechaExpedicion: true,
+                fechaPublicacion: true,
+                activo: true,
                 precios: {
                     where: { activo: true },
-                    include: { zona: { select: { nombre: true } } },
+                    select: {
+                        id: true,
+                        tipoCombustible: true,
+                        tipoServicio: true,
+                        precioUnitario: true,
+                        zona: { select: { nombre: true } }
+                    }
                 },
             },
             orderBy: { fechaExpedicion: 'desc' },

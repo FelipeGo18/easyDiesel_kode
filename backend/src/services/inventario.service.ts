@@ -10,7 +10,10 @@ export class InventarioService {
      * Ajusta el inventario al nivel físico y retorna la diferencia.
      */
     async cierreTurno(data: CierreTurnoInput, options?: { usuarioId?: string; ip?: string; userAgent?: string }) {
-        const tanque = await prisma.tanque.findUnique({ where: { id: data.tanqueId } });
+        const tanque = await prisma.tanque.findUnique({
+            where: { id: data.tanqueId },
+            select: { id: true, nombre: true, estacionId: true, tipoCombustible: true, nivelActual: true, nivelMinimo: true }
+        });
         if (!tanque) throw new Error('Tanque no encontrado');
 
         if (tanque.estacionId !== data.estacionId) {
@@ -91,7 +94,7 @@ export class InventarioService {
         // 1. Obtener información de la estación para el precio
         const estacion = await prisma.estacionServicio.findUnique({
             where: { id: data.estacionId },
-            include: { zona: true }
+            select: { id: true, zona: { select: { id: true, nombre: true, tipoZona: true } } }
         });
         if (!estacion) throw new Error('Estación no encontrada');
 
@@ -118,7 +121,10 @@ export class InventarioService {
         }
 
         if (data.tanqueId) {
-            const tanque = await prisma.tanque.findUnique({ where: { id: data.tanqueId } });
+            const tanque = await prisma.tanque.findUnique({
+                where: { id: data.tanqueId },
+                select: { id: true, estacionId: true, tipoCombustible: true, nivelActual: true, capacidadGalones: true }
+            });
             if (!tanque) throw new Error('Tanque no encontrado');
             if (tanque.estacionId !== data.estacionId) {
                 throw new Error('El tanque no pertenece a la estación indicada');
