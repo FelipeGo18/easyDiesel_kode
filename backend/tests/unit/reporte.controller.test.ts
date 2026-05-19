@@ -12,7 +12,9 @@ describe('Reporte Controller', () => {
         mockRequest = {
             body: {},
             query: {},
-            user: { userId: 'usr-1', email: 'test@test.com', rol: 'admin' }
+            user: { userId: 'usr-1', email: 'test@test.com', rol: 'admin' },
+            ip: '127.0.0.1',
+            get: jest.fn().mockReturnValue('test-agent'),
         };
         mockResponse = {
             status: jest.fn().mockReturnThis(),

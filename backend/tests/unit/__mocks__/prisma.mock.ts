@@ -51,6 +51,7 @@ export const prismaMock: any = {
     entregaDistribuidor: {
         findMany: jest.fn(),
         findUnique: jest.fn(),
+        findFirst: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),

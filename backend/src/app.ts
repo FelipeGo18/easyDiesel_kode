@@ -9,6 +9,7 @@ import { globalApiRateLimiter } from './middleware/rate-limit';
 import type { Express } from 'express';
 
 const app: Express = express();
+app.set('trust proxy', 1);
 applySecurityRuntimeConfig(app);
 
 // ── Security ───────────────────────────────────────────

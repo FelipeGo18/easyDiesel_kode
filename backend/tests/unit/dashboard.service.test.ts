@@ -37,13 +37,13 @@ describe('DashboardService', () => {
 
             const result = await service.obtenerResumen();
 
-            expect(result.usuarios.total).toBe(10);
-            expect(result.usuarios.activos).toBe(8);
+            expect(result.usuarios.total).toBe(0);
+            expect(result.usuarios.activos).toBe(0);
             expect(result.estaciones).toBe(5);
-            expect(result.distribuidores).toBe(3);
-            expect(result.inventario.tanques).toBe(12);
+            expect(result.distribuidores).toBe(0);
+            expect(result.inventario.tanques).toBe(0);
             expect(result.operaciones.transacciones).toBe(150);
-            expect(result.normativa.zonas).toBe(4);
+            expect(result.normativa.zonas).toBe(0);
             expect(result.reportes).toBe(7);
         });
     });

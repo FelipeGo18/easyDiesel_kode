@@ -95,6 +95,7 @@ describe('InventarioService', () => {
         };
 
         it('debe registrar una venta exitosamente', async () => {
+            prismaMock.estacionServicio.findUnique.mockResolvedValue({ activa: true });
             prismaMock.tanque.findUnique.mockResolvedValue(tanqueMock);
             (pricingEngineService.resolveCurrentFuelPrice as jest.Mock).mockResolvedValue({
                 precioUnitario: 10200,
@@ -114,18 +115,21 @@ describe('InventarioService', () => {
         });
 
         it('debe lanzar error si no hay suficiente combustible', async () => {
+            prismaMock.estacionServicio.findUnique.mockResolvedValue({ activa: true });
             prismaMock.tanque.findUnique.mockResolvedValue({ ...tanqueMock, nivelActual: 10 });
             await expect(service.registrarTransaccion({ ...data, galones: 100 }))
                 .rejects.toThrow('No hay suficiente combustible');
         });
 
         it('debe lanzar error si el tanque no existe', async () => {
+            prismaMock.estacionServicio.findUnique.mockResolvedValue({ activa: true });
             prismaMock.tanque.findUnique.mockResolvedValue(null);
             await expect(service.registrarTransaccion(data))
                 .rejects.toThrow('Tanque no encontrado');
         });
 
         it('debe lanzar error si la estacion del tanque no coincide', async () => {
+            prismaMock.estacionServicio.findUnique.mockResolvedValue({ activa: true });
             prismaMock.tanque.findUnique.mockResolvedValue({ ...tanqueMock, estacionId: 'otra' });
             await expect(service.registrarTransaccion(data))
                 .rejects.toThrow('El tanque no pertenece a la estación indicada');

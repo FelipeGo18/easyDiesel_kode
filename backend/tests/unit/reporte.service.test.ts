@@ -22,7 +22,7 @@ jest.mock('../../src/utils/prisma', () => ({
         tanque: { findMany: jest.fn().mockResolvedValue([]) },
         transaccionCombustible: { findMany: jest.fn().mockResolvedValue([]) },
         precioVigente: { findMany: jest.fn().mockResolvedValue([]) },
-        auditoriaLog: { findMany: jest.fn().mockResolvedValue([]) },
+        auditoriaLog: { findMany: jest.fn().mockResolvedValue([]), create: jest.fn() },
         decretoNormativo: { findMany: jest.fn().mockResolvedValue([]) },
     }
 }));
