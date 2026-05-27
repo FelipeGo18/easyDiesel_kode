@@ -12,11 +12,24 @@ const app: Express = express();
 app.set('trust proxy', 1);
 applySecurityRuntimeConfig(app);
 
+const normalizeOrigin = (origin: string) => origin.replace(/\/+$/, '');
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+    .split(',')
+    .map((origin) => normalizeOrigin(origin.trim()))
+    .filter(Boolean);
+
 // ── Security ───────────────────────────────────────────
 app.use(helmet());
 app.use(
     cors({
-        origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(normalizeOrigin(origin))) {
+                callback(null, true);
+                return;
+            }
+
+            callback(new Error(`Origin not allowed by CORS: ${origin}`));
+        },
         credentials: true,
     })
 );
