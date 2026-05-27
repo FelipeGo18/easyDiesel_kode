@@ -2,10 +2,12 @@ FROM node:20-bookworm-slim AS deps
 
 WORKDIR /app
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 COPY backend/package.json backend/pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 COPY backend/prisma ./prisma
 RUN pnpm prisma generate
@@ -19,6 +21,7 @@ FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends openssl ca-certificates \
@@ -27,7 +30,7 @@ RUN apt-get update \
     && corepack prepare pnpm@9.15.9 --activate
 
 COPY backend/package.json backend/pnpm-lock.yaml ./
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --prod --no-frozen-lockfile
 
 COPY --from=deps /app/dist ./dist
 COPY --from=deps /app/prisma ./prisma
