@@ -4,7 +4,11 @@ WORKDIR /app
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && corepack enable \
+    && corepack prepare pnpm@9.15.9 --activate
 
 COPY backend/package.json backend/pnpm-lock.yaml ./
 RUN pnpm install --no-frozen-lockfile
