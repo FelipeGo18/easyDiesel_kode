@@ -1,6 +1,7 @@
 {
   "name": "combustibles-backend",
   "version": "1.0.0",
+  "packageManager": "pnpm@9.15.9",
   "description": "API REST — Plataforma de Gestión de Combustibles",
   "main": "dist/index.js",
   "scripts": {
