@@ -2,7 +2,7 @@ FROM node:20-bookworm-slim AS deps
 
 WORKDIR /app
 
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 COPY backend/package.json backend/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
@@ -23,7 +23,8 @@ ENV NODE_ENV=production
 RUN apt-get update \
     && apt-get install -y --no-install-recommends openssl ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
-    && corepack enable
+    && corepack enable \
+    && corepack prepare pnpm@9.15.9 --activate
 
 COPY backend/package.json backend/pnpm-lock.yaml ./
 RUN pnpm install --prod --frozen-lockfile
