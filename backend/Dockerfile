@@ -29,13 +29,11 @@ RUN apt-get update \
     && corepack enable \
     && corepack prepare pnpm@9.15.9 --activate
 
-COPY backend/package.json backend/pnpm-lock.yaml ./
-RUN pnpm install --prod --no-frozen-lockfile
-
 COPY --from=deps /app/dist ./dist
 COPY --from=deps /app/prisma ./prisma
-COPY --from=deps /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=deps /app/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=deps /app/node_modules ./node_modules
 
 EXPOSE 3000
 
