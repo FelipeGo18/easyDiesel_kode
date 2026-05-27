@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/Badge';
 import { Icon } from '@/components/ui/Icon';
 import {
     ArrowRight,
-    Activity,
     History,
     ShieldAlert,
     RefreshCw,
